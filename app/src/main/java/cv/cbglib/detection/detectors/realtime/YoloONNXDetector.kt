@@ -3,12 +3,13 @@ package cv.cbglib.detection.detectors.realtime
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.ImageProxy
 import cv.cbglib.detection.Detection
 import cv.cbglib.detection.DetectorResult
 import cv.cbglib.detection.IDetector
-import cv.cbglib.logging.PerformanceLogValue
+import cv.cbglib.logging.MetricsValue
 import org.opencv.android.Utils
 import org.opencv.core.Core
 import org.opencv.core.CvType
@@ -27,7 +28,7 @@ class YoloONNXDetector(
     private val modelInputWidth = 640
 
     //    val modelInputHeight = 640 // not used since model expects 1:1 ratio of images
-    var analysisFunction: (ImageProxy) -> Pair<List<Detection>, List<PerformanceLogValue>>
+    var analysisFunction: (ImageProxy, Boolean) -> Triple<List<Detection>, List<MetricsValue>, Bitmap?>
 
     init {
         // try to use Nnapi for hardware accelerated detection, on fail use CPU
@@ -54,18 +55,28 @@ class YoloONNXDetector(
         }
     }
 
-    override fun detect(imageProxy: ImageProxy): DetectorResult {
-        val (detections, metricsList) = verboseMetricsAnalysis(imageProxy)
+    override fun detect(imageProxy: ImageProxy, storeImage: Boolean): DetectorResult {
+        val (detections, metricsList, image) = analysisFunction(imageProxy, storeImage)
 
-        return DetectorResult(detections, imageDetails, metricsList)
+        return DetectorResult(
+            detections,
+            imageDetails,
+            metricsList,
+            image
+        )
     }
 
 
-    private fun verboseMetricsAnalysis(imageProxy: ImageProxy): Pair<List<Detection>, List<PerformanceLogValue>> {
+    private fun verboseMetricsAnalysis(
+        imageProxy: ImageProxy, storeImage: Boolean
+    ): Triple<List<Detection>, List<MetricsValue>, Bitmap?> {
         // convert ImageProxy => Bitmap => OpenCV.Mat
+        var inputBitmap: Bitmap = Bitmap.createBitmap(imageProxy.width, imageProxy.height, Bitmap.Config.ARGB_8888)
         val (_, timeBitmap) = measureTime {
+            inputBitmap = imageProxy.toBitmap()
+
             Utils.bitmapToMat(
-                imageProxy.toBitmap(),
+                inputBitmap,
                 bitmapMat
             )
         }
@@ -96,30 +107,53 @@ class YoloONNXDetector(
         results.close()
         tensor.close()
 
-        return filteredDetections to
-                listOf(
-                    PerformanceLogValue("Bitmap", timeBitmap),
-                    PerformanceLogValue("LetterBox", timeLetterboxing),
-                    PerformanceLogValue("Tensor", timeTensor),
-                    PerformanceLogValue("Detection", timeDetection),
-                    PerformanceLogValue("Extract detections", timeExtractDetections),
-                    PerformanceLogValue("NMS", timeNMS),
-                    PerformanceLogValue(
-                        "Total",
-                        timeBitmap + timeLetterboxing + timeTensor + timeDetection + timeExtractDetections + timeNMS
-                    ),
-                )
+
+        return Triple(
+            filteredDetections,
+            listOf(
+                MetricsValue("Bitmap", timeBitmap),
+                MetricsValue("LetterBox", timeLetterboxing),
+                MetricsValue("Tensor", timeTensor),
+                MetricsValue("Detection", timeDetection),
+                MetricsValue("Extract detections", timeExtractDetections),
+                MetricsValue("NMS", timeNMS),
+                MetricsValue(
+                    "Total",
+                    timeBitmap + timeLetterboxing + timeTensor + timeDetection + timeExtractDetections + timeNMS
+                ),
+            ), if (storeImage) inputBitmap else null
+        )
     }
 
-    private fun basicMetricsAnalysis(imageProxy: ImageProxy): Pair<List<Detection>, List<PerformanceLogValue>> {
-        val (results, total) = measureTime { noMetricsAnalysis(imageProxy) }
-        return Pair(results.first, listOf(PerformanceLogValue("", total)))
+    private fun basicMetricsAnalysis(
+        imageProxy: ImageProxy,
+        storeImage: Boolean
+    ): Triple<List<Detection>, List<MetricsValue>, Bitmap?> {
+        val (results, total) = measureTime { noMetricsAnalysis(imageProxy, storeImage) }
+        return Triple(
+            results.first,
+            listOf(MetricsValue("Total", total)),
+            results.third
+        )
     }
 
-    private fun noMetricsAnalysis(imageProxy: ImageProxy): Pair<List<Detection>, List<PerformanceLogValue>> {
+    private fun noMetricsAnalysis(
+        imageProxy: ImageProxy,
+        storeImage: Boolean
+    ): Triple<List<Detection>, List<MetricsValue>, Bitmap?> {
         // convert ImageProxy => Bitmap => OpenCV.Mat
+        var inputBitmap = imageProxy.toBitmap()
+
         Utils.bitmapToMat(
-            imageProxy.toBitmap(),
+            inputBitmap,
+            bitmapMat
+        )
+
+        // convert ImageProxy => Bitmap => OpenCV.Mat
+        inputBitmap = imageProxy.toBitmap()
+
+        Utils.bitmapToMat(
+            inputBitmap,
             bitmapMat
         )
 
@@ -147,7 +181,7 @@ class YoloONNXDetector(
         results.close()
         tensor.close()
 
-        return filteredDetections to emptyList()
+        return Triple(filteredDetections, emptyList(), if (storeImage) inputBitmap else null)
     }
 
     /**

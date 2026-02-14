@@ -12,7 +12,7 @@ import kotlin.math.max
  * Abstract class used as a view for drawing detections, class does not contain a [drawDetections] implementation where
  * a specific implementation of how detections are represent on screen are coded.
  */
-abstract class OverlayView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
+abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     /**
      * List containing current [Detection] objects that are on screen.
      */
@@ -31,7 +31,7 @@ abstract class OverlayView(context: Context, attrs: AttributeSet?) : View(contex
     var onDetectionClicked: ((detection: Detection) -> Unit)? = null
 
     /**
-     * Sets camera resolution values and calculates scale and crop values for the [OverlayView].
+     * Sets camera resolution values and calculates scale and crop values for the [DetectionOverlay].
      */
     fun setCameraResolution(cameraW: Int, cameraH: Int) {
         cameraWidth = cameraW

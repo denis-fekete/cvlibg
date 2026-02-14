@@ -6,12 +6,11 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.util.AttributeSet
-import android.util.Log
 
 /**
  * PerformanceLogOverlay is derived from LogOverlay, its purpose is draw performance related metrics/logs onto the screen.
  */
-class PerformanceLogOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<PerformanceLogValue>(context, attrs) {
+class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<MetricsValue>(context, attrs) {
     private var tmpAverage: Long = 0
     private var average: Long = 0
     private var cnt: Int = 0
@@ -35,30 +34,22 @@ class PerformanceLogOverlay(context: Context, attrs: AttributeSet?) : LogOverlay
         if (data.isEmpty()) return
 
         val baseOffset = textPaint.fontMetrics.run { bottom - top }
-        var offsetY = 200f;
-        var total: Long = 0
+        var offsetY = height * 0.1f;
         data.forEach {
-            // do not show empty keys (only add to the total value)
-            if (it.key.isNotEmpty()) {
-                val text = "${it.key}: ${it.value / 1_000_000.0}ms\n"
-                canvas.drawText(text, 0f, offsetY, textPaint)
+            val text = "${it.key}: ${it.value / 1_000_000.0}ms\n"
+            canvas.drawText(text, 0f, offsetY, textPaint)
 
-                offsetY += baseOffset
-            }
-            total += it.value
+            offsetY += baseOffset
         }
 
-        if (cnt++ > avgUpdateVal) {
+        if (cnt >= avgUpdateVal) {
             average = tmpAverage / avgUpdateVal
             tmpAverage = 0
             cnt = 0
-        } else {
-            tmpAverage += total
         }
+        tmpAverage += data.last().value
+        cnt++
 
-        offsetY += baseOffset
-        canvas.drawText("Total: ${total / 1_000_000}ms", 0f, offsetY, textPaint)
-        offsetY += baseOffset
         canvas.drawText("Average (last $avgUpdateVal): ${average / 1_000_000}ms", 0f, offsetY, textPaint)
     }
 }

@@ -6,14 +6,13 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.util.AttributeSet
-import android.util.Log
 import androidx.core.content.ContextCompat
-import cv.cbglib.detection.OverlayView
+import cv.cbglib.detection.DetectionOverlay
 import cv.demoapps.bangdemo.MyApp
 import cv.demoapps.bangdemo.R
 import kotlin.math.max
 
-class BangOverlayView(context: Context, attrs: AttributeSet?) : OverlayView(context, attrs) {
+class BangDetectionOverlay(context: Context, attrs: AttributeSet?) : DetectionOverlay(context, attrs) {
     // helper variable to prevent creating a new object on each redraw
     private var scaledRect: RectF = RectF()
 
