@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.util.AttributeSet
 
@@ -14,7 +15,11 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
     private var tmpAverage: Long = 0
     private var average: Long = 0
     private var cnt: Int = 0
-    val avgUpdateVal: Int = 10
+    private val avgUpdateVal: Int = 10
+    private var bgRect: RectF = RectF()
+
+    @Volatile
+    private var textList = mutableListOf<String>()
 
     private val textBackgroundPaint = Paint().apply {
         color = Color.rgb(20, 20, 20)
@@ -33,12 +38,39 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
     override fun drawLogs(canvas: Canvas) {
         if (data.isEmpty()) return
 
+
         val baseOffset = textPaint.fontMetrics.run { bottom - top }
-        var offsetY = height * 0.1f;
+        val startX = width * 0.02f
+        val startY = height * 0.05f
+        var offsetY = startY
+        var maxWidth = 0f
+
+        // measure all text widths
+        textList.clear()
         data.forEach {
             val text = "${it.key}: ${it.value / 1_000_000.0}ms\n"
-            canvas.drawText(text, 0f, offsetY, textPaint)
+            textList.add(text)
 
+            val textWidth = textPaint.measureText(text)
+            if (maxWidth < textWidth) {
+                maxWidth = textWidth
+            }
+        }
+
+        // draw background rectangle
+        val padding = 8
+        val textHeight = (data.size + 1) * baseOffset // +1 for Average
+
+        bgRect.left = startX - padding
+        bgRect.top = startY - baseOffset - padding
+        bgRect.right = bgRect.left + maxWidth + padding
+        bgRect.bottom = bgRect.top + textHeight + 2 * padding
+
+        canvas.drawRect(bgRect, textBackgroundPaint)
+
+        // draw texts onto the screen
+        textList.forEach {
+            canvas.drawText(it, startX, offsetY, textPaint)
             offsetY += baseOffset
         }
 
@@ -50,6 +82,6 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
         tmpAverage += data.last().value
         cnt++
 
-        canvas.drawText("Average (last $avgUpdateVal): ${average / 1_000_000}ms", 0f, offsetY, textPaint)
+        canvas.drawText("Average (last $avgUpdateVal): ${average / 1_000_000}ms", startX, offsetY, textPaint)
     }
 }
