@@ -295,8 +295,8 @@
                         <option name="values">
                           <map>
                             <entry key="assetSourceType" value="FILE" />
-                            <entry key="outputName" value="bitmap" />
-                            <entry key="sourceFile" value="C:\Users\denfe\Desktop\bitmap.svg" />
+                            <entry key="outputName" value="detect" />
+                            <entry key="sourceFile" value="C:\Users\denfe\Downloads\crop_free_64dp_E3E3E3.svg" />
                           </map>
                         </option>
                       </PersistentState>

@@ -7,8 +7,8 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.ImageProxy
 import cv.cbglib.detection.Detection
-import cv.cbglib.detection.DetectorResult
-import cv.cbglib.detection.IDetector
+import cv.cbglib.detection.detectors.DetectorResult
+import cv.cbglib.detection.detectors.IDetector
 import cv.cbglib.logging.MetricsValue
 import org.opencv.android.Utils
 import org.opencv.core.Core

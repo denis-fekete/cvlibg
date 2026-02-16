@@ -1,7 +1,9 @@
 package cv.cbglib.detection
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -24,6 +26,9 @@ abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(c
     private var cropX: Float = 0f
     private var cropY: Float = 0f
     private var tmpRect: RectF = RectF()
+    private var backgroundRect: RectF = RectF()
+    protected var backgroundImage: Bitmap? = null
+
 
     /**
      * Callback function invoked when [Detection] is clicked on screen. Contains a [Detection] that was clicked.
@@ -54,10 +59,9 @@ abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(c
     }
 
     /**
-     * Scales [Detection] to current screen, since image in [BaseImageAnalyzer] might be different size
-     * than screen image scaling and cropping is needed. Info about current image format from
-     * [BaseImageAnalyzer] is stored in [imageDetails] that is updated alongside new [detections] in
-     * [updateBoxes] function that is called by inside image analyzer.
+     * Scales [Detection] to current screen, [cv.cbglib.detection.detectors.IDetector]s might use different size as
+     * inputs to models. Info about current image is stored in [imageDetails] that is updated alongside new
+     * [detections] in [updateBoxes] function that is called by inside [ImageAnalyzer].
      */
     protected fun scaleDetectionToScreenRect(det: Detection): RectF {
         tmpRect = det.toRectF()
@@ -105,12 +109,53 @@ abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(c
         return true
     }
 
+    /**
+     * Convert Scalable Pixels to pixel size for text drawn on detections
+     */
     protected fun unitSpToPix(sp: Float): Float {
         return sp * context.resources.displayMetrics.density
     }
 
+    /**
+     * Sets background image of [DetectionOverlay]
+     */
+    fun setBackgroundBitmap(image: Bitmap?) {
+        backgroundImage = image
+    }
+
+    /**
+     * Function that gets once [cv.cbglib.detection.DetectionOverlay] is invalidated and redraw is request.
+     */
     final override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+
+        // draw background if not null
+        backgroundImage?.let { bitmap ->
+            val viewWidth = width.toFloat()
+            val viewHeight = height.toFloat()
+
+            val bitmapWidth = bitmap.width.toFloat()
+            val bitmapHeight = bitmap.height.toFloat()
+
+            val scale = maxOf(
+                viewWidth / bitmapWidth,
+                viewHeight / bitmapHeight
+            )
+
+            val scaledWidth = bitmapWidth * scale
+            val scaledHeight = bitmapHeight * scale
+
+            val left = (viewWidth - scaledWidth) / 2f
+            val top = (viewHeight - scaledHeight) / 2f
+
+            backgroundRect.left = left
+            backgroundRect.top = top
+            backgroundRect.right = left + scaledWidth
+            backgroundRect.bottom = top + scaledHeight
+
+            canvas.drawBitmap(bitmap, null, backgroundRect, null)
+        }
+
         drawDetections(canvas)
     }
 }

@@ -11,22 +11,50 @@
             android:layout_width = "match_parent"
             android:layout_height = "match_parent"
             app:layout_constraintStart_toStartOf = "parent"
-            app:layout_constraintEnd_toEndOf = "parent">
+            app:layout_constraintEnd_toEndOf = "parent"
+            android:id = "@+id/frameLayout">
 
         <androidx.camera.view.PreviewView
                 android:id = "@+id/cameraxView"
                 android:layout_width = "match_parent"
                 android:layout_height = "match_parent"/>
 
-        <cv.demoapps.bangdemo.views.BangOverlayView
+        <cv.demoapps.bangdemo.views.BangDetectionOverlay
                 android:id = "@+id/overlayView"
                 android:layout_width = "match_parent"
                 android:layout_height = "match_parent"/>
 
-        <cv.cbglib.logging.PerformanceLogOverlay
+        <cv.cbglib.logging.MetricsOverlay
                 android:id = "@+id/performanceLogOverlay"
                 android:layout_width = "match_parent"
                 android:layout_height = "match_parent"/>
 
     </FrameLayout>
+
+    <ImageButton
+            android:id = "@+id/preciseDetectionButton"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:background = "@null"
+            android:src = "@drawable/detect"
+            android:contentDescription = "Detect"
+            app:tint = "@color/navigation_icon_tint"
+            app:layout_constraintBottom_toBottomOf = "parent"
+            app:layout_constraintEnd_toEndOf = "parent"
+            app:layout_constraintStart_toStartOf = "parent"
+            android:layout_marginBottom = "100dp"/>
+
+    <ImageButton
+            android:id = "@+id/exitPreciseDetectionButton"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:background = "@null"
+            android:src = "@drawable/close"
+            android:contentDescription = "Close"
+            app:tint = "@color/navigation_icon_tint"
+            app:layout_constraintBottom_toBottomOf = "parent"
+            app:layout_constraintEnd_toEndOf = "parent"
+            app:layout_constraintStart_toStartOf = "parent"
+            android:layout_marginBottom = "100dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

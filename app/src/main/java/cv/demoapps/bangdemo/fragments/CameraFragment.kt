@@ -21,7 +21,7 @@ class CameraFragment : AbstractCameraFragment(R.layout.fragment_camera) {
         super.onViewCreated(view, savedInstanceState)
 
         // attaching onDetectionClicked event
-        overlayView.onDetectionClicked = { detection ->
+        detectionOverlay.onDetectionClicked = { detection ->
             val action =
                 CameraFragmentDirections.actionCameraFragmentToCardDetailsFragment(class2linkService.items[detection.classIndex]!!.linkId)
 
