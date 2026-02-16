@@ -35,11 +35,14 @@
     <string name = "card_details_description">Lorem Ipsum Dolor Sit Amet, Consetetur Sadipscing Elitr, Sed Diam Nonumy Eirmod Tempor Invidunt Ut Labore Et Dolore Magna Aliquyam Erat, Sed Diam Voluptua. At Vero Eos Et Accusam Et Justo Duo Dolores Et Ea Rebum. Stet Clita Kasd Gubergren, No Sea Takimata</string>
 
     <!-- Settings layout text-->
-    <string name = "settings_choose_model">Choose model:</string>
+    <string name = "settings_choose_realtime_model">Choose realtime model:</string>
+    <string name = "settings_choose_singleshot_model">Choose single shot model:</string>
     <string name = "settings_choose_language">Choose language:</string>
     <string name = "settings_font_size">Font size:</string>
     <string name = "settings_show_performance">Show performance:</string>
     <string name = "settings_verbose_performance">Verbose performance:</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name = "hello_blank_fragment">Hello blank fragment</string>
+    <string name = "settingsPageTitle">Settings</string>
+    <string name = "settingsMetrics">Metrics:</string>
 </resources>

@@ -9,7 +9,8 @@ class SettingsService(
 ) {
     lateinit var language: String // TODO: implement behavior
     var fontSize: Int = 0
-    lateinit var selectedModel: String
+    lateinit var realtimeModel: String
+    lateinit var precisionModel: String
     var showPerformance: Boolean = false
     var verbosePerformance: Boolean = false
     var framesToSkip: Int = 5
@@ -27,10 +28,11 @@ class SettingsService(
      * Loads settings from `SharedPreferences`.
      */
     fun load() {
-        selectedModel = sPref.getString("selectedModel", null).toString()
+        realtimeModel = sPref.getString("realtimeModel", null).toString()
+        precisionModel = sPref.getString("precisionModel", null).toString()
         language = sPref.getString("language", "").toString()
 
-        fontSize = sPref.getInt("detectionBoxTextSize", 0)
+        fontSize = sPref.getInt("fontSize", 0)
 
         showPerformance = sPref.getBoolean("showPerformance", false)
         verbosePerformance = sPref.getBoolean("verbosePerformance", true)
@@ -44,10 +46,12 @@ class SettingsService(
     fun save() {
         val editor = sPref.edit()
         editor.apply {
-            putString("selectedModel", selectedModel)
+            putString("realtimeModel", realtimeModel)
+            putString("precisionModel", precisionModel)
+
             putString("language", language)
 
-            putInt("detectionBoxTextSize", fontSize)
+            putInt("fontSize", fontSize)
 
             putBoolean("showPerformance", showPerformance)
             putBoolean("verbosePerformance", verbosePerformance)

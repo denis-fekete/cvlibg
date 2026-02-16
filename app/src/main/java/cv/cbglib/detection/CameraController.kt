@@ -43,7 +43,7 @@ class CameraController(
     private var cameraControllerInitialized: Boolean = false
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var cameraProvider: ProcessCameraProvider
-    private lateinit var imageAnalyzer: ImageAnalyzer
+    private var imageAnalyzer: ImageAnalyzer? = null
     private lateinit var resolutionSelector: ResolutionSelector
 
     private val assetService by lazy {
@@ -65,7 +65,7 @@ class CameraController(
         cameraProvider = ProcessCameraProvider.getInstance(context).await()
         resolutionSelector = getResolutionSelector()
 
-        val realtimeAnalysis = setupImageAnalyzer() ?: return
+        val imageAnalysis = setupImageAnalysis()
 
         val preview = Preview.Builder()
             .setResolutionSelector(resolutionSelector)
@@ -73,13 +73,22 @@ class CameraController(
         preview.surfaceProvider = previewView.surfaceProvider
 
         try {
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA,
-                preview,
-                realtimeAnalysis,
-            )
+            if (imageAnalysis != null) {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    imageAnalysis
+                )
+            } else {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                )
+            }
         } catch (exc: Exception) {
             AlertDialog.Builder(context)
                 .setTitle("Error")
@@ -93,9 +102,9 @@ class CameraController(
      * Sets up image analysis for realtime (low latency) detection. Uses values stored in
      * [cv.cbglib.services.SettingsService].
      */
-    private fun setupImageAnalyzer(): ImageAnalysis? {
+    private fun setupImageAnalysis(): ImageAnalysis? {
         val realtimeModel = getModelBytes(
-            settingsService.selectedModel,
+            settingsService.realtimeModel,
             "Real-time detection"
         ) ?: return null
 
@@ -106,7 +115,7 @@ class CameraController(
         )
 
         val preciseModel = getModelBytes(
-            settingsService.selectedModel,
+            settingsService.precisionModel,
             "Precise detection"
         ) ?: return null
 
@@ -124,6 +133,9 @@ class CameraController(
             preciseDetector
         )
 
+        if (imageAnalyzer == null)
+            return null
+
         // keep only latest, if image analyzer is not keeping up (calculations take too much time), then keep only the
         // most recent image instead of buffering them
         val imageAnalysis = ImageAnalysis.Builder()
@@ -131,7 +143,7 @@ class CameraController(
             .setResolutionSelector(resolutionSelector)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
-        imageAnalysis.setAnalyzer(cameraExecutor, imageAnalyzer)
+        imageAnalysis.setAnalyzer(cameraExecutor, imageAnalyzer!!)
 
         return imageAnalysis
     }
@@ -140,14 +152,14 @@ class CameraController(
      * Starts realtime/faster detection method
      */
     fun realtimeDetection() {
-        imageAnalyzer.resumeAnalysis()
+        imageAnalyzer?.resumeAnalysis()
     }
 
     /**
      * Starts precises/slower detection method
      */
     fun preciseDetection() {
-        imageAnalyzer.preciseDetectAndPause()
+        imageAnalyzer?.preciseDetectAndPause()
     }
 
     /**
@@ -194,6 +206,6 @@ class CameraController(
         if (cameraControllerInitialized)
             cameraExecutor.shutdown()
 
-        imageAnalyzer.destroy()
+        imageAnalyzer?.destroy()
     }
 }

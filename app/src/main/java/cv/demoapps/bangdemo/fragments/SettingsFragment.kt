@@ -29,11 +29,20 @@ class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
         super.onViewCreated(view, savedInstanceState)
 
         setupSpinnerWithStringValues(
-            R.id.modelSpinner,
+            R.id.realtimeModelSpinner,
             assetService.availableModels,
-            settingsService.selectedModel
+            settingsService.realtimeModel
         ) { selected: String ->
-            settingsService.selectedModel = selected
+            settingsService.realtimeModel = selected
+            settingsService.save()
+        }
+
+        setupSpinnerWithStringValues(
+            R.id.preciseModelSpinner,
+            assetService.availableModels,
+            settingsService.precisionModel
+        ) { selected: String ->
+            settingsService.precisionModel = selected
             settingsService.save()
         }
 
@@ -135,7 +144,10 @@ class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
             R.id.textShowPerformance,
             R.id.textVerbosePerformance,
             R.id.textChooseLanguage,
-            R.id.textChooseModel,
+            R.id.textChooseRealtimeModel,
+            R.id.textChoosePrecisionModel,
+            R.id.textChooseLanguage,
+            R.id.metricsSeparator
         )
         for (i in textIds) {
             view?.findViewById<TextView>(i)
@@ -143,7 +155,8 @@ class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
         }
 
         val spinnerIds = arrayOf(
-            R.id.modelSpinner,
+            R.id.realtimeModelSpinner,
+            R.id.preciseModelSpinner,
             R.id.languageSpinner
         )
 
