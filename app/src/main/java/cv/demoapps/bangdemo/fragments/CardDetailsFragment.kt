@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
 import cv.cbglib.fragments.BaseFragment
 import cv.demoapps.bangdemo.MyApp
@@ -79,6 +80,7 @@ class CardDetailsFragment : BaseFragment(R.layout.fragment_card_details) {
             imageView.visibility = View.GONE
         }
 
+        val navController = findNavController()
         if (thisCard.links.isNotEmpty()) {
             for (id in thisCard.links) {
                 val linkCard = cardDetailsService.items[id] ?: continue
@@ -106,10 +108,7 @@ class CardDetailsFragment : BaseFragment(R.layout.fragment_card_details) {
                 }
 
                 linkView.setOnClickListener {
-                    val action =
-                        CardDetailsFragmentDirections.actionCardDetailsFragmentSelf(id)
-
-                    findNavController().navigate(action)
+                    navController.navigate(R.id.cardDetailsFragment, bundleOf("id" to id))
                 }
 
                 linksLayout.addView(linkView)

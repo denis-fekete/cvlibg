@@ -2,6 +2,7 @@ package cv.demoapps.bangdemo.fragments
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
 import cv.cbglib.fragments.AbstractCameraFragment
 import cv.demoapps.bangdemo.MyApp
@@ -22,10 +23,11 @@ class CameraFragment : AbstractCameraFragment(R.layout.fragment_camera) {
 
         // attaching onDetectionClicked event
         detectionOverlay.onDetectionClicked = { detection ->
-            val action =
-                CameraFragmentDirections.actionCameraFragmentToCardDetailsFragment(class2linkService.items[detection.classIndex]!!.linkId)
+            val bundle = bundleOf(
+                "id" to class2linkService.items[detection.classIndex]!!.linkId
+            )
 
-            findNavController().navigate(action)
+            findNavController().navigate(R.id.cardDetailsFragment, bundle)
         }
     }
 }
