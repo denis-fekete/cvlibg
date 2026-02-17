@@ -9,7 +9,8 @@ import android.graphics.Typeface
 import android.util.AttributeSet
 
 /**
- * PerformanceLogOverlay is derived from LogOverlay, its purpose is draw performance related metrics/logs onto the screen.
+ * [cv.cbglib.logging.MetricsOverlay] is derived from [LogOverlay], its purpose is draw performance related
+ * metrics/logs onto the screen.
  */
 class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<MetricsValue>(context, attrs) {
     private var tmpAverage: Long = 0
@@ -17,8 +18,6 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
     private var cnt: Int = 0
     private val avgUpdateVal: Int = 10
     private var bgRect: RectF = RectF()
-
-    @Volatile
     private var textList = mutableListOf<String>()
 
     private val textBackgroundPaint = Paint().apply {
@@ -38,17 +37,29 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
     override fun drawLogs(canvas: Canvas) {
         if (data.isEmpty()) return
 
-
         val baseOffset = textPaint.fontMetrics.run { bottom - top }
         val startX = width * 0.02f
         val startY = height * 0.05f
         var offsetY = startY
         var maxWidth = 0f
 
+        // count average
+        if (cnt >= avgUpdateVal) {
+            average = tmpAverage / avgUpdateVal
+            tmpAverage = 0
+            cnt = 0
+        }
+        tmpAverage += data.last().value
+        cnt++
+
         // measure all text widths
         textList.clear()
-        data.forEach {
-            val text = "${it.key}: ${it.value / 1_000_000.0}ms\n"
+        for (i in 0 until data.size + 1) {
+            val text = if (i < data.size)
+                "${data[i].key}: ${data[i].value / 1_000_000.0}ms\n"
+            else
+                "Average (last $avgUpdateVal): ${average / 1_000_000}ms"
+
             textList.add(text)
 
             val textWidth = textPaint.measureText(text)
@@ -73,15 +84,5 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
             canvas.drawText(it, startX, offsetY, textPaint)
             offsetY += baseOffset
         }
-
-        if (cnt >= avgUpdateVal) {
-            average = tmpAverage / avgUpdateVal
-            tmpAverage = 0
-            cnt = 0
-        }
-        tmpAverage += data.last().value
-        cnt++
-
-        canvas.drawText("Average (last $avgUpdateVal): ${average / 1_000_000}ms", startX, offsetY, textPaint)
     }
 }
