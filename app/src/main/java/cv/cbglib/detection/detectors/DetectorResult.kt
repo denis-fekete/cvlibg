@@ -8,6 +8,5 @@ import cv.cbglib.logging.MetricsValue
 data class DetectorResult(
     val detections: List<Detection>,
     val details: ImageDetails,
-    val metrics: List<MetricsValue>? = null,
-    val image: Bitmap? = null
+    val metrics: List<MetricsValue>? = null
 )

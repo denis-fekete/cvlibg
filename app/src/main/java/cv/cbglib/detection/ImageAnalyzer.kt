@@ -1,6 +1,7 @@
 package cv.cbglib.detection
 
-import android.R
+import android.os.SystemClock
+import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import cv.cbglib.detection.detectors.DetectorResult
@@ -8,14 +9,15 @@ import cv.cbglib.detection.detectors.IDetector
 import cv.cbglib.logging.MetricsOverlay
 
 class ImageAnalyzer(
-    private var framesToSkip: Int = 5,
     private val detectionOverlay: DetectionOverlay,
     private val metricsOverlay: MetricsOverlay? = null,
     private val realtimeDetector: IDetector,
     private val precisionDetector: IDetector,
 ) : ImageAnalysis.Analyzer {
-    private var skippedFramesCounter: Int = framesToSkip // activate at first frame
     private var resolutionInitialized = false
+
+    @Volatile
+    private var detectorRunning = false
 
     @Volatile
     private var useRealtimeDetector = true
@@ -26,12 +28,15 @@ class ImageAnalyzer(
      * and is an in buffers, these should be freed as fast as possible.
      */
     override fun analyze(imageProxy: ImageProxy) {
-        if (pauseAnalysis || skippedFramesCounter++ < framesToSkip) {
+        if (detectorRunning || pauseAnalysis) {
             imageProxy.close()
             return
         }
 
-        skippedFramesCounter = 0
+        val bitmap = imageProxy.toBitmap()
+        imageProxy.close()
+
+        detectorRunning = true
 
         if (!resolutionInitialized) {
             detectionOverlay.setCameraResolution(imageProxy.width, imageProxy.height)
@@ -39,14 +44,18 @@ class ImageAnalyzer(
         }
 
         val detectorResult: DetectorResult
-        if (useRealtimeDetector) {
-            detectorResult = realtimeDetector.detect(imageProxy)
 
+        if (useRealtimeDetector) {
+            detectorResult = realtimeDetector.detect(bitmap)
+            detectorRunning = false
         } else {
-            detectorResult = precisionDetector.detect(imageProxy, storeImage = true)
-            detectionOverlay.setBackgroundBitmap(detectorResult.image!!)
+            detectorResult = precisionDetector.detect(bitmap)
+            detectorRunning = false
+
+            detectionOverlay.setBackgroundBitmap(bitmap)
             pauseAnalysis = true
         }
+
 
         if (detectorResult.metrics != null) {
             metricsOverlay?.post {
@@ -66,7 +75,6 @@ class ImageAnalyzer(
      */
     fun preciseDetectAndPause() {
         useRealtimeDetector = false
-        skippedFramesCounter += framesToSkip // force update on analyze() class
     }
 
     /**
@@ -80,15 +88,6 @@ class ImageAnalyzer(
         detectionOverlay.post {
             detectionOverlay.setBackgroundBitmap(null)
         }
-
-        skippedFramesCounter += framesToSkip // force update on analyze() class
-    }
-
-    /**
-     * Sets number of frames that will be skipped until analysis on image is done
-     */
-    fun setFramesToSkip(newValue: Int) {
-        framesToSkip = newValue
     }
 
     fun destroy() {

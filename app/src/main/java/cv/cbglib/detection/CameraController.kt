@@ -126,7 +126,7 @@ class CameraController(
         )
 
         imageAnalyzer = ImageAnalyzer(
-            settingsService.framesToSkip,
+//            settingsService.framesToSkip,
             detectionOverlay,
             metricsOverlay,
             realtimeDetector,

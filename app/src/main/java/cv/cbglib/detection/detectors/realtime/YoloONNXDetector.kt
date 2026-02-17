@@ -27,8 +27,7 @@ class YoloONNXDetector(
     private var inputName: String
     private val modelInputWidth = 640
 
-    //    val modelInputHeight = 640 // not used since model expects 1:1 ratio of images
-    var analysisFunction: (ImageProxy, Boolean) -> Triple<List<Detection>, List<MetricsValue>, Bitmap?>
+    var analysisFunction: (Bitmap) -> Pair<List<Detection>, List<MetricsValue>>
 
     init {
         // try to use Nnapi for hardware accelerated detection, on fail use CPU
@@ -55,34 +54,25 @@ class YoloONNXDetector(
         }
     }
 
-    override fun detect(imageProxy: ImageProxy, storeImage: Boolean): DetectorResult {
-        val (detections, metricsList, image) = analysisFunction(imageProxy, storeImage)
+    override fun detect(image: Bitmap): DetectorResult {
+        val (detections, metricsList) = analysisFunction(image)
 
         return DetectorResult(
             detections,
             imageDetails,
-            metricsList,
-            image
+            metricsList
         )
     }
 
 
     private fun verboseMetricsAnalysis(
-        imageProxy: ImageProxy, storeImage: Boolean
-    ): Triple<List<Detection>, List<MetricsValue>, Bitmap?> {
-        // convert ImageProxy => Bitmap => OpenCV.Mat
-        var inputBitmap: Bitmap = Bitmap.createBitmap(imageProxy.width, imageProxy.height, Bitmap.Config.ARGB_8888)
-        val (_, timeBitmap) = measureTime {
-            inputBitmap = imageProxy.toBitmap()
-
-            Utils.bitmapToMat(
-                inputBitmap,
-                bitmapMat
-            )
-        }
-
-        // close imageProxy so buffers can be reused
-        imageProxy.close()
+        image: Bitmap
+    ): Pair<List<Detection>, List<MetricsValue>> {
+        // convert Bitmap => OpenCV.Mat
+        Utils.bitmapToMat(
+            image,
+            bitmapMat
+        )
 
         // resize image into expected size for model, apply letterboxing if needed
         val (letterBoxMat, timeLetterboxing) = measureTime {
@@ -108,57 +98,36 @@ class YoloONNXDetector(
         tensor.close()
 
 
-        return Triple(
-            filteredDetections,
-            listOf(
-                MetricsValue("Bitmap", timeBitmap),
-                MetricsValue("LetterBox", timeLetterboxing),
-                MetricsValue("Tensor", timeTensor),
-                MetricsValue("Detection", timeDetection),
-                MetricsValue("Extract detections", timeExtractDetections),
-                MetricsValue("NMS", timeNMS),
-                MetricsValue(
-                    "Total",
-                    timeBitmap + timeLetterboxing + timeTensor + timeDetection + timeExtractDetections + timeNMS
-                ),
-            ), if (storeImage) inputBitmap else null
-        )
+        return filteredDetections to
+                listOf(
+                    MetricsValue("LetterBox", timeLetterboxing),
+                    MetricsValue("Tensor", timeTensor),
+                    MetricsValue("Detection", timeDetection),
+                    MetricsValue("Extract detections", timeExtractDetections),
+                    MetricsValue("NMS", timeNMS),
+                    MetricsValue(
+                        "Total",
+                        timeLetterboxing + timeTensor + timeDetection + timeExtractDetections + timeNMS
+                    )
+                )
     }
 
     private fun basicMetricsAnalysis(
-        imageProxy: ImageProxy,
-        storeImage: Boolean
-    ): Triple<List<Detection>, List<MetricsValue>, Bitmap?> {
-        val (results, total) = measureTime { noMetricsAnalysis(imageProxy, storeImage) }
-        return Triple(
-            results.first,
-            listOf(MetricsValue("Total", total)),
-            results.third
-        )
+        image: Bitmap,
+    ): Pair<List<Detection>, List<MetricsValue>> {
+        val (results, total) = measureTime { noMetricsAnalysis(image) }
+        return results.first to
+                listOf(MetricsValue("Total", total))
     }
 
     private fun noMetricsAnalysis(
-        imageProxy: ImageProxy,
-        storeImage: Boolean
-    ): Triple<List<Detection>, List<MetricsValue>, Bitmap?> {
-        // convert ImageProxy => Bitmap => OpenCV.Mat
-        var inputBitmap = imageProxy.toBitmap()
+        image: Bitmap,
+    ): Pair<List<Detection>, List<MetricsValue>> {
 
         Utils.bitmapToMat(
-            inputBitmap,
+            image,
             bitmapMat
         )
-
-        // convert ImageProxy => Bitmap => OpenCV.Mat
-        inputBitmap = imageProxy.toBitmap()
-
-        Utils.bitmapToMat(
-            inputBitmap,
-            bitmapMat
-        )
-
-        // close imageProxy so buffers can be reused
-        imageProxy.close()
 
         // resize image into expected size for model, apply letterboxing if needed
         letterBoxMat = resizeAndLetterBox(bitmapMat, modelInputWidth)
@@ -181,7 +150,7 @@ class YoloONNXDetector(
         results.close()
         tensor.close()
 
-        return Triple(filteredDetections, emptyList(), if (storeImage) inputBitmap else null)
+        return filteredDetections to emptyList()
     }
 
     /**

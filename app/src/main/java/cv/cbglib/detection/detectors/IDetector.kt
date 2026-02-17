@@ -1,5 +1,6 @@
 package cv.cbglib.detection.detectors
 
+import android.graphics.Bitmap
 import androidx.camera.core.ImageProxy
 
 interface IDetector {
@@ -7,6 +8,6 @@ interface IDetector {
      * Runs image detection analysis and returns [DetectorResult] containing detections, image information and
      * optionally metrics.
      */
-    fun detect(imageProxy: ImageProxy, storeImage: Boolean = false): DetectorResult
+    fun detect(image: Bitmap): DetectorResult
     fun destroy()
 }
