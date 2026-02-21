@@ -7,6 +7,8 @@ import org.opencv.core.Rect2d
  * Data class representing bounding boxes or detections, its highest rated class and confidence score for given class.
  * Values stored are in a model dimension representation, meaning that if [Detection] should be used in Kotlin drawing
  * algorithms and functions [toRectF] should be called.
+ *
+ * CBGLIB works and expects Detection objects to be center based, meaning the X,Y represent center of the detection.
  */
 data class Detection(
     val x: Float, // center x coordinate of bounding box

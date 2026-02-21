@@ -3,7 +3,6 @@ package cv.cbglib.detection
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -59,7 +58,7 @@ abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(c
     }
 
     /**
-     * Scales [Detection] to current screen, [cv.cbglib.detection.detectors.IDetector]s might use different size as
+     * Scales [Detection] to current screen, [cv.cbglib.detection.detectors.Detector]s might use different size as
      * inputs to models. Info about current image is stored in [imageDetails] that is updated alongside new
      * [detections] in [updateBoxes] function that is called by inside [ImageAnalyzer].
      */

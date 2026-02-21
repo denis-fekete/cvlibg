@@ -1,18 +1,16 @@
 package cv.cbglib.detection
 
-import android.os.SystemClock
-import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import cv.cbglib.detection.detectors.DetectorResult
-import cv.cbglib.detection.detectors.IDetector
+import cv.cbglib.detection.detectors.Detector
 import cv.cbglib.logging.MetricsOverlay
 
 class ImageAnalyzer(
     private val detectionOverlay: DetectionOverlay,
     private val metricsOverlay: MetricsOverlay? = null,
-    private val realtimeDetector: IDetector,
-    private val precisionDetector: IDetector,
+    private val realtimeDetector: Detector,
+    private val precisionDetector: Detector,
 ) : ImageAnalysis.Analyzer {
     private var resolutionInitialized = false
 
@@ -46,10 +44,10 @@ class ImageAnalyzer(
         val detectorResult: DetectorResult
 
         if (useRealtimeDetector) {
-            detectorResult = realtimeDetector.detect(bitmap)
+            detectorResult = realtimeDetector.run(bitmap)
             detectorRunning = false
         } else {
-            detectorResult = precisionDetector.detect(bitmap)
+            detectorResult = precisionDetector.run(bitmap)
             detectorRunning = false
 
             detectionOverlay.setBackgroundBitmap(bitmap)

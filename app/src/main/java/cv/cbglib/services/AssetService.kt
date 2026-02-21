@@ -23,9 +23,6 @@ class AssetService(
     private val pathToModels: String = "models",
     private val allowedExtensions: List<String> = listOf(".onnx")
 ) {
-    private var lastModelFullPath: String? = null
-    private lateinit var modelBytes: ByteArray
-
     val availableModels: Array<String> by lazy {
         try {
             val files = app.assets.list(pathToModels) ?: return@lazy emptyArray<String>()
@@ -57,13 +54,7 @@ class AssetService(
      */
     fun getModel(modelName: String, modelPath: String = "models/"): ByteArray {
         val fullPath = "$modelPath$modelName"
-        if (lastModelFullPath == fullPath) {
-            return modelBytes
-        } else {
-            modelBytes = app.assets.open(fullPath).readBytes()
-            lastModelFullPath = fullPath
-            return modelBytes
-        }
+        return app.assets.open(fullPath).readBytes()
     }
 
 

@@ -4,12 +4,12 @@ import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
 import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.NumberPicker
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
 import cv.cbglib.commonUI.ResizableSpinnerAdapter
+import cv.cbglib.detection.CameraController
 import cv.cbglib.fragments.BaseFragment
 import cv.cbglib.services.SettingsService
 import cv.demoapps.bangdemo.MyApp
@@ -30,7 +30,7 @@ class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
 
         setupSpinnerWithStringValues(
             R.id.realtimeModelSpinner,
-            assetService.availableModels,
+            CameraController.getModelNames(),
             settingsService.realtimeModel
         ) { selected: String ->
             settingsService.realtimeModel = selected
@@ -39,7 +39,7 @@ class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
 
         setupSpinnerWithStringValues(
             R.id.preciseModelSpinner,
-            assetService.availableModels,
+            CameraController.getModelNames(),
             settingsService.precisionModel
         ) { selected: String ->
             settingsService.precisionModel = selected
@@ -66,15 +66,16 @@ class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
      */
     private fun setupSpinnerWithStringValues(
         spinnerId: Int,
-        items: Array<String>,
+        items: Collection<String>,
         selectedItem: String?,
         onItemChanged: (String) -> Unit
     ) {
         val spinner = view?.findViewById<Spinner>(spinnerId)
+        val itemArray = items.toTypedArray()
 
         val modelAdapter = ResizableSpinnerAdapter(
             requireContext(),
-            items,
+            itemArray,
             TypedValue.COMPLEX_UNIT_SP,
             settingsService.fontSize.toFloat(),
         )
@@ -87,7 +88,7 @@ class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
             var lastSelected: String = ""
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val current = items[position]
+                val current = itemArray[position]
 
                 if (current == lastSelected) return
 
@@ -105,18 +106,18 @@ class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
     private fun setupPerformanceMonitorSwitch() {
 
         val switchShow = view?.findViewById<SwitchCompat>(R.id.showPerformanceSwitch)
-        switchShow?.isChecked = settingsService.showPerformance
+        switchShow?.isChecked = settingsService.showMetrics
 
         switchShow?.setOnCheckedChangeListener { _, isChecked ->
-            settingsService.showPerformance = isChecked
+            settingsService.showMetrics = isChecked
             settingsService.save()
         }
 
         val switchVerbose = view?.findViewById<SwitchCompat>(R.id.verbosePerformanceSwitch)
-        switchVerbose?.isChecked = settingsService.verbosePerformance
+        switchVerbose?.isChecked = settingsService.verboseMetrics
 
         switchVerbose?.setOnCheckedChangeListener { _, isChecked ->
-            settingsService.verbosePerformance = isChecked
+            settingsService.verboseMetrics = isChecked
             settingsService.save()
         }
     }

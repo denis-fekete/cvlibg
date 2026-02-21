@@ -1,8 +1,9 @@
 package cv.cbglib.detection.detectors.realtime
 
-import android.os.SystemClock
+import android.util.Log
 import cv.cbglib.detection.Detection
 import cv.cbglib.detection.ImageDetails
+import cv.cbglib.detection.detectors.Detector
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfFloat
@@ -19,7 +20,10 @@ import kotlin.collections.iterator
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-abstract class AbstractYoloDetector {
+/**
+ * Abstract class for all Yolo based detectors, containing common functions.
+ */
+abstract class AbstractYoloDetector(modelPath: String) : Detector(modelPath) {
     // "cache" variables to prevent initializing new object each new frame
     protected var bitmapMat = Mat()
     protected var resized = Mat()
@@ -38,7 +42,7 @@ abstract class AbstractYoloDetector {
      *
      * @return [Mat] containing scaled and letterboxed image
      */
-    protected fun resizeAndLetterBox(
+    protected open fun resizeAndLetterBox(
         src: Mat,
         newSize: Int,
         padValue: Scalar = Scalar(114.0, 114.0, 114.0),
@@ -76,7 +80,7 @@ abstract class AbstractYoloDetector {
         return letterBoxMat
     }
 
-    protected fun transpose(output: Array<FloatArray>): Array<FloatArray> {
+    protected open fun transpose(output: Array<FloatArray>): Array<FloatArray> {
         val rows = output.size
         val cols = output[0].size
         val transposed = Array(cols) { FloatArray(rows) }
@@ -95,7 +99,10 @@ abstract class AbstractYoloDetector {
      *
      * @return List of [Detection] that pass the [confThreshold] confidence score threshold
      */
-    protected fun extractDetections(results: Array<Array<FloatArray>>, confThreshold: Float = 0.6f): List<Detection> {
+    protected open fun extractDetections(
+        results: Array<Array<FloatArray>>,
+        confThreshold: Float = 0.6f
+    ): List<Detection> {
         // remove batch dimension as model only outputs one batch
         val rawDetections = results[0] // [values, detections]
 
@@ -135,7 +142,7 @@ abstract class AbstractYoloDetector {
     /**
      * Apply Non-Maximum Suppression (NMS) on list of [Detection]s. Implemented using OpenCV NSM function.
      */
-    protected fun applyNMS(
+    protected open fun applyNMS(
         detections: List<Detection>,
         confThreshold: Float,
         iouThreshold: Float
@@ -184,19 +191,12 @@ abstract class AbstractYoloDetector {
         return finalDetections
     }
 
-    protected inline fun <T> measureTime(action: () -> T): Pair<T, Long> {
-        val start = SystemClock.elapsedRealtimeNanos()
-        val result = action()
-        val end = SystemClock.elapsedRealtimeNanos()
-
-        return result to (end - start)
-    }
 
     /**
      * Clean up variables that are used as "cache" (not actual cache but frequently used where reallocation each frame
      * does not make sense).
      */
-    protected fun cleanup() {
+    override fun destroy() {
         bitmapMat.release()
         resized.release()
         letterBoxMat.release()

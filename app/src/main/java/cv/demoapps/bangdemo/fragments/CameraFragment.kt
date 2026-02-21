@@ -10,8 +10,7 @@ import cv.demoapps.bangdemo.R
 
 /**
  * [CameraFragment] is class derived from [AbstractCameraFragment]. Basic functionality can be achieved by simply
- * inheriting from class, giving current layout "ID". On detection click must be activated here! The
- * [CameraFragmentDirections] is needed for navigation unless other navigation system is used.
+ * inheriting from class, giving current layout "ID". On detection click must be activated here!
  */
 class CameraFragment : AbstractCameraFragment(R.layout.fragment_camera) {
     private val class2linkService by lazy {

@@ -14,7 +14,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.concurrent.futures.await
 import androidx.lifecycle.LifecycleOwner
-import cv.cbglib.detection.detectors.realtime.YoloONNXDetector
+import cv.cbglib.detection.detectors.Detector
 import cv.cbglib.logging.MetricsOverlay
 import cv.demoapps.bangdemo.MyApp
 import java.io.IOException
@@ -45,10 +45,6 @@ class CameraController(
     private lateinit var cameraProvider: ProcessCameraProvider
     private var imageAnalyzer: ImageAnalyzer? = null
     private lateinit var resolutionSelector: ResolutionSelector
-
-    private val assetService by lazy {
-        (context.applicationContext as MyApp).assetService
-    }
 
     private val settingsService by lazy {
         (context.applicationContext as MyApp).settingsService
@@ -103,30 +99,36 @@ class CameraController(
      * [cv.cbglib.services.SettingsService].
      */
     private fun setupImageAnalysis(): ImageAnalysis? {
-        val realtimeModel = getModelBytes(
-            settingsService.realtimeModel,
-            "Real-time detection"
-        ) ?: return null
+        val realtimeDetector: Detector
+        try {
+            realtimeDetector = createDetector(settingsService.realtimeModel)
+        } catch (exc: IOException) {
+            AlertDialog.Builder(context)
+                .setTitle("Error loading model for real time detector")
+                .setMessage("Model'${settingsService.realtimeModel}' could not be loaded. Please choose a different model in Settings.")
+                .setPositiveButton("OK", null)
+                .show()
 
-        val realtimeDetector = YoloONNXDetector(
-            realtimeModel,
-            settingsService.showPerformance,
-            settingsService.verbosePerformance
-        )
+            return null
+        }
 
-        val preciseModel = getModelBytes(
-            settingsService.precisionModel,
-            "Precise detection"
-        ) ?: return null
+        val preciseDetector: Detector
+        try {
+            preciseDetector = createDetector(settingsService.precisionModel)
+        } catch (exc: IOException) {
+            AlertDialog.Builder(context)
+                .setTitle("Error loading model for real precision detector")
+                .setMessage("Model'${settingsService.precisionModel}' could not be loaded. Please choose a different model in Settings.")
+                .setPositiveButton("OK", null)
+                .show()
 
-        val preciseDetector = YoloONNXDetector(
-            preciseModel,
-            settingsService.showPerformance,
-            settingsService.verbosePerformance
-        )
+            return null
+        }
+
+        realtimeDetector.build(context, settingsService.showMetrics, settingsService.verboseMetrics)
+        preciseDetector.build(context, settingsService.showMetrics, settingsService.verboseMetrics)
 
         imageAnalyzer = ImageAnalyzer(
-//            settingsService.framesToSkip,
             detectionOverlay,
             metricsOverlay,
             realtimeDetector,
@@ -162,24 +164,6 @@ class CameraController(
         imageAnalyzer?.preciseDetectAndPause()
     }
 
-    /**
-     * Returns [ByteArray] of model from [cv.cbglib.services.SettingsService]. Models must be stored inside
-     * `assets/models/`.
-     */
-    private fun getModelBytes(modelName: String, modelUseCase: String): ByteArray? {
-        try {
-            return assetService.getModel(modelName, "models/")
-        } catch (exc: IOException) {
-            AlertDialog.Builder(context)
-                .setTitle("Error loading model for $modelUseCase")
-                .setMessage("Model'$modelName' could not be loaded. Please choose a different model in Settings.")
-                .setPositiveButton("OK", null)
-                .show()
-
-            return null
-        }
-    }
-
     private fun getResolutionSelector(): ResolutionSelector {
         // minimal size with ration 16:9, fewer pixels, less accurate but, more performance
         return ResolutionSelector.Builder()
@@ -207,5 +191,30 @@ class CameraController(
             cameraExecutor.shutdown()
 
         imageAnalyzer?.destroy()
+    }
+
+    companion object {
+        private val modelNameToPathMap = mutableMapOf<String, String>()
+
+        private val modelPathToDetector = mutableMapOf<String, (String) -> Detector>()
+
+        fun addModel(modelName: String, modelPath: String, factory: (String) -> Detector) {
+            modelNameToPathMap[modelName] = modelPath
+            modelPathToDetector[modelPath] = factory
+        }
+
+        fun getModelNames(): List<String> {
+            return modelNameToPathMap.keys.toList()
+        }
+
+        fun createDetector(modelName: String): Detector {
+            val modelPath = modelNameToPathMap[modelName]
+                ?: throw IllegalArgumentException("Model with path with key: $modelName was not found")
+
+            val modelClass = modelPathToDetector[modelPath]
+                ?: throw IllegalArgumentException("Model with class with key: $modelName was not found")
+
+            return modelClass(modelPath)
+        }
     }
 }

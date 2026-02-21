@@ -11,8 +11,8 @@ class SettingsService(
     var fontSize: Int = 0
     lateinit var realtimeModel: String
     lateinit var precisionModel: String
-    var showPerformance: Boolean = false
-    var verbosePerformance: Boolean = false
+    var showMetrics: Boolean = false
+    var verboseMetrics: Boolean = false
     var framesToSkip: Int = 5
 
     var sPref: SharedPreferences = app.getSharedPreferences(
@@ -34,8 +34,8 @@ class SettingsService(
 
         fontSize = sPref.getInt("fontSize", 0)
 
-        showPerformance = sPref.getBoolean("showPerformance", false)
-        verbosePerformance = sPref.getBoolean("verbosePerformance", true)
+        showMetrics = sPref.getBoolean("showPerformance", false)
+        verboseMetrics = sPref.getBoolean("verbosePerformance", true)
 
         framesToSkip = sPref.getInt("framesToSkip", 0)
     }
@@ -53,8 +53,8 @@ class SettingsService(
 
             putInt("fontSize", fontSize)
 
-            putBoolean("showPerformance", showPerformance)
-            putBoolean("verbosePerformance", verbosePerformance)
+            putBoolean("showPerformance", showMetrics)
+            putBoolean("verbosePerformance", verboseMetrics)
 
             putInt("framesToSkip", framesToSkip)
 
@@ -62,6 +62,6 @@ class SettingsService(
     }
 
     companion object {
-        val languageOptions = arrayOf("Čestina", "English", "Slovenčina")
+        val languageOptions = listOf("Čestina", "English", "Slovenčina")
     }
 }

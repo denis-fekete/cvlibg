@@ -1,6 +1,7 @@
 package cv.cbglib;
 
 import android.app.Application
+import cv.cbglib.detection.detectors.Detector
 import cv.cbglib.services.AssetService
 import cv.cbglib.services.SettingsService
 
@@ -23,4 +24,26 @@ abstract class CustomApplication : Application() {
     val settingsService: SettingsService by lazy {
         SettingsService(this)
     }
+
+
+    override fun onCreate() {
+        super.onCreate()
+        setupModels()
+    }
+
+    /**
+     * Abstract function for setting up models that will be available for users to choose from. Override this function
+     * and add entries to [cv.cbglib.detection.CameraController.modelNameToPathMap] like this:
+     * ```
+     * CameraController.addModel("Name shown in app", "path to the model in assets/models/model_name.onnx") { path ->
+     *     DetectorClass(
+     *         path
+     *     )
+     * }
+     * ```
+     *
+     * for DetectorClass could be used [cv.cbglib.detection.detectors.realtime.YoloOnnx8to11Detector] or
+     * [cv.cbglib.detection.detectors.realtime.YoloOnnx26Detector]
+     */
+    abstract fun setupModels()
 }
