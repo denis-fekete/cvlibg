@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.util.AttributeSet
+import kotlin.math.max
 
 /**
  * [cv.cbglib.logging.MetricsOverlay] is derived from [LogOverlay], its purpose is draw performance related
@@ -18,6 +19,7 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
     private var cnt: Int = 0
     private val avgUpdateVal: Int = 10
     private var bgRect: RectF = RectF()
+    private var total: Long? = 0L
     private var textList = mutableListOf<String>()
 
     private val textBackgroundPaint = Paint().apply {
@@ -34,8 +36,15 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
         alpha = 200
     }
 
+    fun updateLogData(data: List<MetricsValue>, total: Long?) {
+        this.data.clear()
+        this.data.addAll(data)
+        this.total = total
+        invalidate()
+    }
+
     override fun drawLogs(canvas: Canvas) {
-        if (data.isEmpty()) return
+        if (data.isEmpty() && total == null) return
 
         val baseOffset = textPaint.fontMetrics.run { bottom - top }
         val startX = width * 0.02f
@@ -43,23 +52,21 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
         var offsetY = startY
         var maxWidth = 0f
 
-        // count average
-        if (cnt >= avgUpdateVal) {
-            average = tmpAverage / avgUpdateVal
-            tmpAverage = 0
-            cnt = 0
+        if (total != null) {
+            // count average
+            if (cnt >= avgUpdateVal) {
+                average = tmpAverage / avgUpdateVal
+                tmpAverage = 0
+                cnt = 0
+            }
+            tmpAverage += total!!
+            cnt++
         }
-        tmpAverage += data.last().value
-        cnt++
 
-        // measure all text widths
+        // measure all text widths and add it to the textList variable
         textList.clear()
-        for (i in 0 until data.size + 1) {
-            val text = if (i < data.size)
-                "${data[i].key}: ${data[i].value / 1_000_000.0}ms\n"
-            else
-                "Average (last $avgUpdateVal): ${average / 1_000_000}ms"
-
+        data.forEach {
+            val text = "${it.key}: ${it.value / 1_000_000.0}ms\n"
             textList.add(text)
 
             val textWidth = textPaint.measureText(text)
@@ -68,9 +75,17 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
             }
         }
 
+        if (total != null) {
+            textList.add("Total : ${total!! / 1_000_000}ms")
+            maxWidth = max(maxWidth, textPaint.measureText(textList.last()))
+
+            textList.add("Average (last $avgUpdateVal): ${average / 1_000_000}ms")
+            maxWidth = max(maxWidth, textPaint.measureText(textList.last()))
+        }
+
         // draw background rectangle
         val padding = 8
-        val textHeight = (data.size + 1) * baseOffset // +1 for Average
+        val textHeight = (data.size + 2) * baseOffset // +1 for Average, +1 for total
 
         bgRect.left = startX - padding
         bgRect.top = startY - baseOffset - padding

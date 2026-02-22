@@ -1,5 +1,6 @@
 package cv.cbglib.detection
 
+import android.os.SystemClock
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import cv.cbglib.detection.detectors.DetectorResult
@@ -43,6 +44,7 @@ class ImageAnalyzer(
 
         val detectorResult: DetectorResult
 
+        val totalTimeStart = SystemClock.elapsedRealtimeNanos()
         if (useRealtimeDetector) {
             detectorResult = realtimeDetector.run(bitmap)
             detectorRunning = false
@@ -53,12 +55,13 @@ class ImageAnalyzer(
             detectionOverlay.setBackgroundBitmap(bitmap)
             pauseAnalysis = true
         }
+        val totalTimeEnd = SystemClock.elapsedRealtimeNanos()
 
-
-        if (detectorResult.metrics != null) {
-            metricsOverlay?.post {
-                metricsOverlay.updateLogData(detectorResult.metrics)
-            }
+        metricsOverlay?.post {
+            metricsOverlay.updateLogData(
+                detectorResult.metrics,
+                if (detectorResult.showMetrics) totalTimeEnd - totalTimeStart else null
+            )
         }
 
         // add new [Detection] boxes to draw and invalidate View that is drawing them
