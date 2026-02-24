@@ -9,11 +9,37 @@ import cv.demoapps.bangdemo.MyApp
 /**
  * Abstract class for all classes that will detect objects. Should work as a common interface for all derived Detectors.
  */
-abstract class Detector(protected val modelPath: String) {
+abstract class Detector(
+    protected val modelPath: String,
+    protected val confThreshold: Float = 0.6f,
+    protected val applyNMS: Boolean = true,
+    protected val nmsThreshold: Float = 0.5f,
+) {
     private var isBuilt: Boolean = false
-    protected var modelBytes: ByteArray? = null
     protected var showMetrics: Boolean = false
     protected var verboseMetrics: Boolean = false
+
+    /**
+     * Abstract function that takes [Bitmap] containing camera image as input and returns [DetectorResult].
+     *
+     * @param image [Bitmap] containing input image that inference engine will run object detection model on.
+     *
+     * @return [DetectorResult] object containing list of detection, image info and performance metrics (optional)
+     */
+    protected abstract fun detect(image: Bitmap): DetectorResult
+
+    /**
+     * Destroys allocated memory of the [Detector]. Must be called to prevent memory leaks!
+     */
+    abstract fun destroy()
+
+    /**
+     * Internal build function that is called on Detector build. In this function the Detector MUST load model and be
+     * finalized and ready to perform detections. Throws an exception on error.
+     *
+     * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
+     */
+    protected abstract fun runtimeSetup(assetService: AssetService)
 
     /**
      * Runs image detection analysis and returns [DetectorResult] containing detections, image information and
@@ -27,27 +53,23 @@ abstract class Detector(protected val modelPath: String) {
         return detect(image)
     }
 
-    protected abstract fun detect(image: Bitmap): DetectorResult
-
-    /**
-     * Destroys allocated memory of the [Detector]. Must be called to prevent memory leaks!
-     */
-    abstract fun destroy()
-
-
     /**
      * Loads model and builds it. Throws an exception on error.
      *
-     * @param context Context required to get load model bytes from assets.
+     * @param context Context used for loading [AssetService], from which a model will be loaded.
      * @param showMetrics Boolean value whenever the metrics should be shown.
      * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
      */
     fun build(context: Context, showMetrics: Boolean = false, verboseMetrics: Boolean = false) {
         if (isBuilt) return
 
+        this.showMetrics = showMetrics
+        this.verboseMetrics = verboseMetrics
         val assetService = (context.applicationContext as MyApp).assetService
+
         build(assetService, showMetrics, verboseMetrics)
     }
+
 
     /**
      * Loads model and builds it. Throws an exception on error.
@@ -59,34 +81,14 @@ abstract class Detector(protected val modelPath: String) {
     fun build(assetService: AssetService, showMetrics: Boolean = false, verboseMetrics: Boolean = false) {
         if (isBuilt) return
 
-        val modelBytes = assetService.getModel(modelPath)
-        build(modelBytes, showMetrics, verboseMetrics)
-    }
-
-    /**
-     * Loads model and builds it. Throws an exception on error.
-     *
-     * @param modelBytes [ByteArray] containing model loaded as bytes.
-     * @param showMetrics Boolean value whenever the metrics should be shown.
-     * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
-     */
-    private fun build(modelBytes: ByteArray, showMetrics: Boolean = false, verboseMetrics: Boolean = false) {
-        if (isBuilt) return
-
         this.showMetrics = showMetrics
         this.verboseMetrics = verboseMetrics
-        this.modelBytes = modelBytes
 
-        afterModelLoaded()
+        runtimeSetup(assetService)
 
         isBuilt = true
     }
 
-    /**
-     * Function called after model bytes were loaded. Make any preparations that would be called inside of init{} for
-     * this model.
-     */
-    abstract fun afterModelLoaded()
 
     /**
      * Generic function that performs action and measures time if [measure] is true. Returns the result of action and

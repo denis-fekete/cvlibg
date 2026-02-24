@@ -15,6 +15,7 @@ import androidx.camera.view.PreviewView
 import androidx.concurrent.futures.await
 import androidx.lifecycle.LifecycleOwner
 import cv.cbglib.detection.detectors.Detector
+import cv.cbglib.detection.detectors.DetectorRegistry
 import cv.cbglib.logging.MetricsOverlay
 import cv.demoapps.bangdemo.MyApp
 import java.io.IOException
@@ -101,7 +102,7 @@ class CameraController(
     private fun setupImageAnalysis(): ImageAnalysis? {
         val realtimeDetector: Detector
         try {
-            realtimeDetector = createDetector(settingsService.realtimeModel)
+            realtimeDetector = DetectorRegistry.createDetector(settingsService.realtimeModel)
         } catch (exc: IOException) {
             AlertDialog.Builder(context)
                 .setTitle("Error loading model for real time detector")
@@ -114,7 +115,7 @@ class CameraController(
 
         val preciseDetector: Detector
         try {
-            preciseDetector = createDetector(settingsService.precisionModel)
+            preciseDetector = DetectorRegistry.createDetector(settingsService.precisionModel)
         } catch (exc: IOException) {
             AlertDialog.Builder(context)
                 .setTitle("Error loading model for real precision detector")
@@ -191,30 +192,5 @@ class CameraController(
             cameraExecutor.shutdown()
 
         imageAnalyzer?.destroy()
-    }
-
-    companion object {
-        private val modelNameToPathMap = mutableMapOf<String, String>()
-
-        private val modelPathToDetector = mutableMapOf<String, (String) -> Detector>()
-
-        fun addModel(modelName: String, modelPath: String, factory: (String) -> Detector) {
-            modelNameToPathMap[modelName] = modelPath
-            modelPathToDetector[modelPath] = factory
-        }
-
-        fun getModelNames(): List<String> {
-            return modelNameToPathMap.keys.toList()
-        }
-
-        fun createDetector(modelName: String): Detector {
-            val modelPath = modelNameToPathMap[modelName]
-                ?: throw IllegalArgumentException("Model with path with key: $modelName was not found")
-
-            val modelClass = modelPathToDetector[modelPath]
-                ?: throw IllegalArgumentException("Model with class with key: $modelName was not found")
-
-            return modelClass(modelPath)
-        }
     }
 }

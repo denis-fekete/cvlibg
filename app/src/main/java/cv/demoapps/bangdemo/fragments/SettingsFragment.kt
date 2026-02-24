@@ -9,7 +9,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
 import cv.cbglib.commonUI.ResizableSpinnerAdapter
-import cv.cbglib.detection.CameraController
+import cv.cbglib.detection.detectors.DetectorRegistry
 import cv.cbglib.fragments.BaseFragment
 import cv.cbglib.services.SettingsService
 import cv.demoapps.bangdemo.MyApp
@@ -30,7 +30,7 @@ class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
 
         setupSpinnerWithStringValues(
             R.id.realtimeModelSpinner,
-            CameraController.getModelNames(),
+            DetectorRegistry.getModelNames(),
             settingsService.realtimeModel
         ) { selected: String ->
             settingsService.realtimeModel = selected
@@ -39,7 +39,7 @@ class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
 
         setupSpinnerWithStringValues(
             R.id.preciseModelSpinner,
-            CameraController.getModelNames(),
+            DetectorRegistry.getModelNames(),
             settingsService.precisionModel
         ) { selected: String ->
             settingsService.precisionModel = selected

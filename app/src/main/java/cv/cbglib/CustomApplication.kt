@@ -1,7 +1,6 @@
 package cv.cbglib;
 
 import android.app.Application
-import cv.cbglib.detection.detectors.Detector
 import cv.cbglib.services.AssetService
 import cv.cbglib.services.SettingsService
 
@@ -42,8 +41,8 @@ abstract class CustomApplication : Application() {
      * }
      * ```
      *
-     * for DetectorClass could be used [cv.cbglib.detection.detectors.realtime.YoloOnnx8to11Detector] or
-     * [cv.cbglib.detection.detectors.realtime.YoloOnnx26Detector]
+     * for DetectorClass could be used [cv.cbglib.detection.detectors.onnx.YoloOnnx8to11Detector] or
+     * [cv.cbglib.detection.detectors.onnx.Yolo26OnnxDetector]
      */
     abstract fun setupModels()
 }

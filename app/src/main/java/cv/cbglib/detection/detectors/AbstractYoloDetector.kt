@@ -1,9 +1,7 @@
-package cv.cbglib.detection.detectors.realtime
+package cv.cbglib.detection.detectors
 
-import android.util.Log
 import cv.cbglib.detection.Detection
 import cv.cbglib.detection.ImageDetails
-import cv.cbglib.detection.detectors.Detector
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfFloat
@@ -14,8 +12,6 @@ import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.dnn.Dnn
 import org.opencv.imgproc.Imgproc
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.collections.iterator
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -23,7 +19,12 @@ import kotlin.math.roundToInt
 /**
  * Abstract class for all Yolo based detectors, containing common functions.
  */
-abstract class AbstractYoloDetector(modelPath: String) : Detector(modelPath) {
+abstract class AbstractYoloDetector(
+    modelPath: String,
+    confThreshold: Float = 0.6f,
+    applyNMS: Boolean = true,
+    nmsThreshold: Float = 0.5f
+) : Detector(modelPath, confThreshold, applyNMS, nmsThreshold) {
     // "cache" variables to prevent initializing new object each new frame
     protected var bitmapMat = Mat()
     protected var resized = Mat()
@@ -92,61 +93,22 @@ abstract class AbstractYoloDetector(modelPath: String) : Detector(modelPath) {
         return transposed
     }
 
-    /**
-     * Extracts list of [Detection] objects from OrtSession result.
-     * Results are in format `[batch, values, detections]` where the values are:
-     * x, y, w, h, class0 confidence, class1 confidence, class2 confidence...
-     *
-     * @return List of [Detection] that pass the [confThreshold] confidence score threshold
-     */
-    protected open fun extractDetections(
-        results: Array<Array<FloatArray>>,
-        confThreshold: Float = 0.6f
-    ): List<Detection> {
-        // remove batch dimension as model only outputs one batch
-        val rawDetections = results[0] // [values, detections]
-
-        // transpose from [values, detections] into more user friendly [detections, values]
-        val transposedDetections = transpose(rawDetections)
-
-        val detections = mutableListOf<Detection>()
-
-        for (value in transposedDetections) {
-            val classScores = value.sliceArray(4 until value.size)
-
-            var bestScore = -Float.MAX_VALUE
-            var bestClass = -1
-
-            for (i in classScores.indices) {
-                val score = classScores[i]
-                if (score > bestScore) {
-                    bestScore = score
-                    bestClass = i
-                }
-            }
-
-            if (bestScore < confThreshold)
-                continue
-
-            val x = value[0]
-            val y = value[1]
-            val w = value[2]
-            val h = value[3]
-
-            detections.add(Detection(x, y, w, h, bestClass, bestScore))
-        }
-
-        return detections
-    }
 
     /**
      * Apply Non-Maximum Suppression (NMS) on list of [Detection]s. Implemented using OpenCV NSM function.
+     * The thresholding value for NMS is taken from [nmsThreshold] (see [Detector]). If [applyNMS] is set to false the
+     * input list will be returned.
+     *
+     * @param detections List of detections that will be filtered.
+     * @param threshold NMS threshold value, by default [nmsThreshold] from [Detector] is used.
+     * @return List of detections filtered by NMS algorithm.
      */
-    protected open fun applyNMS(
+    protected open fun nmsFilter(
         detections: List<Detection>,
-        confThreshold: Float,
-        iouThreshold: Float
+        threshold: Float = nmsThreshold
     ): List<Detection> {
+        if (!applyNMS) return detections
+
         if (detections.isEmpty()) return emptyList()
 
         val finalDetections = mutableListOf<Detection>()
@@ -173,7 +135,7 @@ abstract class AbstractYoloDetector(modelPath: String) : Detector(modelPath) {
                 matRects,
                 matScores,
                 confThreshold,
-                iouThreshold,
+                nmsThreshold,
                 matIndices
             )
 
@@ -190,8 +152,7 @@ abstract class AbstractYoloDetector(modelPath: String) : Detector(modelPath) {
 
         return finalDetections
     }
-
-
+    
     /**
      * Clean up variables that are used as "cache" (not actual cache but frequently used where reallocation each frame
      * does not make sense).

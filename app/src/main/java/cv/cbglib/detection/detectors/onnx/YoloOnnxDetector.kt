@@ -1,4 +1,4 @@
-package cv.cbglib.detection.detectors.realtime
+package cv.cbglib.detection.detectors.onnx
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
@@ -6,8 +6,10 @@ import ai.onnxruntime.OrtSession
 import android.graphics.Bitmap
 import android.util.Log
 import cv.cbglib.detection.Detection
+import cv.cbglib.detection.detectors.AbstractYoloDetector
 import cv.cbglib.detection.detectors.DetectorResult
 import cv.cbglib.logging.MetricsValue
+import cv.cbglib.services.AssetService
 import org.opencv.android.Utils
 import org.opencv.core.Core
 import org.opencv.core.CvType
@@ -18,15 +20,21 @@ import java.nio.FloatBuffer
 /**
  * Abstract class for all Yolo based detectors that use Onnx Runtime, containing common functions.
  */
-abstract class AbstractYoloOnnxDetector(
-    modelPath: String
-) : AbstractYoloDetector(modelPath) {
+open class YoloOnnxDetector(
+    modelPath: String,
+    confThreshold: Float = 0.6f,
+    applyNMS: Boolean = true,
+    nmsThreshold: Float = 0.5f
+
+) : AbstractYoloDetector(modelPath, confThreshold, applyNMS, nmsThreshold) {
     protected lateinit var ortSession: OrtSession
     protected var ortEnvironment: OrtEnvironment = OrtEnvironment.getEnvironment()
     protected lateinit var inputName: String
     protected val modelInputWidth = 640
 
-    override fun afterModelLoaded() {
+    override fun runtimeSetup(assetService: AssetService) {
+        val modelBytes = assetService.getModel(modelPath)
+
         // try to use Nnapi for hardware accelerated detection, on fail use CPU
         try {
             val sessionOptions = OrtSession.SessionOptions()
@@ -39,20 +47,14 @@ abstract class AbstractYoloOnnxDetector(
         }
 
         inputName = ortSession.inputNames.first()
-
-        // fixes running out of memory for low-end devices, frees heap
-        this.modelBytes = null
     }
 
-    private fun analysisFunction(
-        image: Bitmap
-    ): Pair<List<Detection>, List<MetricsValue>> {
+    override fun detect(image: Bitmap): DetectorResult {
         // convert Bitmap => OpenCV.Mat
         Utils.bitmapToMat(
             image,
             bitmapMat
         )
-
         // resize image into expected size for model, apply letterboxing if needed
         val (letterBoxMat, timeLetterboxing) = measureTime(showMetrics) {
             resizeAndLetterBox(bitmapMat, modelInputWidth)
@@ -61,6 +63,10 @@ abstract class AbstractYoloOnnxDetector(
         // create tensor from Mat
         val (tensor, timeTensor) = measureTime(showMetrics) { matToTensor(letterBoxMat) }
 
+        if (tensor == null) {
+            return DetectorResult(emptyList(), imageDetails, false, emptyList())
+        }
+
         // run model on tensor, and get result
         val (results, timeDetection) = measureTime(showMetrics) { ortSession.run(mapOf(inputName to tensor)) }
 
@@ -68,58 +74,96 @@ abstract class AbstractYoloOnnxDetector(
         val result3D = results[0].value as Array<Array<FloatArray>> // [batch, values, detections]
 
         // extract bounding boxes [Detection] objects from results that
-        val (detections, timeExtractDetections) = measureTime(showMetrics) { extractDetections(result3D, 0.6f) }
+        val (detections, timeExtractDetections) = measureTime(showMetrics) { thresholdingFilter(result3D) }
 
         // apply NMS onto results
-        val (filteredDetections, timeNMS) = measureTime(showMetrics) { applyNMS(detections, 0.6f, 0.5f) }
+        val (filteredDetections, timeNMS) = measureTime(showMetrics) { nmsFilter(detections) }
 
         results.close()
         tensor.close()
 
-        return filteredDetections to if (showMetrics) {
-            if (verboseMetrics) { // show verbose metrics
-                listOf(
-                    MetricsValue("LetterBox", timeLetterboxing),
-                    MetricsValue("Tensor", timeTensor),
-                    MetricsValue("Detection", timeDetection),
-                    MetricsValue("Extract detections", timeExtractDetections),
-                    MetricsValue("NMS", timeNMS),
-                    MetricsValue(
-                        "Total",
-                        timeLetterboxing + timeTensor + timeDetection + timeExtractDetections + timeNMS
-                    )
-                )
-            } else { // show metrics but only basic (total)
-                listOf(
-                    MetricsValue(
-                        "Total",
-                        timeLetterboxing + timeTensor + timeDetection + timeExtractDetections + timeNMS
-                    )
-                )
-            }
-        } else { // no metrics
+        val metricsList = if (showMetrics && verboseMetrics) {
+            listOf(
+                MetricsValue("LetterBox", timeLetterboxing),
+                MetricsValue("Tensor", timeTensor),
+                MetricsValue("Detection", timeDetection),
+                MetricsValue("Extract detections", timeExtractDetections),
+                MetricsValue("NMS", timeNMS),
+            )
+        } else { // show metrics but only basic (total)
             emptyList()
         }
-    }
-
-    override fun detect(image: Bitmap): DetectorResult {
-        val (detections, metricsList) = analysisFunction(image)
 
         return DetectorResult(
-            detections,
+            filteredDetections,
             imageDetails,
+            showMetrics = showMetrics,
             metricsList
         )
     }
 
 
     /**
+     * Extracts list of [cv.cbglib.detection.Detection] objects from OrtSession result. Value for thresholding is
+     * Results are in format `[batch, values, detections]` where the values are:
+     * x, y, w, h, class0 confidence, class1 confidence, class2 confidence...
+     *
+     * By default, the [threshold] value is determined by the [confThreshold] (see [cv.cbglib.detection.detectors.Detector]).
+     *
+     * @param results Onnx runtime results in array format that will be filtered.
+     * @return List of [cv.cbglib.detection.Detection] that pass the [confThreshold] confidence score threshold
+     */
+    protected open fun thresholdingFilter(
+        results: Array<Array<FloatArray>>,
+        threshold: Float = confThreshold
+    ): List<Detection> {
+        // remove batch dimension as model only outputs one batch
+        val rawDetections = results[0] // [values, detections]
+
+        // transpose from [values, detections] into more user friendly [detections, values]
+        val transposedDetections = transpose(rawDetections)
+
+        val detections = mutableListOf<Detection>()
+
+        for (value in transposedDetections) {
+            val classScores = value.sliceArray(4 until value.size)
+
+            var bestScore = 0f
+            var bestClass = -1
+
+            for (i in classScores.indices) {
+                val score = classScores[i]
+                if (score > bestScore) {
+                    bestScore = score
+                    bestClass = i
+                }
+            }
+
+            if (bestScore < threshold)
+                continue
+
+            val x = value[0]
+            val y = value[1]
+            val w = value[2]
+            val h = value[3]
+
+            detections.add(Detection(x, y, w, h, bestClass, bestScore))
+        }
+
+        return detections
+    }
+
+    /**
      * Converts OpenCV Mat containing input image into an OnnxTensor that can be put into OnnxSession for object
      * detection. OpenCV uses HWC format, where the ONNX expects and CHW format, for that and image has to converted.
      *
+     * @param mat input OpenCV [Mat] that will transform into [OnnxTensor]
      * @return [OnnxTensor] that can be put as an input to OnnxRuntime model
      */
-    protected fun matToTensor(mat: Mat): OnnxTensor {
+    protected fun matToTensor(mat: Mat): OnnxTensor? {
+        if (mat.empty())
+            return null
+
         // convert from RGB Alpha into RGB
         Imgproc.cvtColor(mat, rgbMat, Imgproc.COLOR_RGBA2RGB)
 
