@@ -20,19 +20,19 @@
                 android:layout_height = "match_parent"/>
 
         <cv.demoapps.bangdemo.views.BangDetectionOverlay
-                android:id = "@+id/overlayView"
+                android:id = "@+id/detectionOverlay"
                 android:layout_width = "match_parent"
                 android:layout_height = "match_parent"/>
 
         <cv.cbglib.logging.MetricsOverlay
-                android:id = "@+id/performanceLogOverlay"
+                android:id = "@+id/metricsOverlay"
                 android:layout_width = "match_parent"
                 android:layout_height = "match_parent"/>
 
     </FrameLayout>
 
     <ImageButton
-            android:id = "@+id/preciseDetectionButton"
+            android:id = "@+id/startQualityDetectionBtn"
             android:layout_width = "wrap_content"
             android:layout_height = "wrap_content"
             android:background = "@null"
@@ -45,7 +45,7 @@
             android:layout_marginBottom = "100dp"/>
 
     <ImageButton
-            android:id = "@+id/exitPreciseDetectionButton"
+            android:id = "@+id/endQualityDetectionBtn"
             android:layout_width = "wrap_content"
             android:layout_height = "wrap_content"
             android:background = "@null"

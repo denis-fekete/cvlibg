@@ -1,8 +1,10 @@
 package cv.cbglib;
 
 import android.app.Application
+import android.util.Log
 import cv.cbglib.services.AssetService
 import cv.cbglib.services.SettingsService
+import org.opencv.android.OpenCVLoader
 
 /**
  * Application that initializes [AssetService], needed for the [cv.cbglib.fragments.AbstractCameraFragment]. For use
@@ -27,7 +29,13 @@ abstract class CustomApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        setupModels()
+        registerModels()
+
+        if (OpenCVLoader.initLocal()) {
+            Log.d("OpenCV", "OpenCV loaded successfully")
+        } else {
+            Log.e("OpenCV", "Failed to load OpenCV")
+        }
     }
 
     /**
@@ -44,5 +52,5 @@ abstract class CustomApplication : Application() {
      * for DetectorClass could be used [cv.cbglib.detection.detectors.onnx.YoloOnnx8to11Detector] or
      * [cv.cbglib.detection.detectors.onnx.Yolo26OnnxDetector]
      */
-    abstract fun setupModels()
+    abstract fun registerModels()
 }

@@ -3,6 +3,7 @@ package cv.cbglib.detection.detectors
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.SystemClock
+import android.util.Size
 import cv.cbglib.services.AssetService
 import cv.demoapps.bangdemo.MyApp
 
@@ -14,6 +15,7 @@ abstract class Detector(
     protected val confThreshold: Float = 0.6f,
     protected val applyNMS: Boolean = true,
     protected val nmsThreshold: Float = 0.5f,
+    public val inputDataSize: Size
 ) {
     private var isBuilt: Boolean = false
     protected var showMetrics: Boolean = false
@@ -31,7 +33,7 @@ abstract class Detector(
     /**
      * Destroys allocated memory of the [Detector]. Must be called to prevent memory leaks!
      */
-    abstract fun destroy()
+    open fun destroy() {}
 
     /**
      * Internal build function that is called on Detector build. In this function the Detector MUST load model and be

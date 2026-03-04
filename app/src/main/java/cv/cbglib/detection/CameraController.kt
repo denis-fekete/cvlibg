@@ -34,18 +34,22 @@ import java.util.concurrent.Executors
  *
  * Function [stop] must be called, otherwise a detached thread might cause memory errors.
  */
-class CameraController(
+open class CameraController(
     private val context: Context,
     private val lifecycleOwner: LifecycleOwner,
     private val previewView: PreviewView,
     private val detectionOverlay: DetectionOverlay,
-    private val metricsOverlay: MetricsOverlay
+    private val metricsOverlay: MetricsOverlay?,
+    public val useRealtimeDetector: Boolean = true,
+    public val useQualityDetector: Boolean = true
 ) {
-    private var cameraControllerInitialized: Boolean = false
+    private var cameraExecutorInitialized: Boolean = false
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var cameraProvider: ProcessCameraProvider
     private var imageAnalyzer: ImageAnalyzer? = null
     private lateinit var resolutionSelector: ResolutionSelector
+    private var realtimeDetector: Detector? = null
+    private var qualityDetector: Detector? = null
 
     private val settingsService by lazy {
         (context.applicationContext as MyApp).settingsService
@@ -53,91 +57,26 @@ class CameraController(
 
     /**
      * Initializes all camera and image analysis related options.
-     * Source [source](https://developer.android.com/media/camera/camerax/analyze#operating_modes)
      */
-    suspend fun start() {
-        cameraExecutor = Executors.newSingleThreadExecutor()
-        cameraControllerInitialized = true
-
+    open suspend fun start() {
         cameraProvider = ProcessCameraProvider.getInstance(context).await()
+
+        // setup detectors, must be called before the getResolutionSelector() as it uses detectors for choosing the resolution
+        setupDetectors()
+
         resolutionSelector = getResolutionSelector()
-
-        val imageAnalysis = setupImageAnalysis()
-
-        val preview = Preview.Builder()
-            .setResolutionSelector(resolutionSelector)
-            .build()
-        preview.surfaceProvider = previewView.surfaceProvider
-
-        try {
-            if (imageAnalysis != null) {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    lifecycleOwner,
-                    CameraSelector.DEFAULT_BACK_CAMERA,
-                    preview,
-                    imageAnalysis
-                )
-            } else {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    lifecycleOwner,
-                    CameraSelector.DEFAULT_BACK_CAMERA,
-                    preview,
-                )
-            }
-        } catch (exc: Exception) {
-            AlertDialog.Builder(context)
-                .setTitle("Error")
-                .setMessage("Exception during camera initialization: ${exc.message}")
-                .setPositiveButton("OK", null)
-                .show()
-        }
-    }
-
-    /**
-     * Sets up image analysis for realtime (low latency) detection. Uses values stored in
-     * [cv.cbglib.services.SettingsService].
-     */
-    private fun setupImageAnalysis(): ImageAnalysis? {
-        val realtimeDetector: Detector
-        try {
-            realtimeDetector = DetectorRegistry.createDetector(settingsService.realtimeModel)
-        } catch (exc: IOException) {
-            AlertDialog.Builder(context)
-                .setTitle("Error loading model for real time detector")
-                .setMessage("Model'${settingsService.realtimeModel}' could not be loaded. Please choose a different model in Settings.")
-                .setPositiveButton("OK", null)
-                .show()
-
-            return null
-        }
-
-        val preciseDetector: Detector
-        try {
-            preciseDetector = DetectorRegistry.createDetector(settingsService.precisionModel)
-        } catch (exc: IOException) {
-            AlertDialog.Builder(context)
-                .setTitle("Error loading model for real precision detector")
-                .setMessage("Model'${settingsService.precisionModel}' could not be loaded. Please choose a different model in Settings.")
-                .setPositiveButton("OK", null)
-                .show()
-
-            return null
-        }
-
-        realtimeDetector.build(context, settingsService.showMetrics, settingsService.verboseMetrics)
-        preciseDetector.build(context, settingsService.showMetrics, settingsService.verboseMetrics)
 
         imageAnalyzer = ImageAnalyzer(
             detectionOverlay,
             metricsOverlay,
             realtimeDetector,
-            preciseDetector
+            qualityDetector
         )
 
-        if (imageAnalyzer == null)
-            return null
+        if (imageAnalyzer == null) return
+
+        cameraExecutor = Executors.newSingleThreadExecutor()
+        cameraExecutorInitialized = true
 
         // keep only latest, if image analyzer is not keeping up (calculations take too much time), then keep only the
         // most recent image instead of buffering them
@@ -148,29 +87,111 @@ class CameraController(
             .build()
         imageAnalysis.setAnalyzer(cameraExecutor, imageAnalyzer!!)
 
-        return imageAnalysis
+        val preview = Preview.Builder()
+            .setResolutionSelector(resolutionSelector)
+            .build()
+        preview.surfaceProvider = previewView.surfaceProvider
+
+        try {
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner,
+                CameraSelector.DEFAULT_BACK_CAMERA,
+                preview,
+                imageAnalysis
+            )
+        } catch (exc: Exception) {
+            AlertDialog.Builder(context)
+                .setTitle("Error")
+                .setMessage("Exception during camera initialization: ${exc.message}")
+                .setPositiveButton("OK", null)
+                .show()
+        }
     }
 
     /**
      * Starts realtime/faster detection method
      */
     fun realtimeDetection() {
-        imageAnalyzer?.resumeAnalysis()
+        imageAnalyzer?.resumeRealtimeAnalysis()
     }
 
     /**
      * Starts precises/slower detection method
      */
-    fun preciseDetection() {
-        imageAnalyzer?.preciseDetectAndPause()
+    fun qualityDetection() {
+        imageAnalyzer?.performSingleQualityAnalysis()
     }
 
-    private fun getResolutionSelector(): ResolutionSelector {
+    /**
+     * Destroys [cameraExecutor] that is running on different thread, to prevent memory leaks, this must be called!
+     */
+    open fun stop() {
+        if (cameraExecutorInitialized)
+            cameraExecutor.shutdown()
+
+        imageAnalyzer?.destroy()
+    }
+
+    /**
+     * Sets up image analysis for realtime (low latency) detection. Uses values stored in
+     * [cv.cbglib.services.SettingsService].
+     */
+    private fun setupDetectors() {
+        if (useRealtimeDetector) {
+            try {
+                realtimeDetector = DetectorRegistry.createDetector(settingsService.realtimeModel)
+            } catch (exc: IOException) {
+                AlertDialog.Builder(context)
+                    .setTitle("Error loading model for real time detector")
+                    .setMessage("Model'${settingsService.realtimeModel}' could not be loaded. Please choose a different model in Settings.")
+                    .setPositiveButton("OK", null)
+                    .show()
+
+                return
+            }
+
+            realtimeDetector?.build(context, settingsService.showMetrics, settingsService.verboseMetrics)
+        }
+
+        if (useQualityDetector) {
+            try {
+                qualityDetector = DetectorRegistry.createDetector(settingsService.precisionModel)
+            } catch (exc: IOException) {
+                AlertDialog.Builder(context)
+                    .setTitle("Error loading model for real precision detector")
+                    .setMessage("Model'${settingsService.precisionModel}' could not be loaded. Please choose a different model in Settings.")
+                    .setPositiveButton("OK", null)
+                    .show()
+
+                return
+            }
+
+            qualityDetector?.build(context, settingsService.showMetrics, settingsService.verboseMetrics)
+        }
+    }
+
+    protected open fun getResolutionSelector(): ResolutionSelector {
+        val qualityDetectorSize: Size = qualityDetector?.inputDataSize ?: Size(0, 0)
+        val realtimeDetectorSize: Size = realtimeDetector?.inputDataSize ?: Size(0, 0)
+
+        val rtDetectorPixelCount = realtimeDetectorSize.width * realtimeDetectorSize.height
+        val qDetectorPixelCount = qualityDetectorSize.width * qualityDetectorSize.height
+
+        val resultSize =
+            if (qDetectorPixelCount > rtDetectorPixelCount && qualityDetector != null) {
+                qualityDetector!!.inputDataSize
+            } else if (realtimeDetector != null) {
+                realtimeDetector!!.inputDataSize
+            } else {
+                Size(640, 480)
+            }
+
         // minimal size with ration 16:9, fewer pixels, less accurate but, more performance
         return ResolutionSelector.Builder()
             .setResolutionStrategy(
                 ResolutionStrategy(
-                    Size(640, 480),
+                    resultSize,
                     ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
                 )
             )
@@ -181,16 +202,5 @@ class CameraController(
                 )
             )
             .build()
-    }
-
-
-    /**
-     * Destroys [cameraExecutor] that is running on different thread, to prevent memory leaks, this must be called!
-     */
-    fun stop() {
-        if (cameraControllerInitialized)
-            cameraExecutor.shutdown()
-
-        imageAnalyzer?.destroy()
     }
 }

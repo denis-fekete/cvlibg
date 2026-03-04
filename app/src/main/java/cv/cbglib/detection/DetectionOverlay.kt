@@ -18,7 +18,7 @@ abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(c
      * List containing current [Detection] objects that are on screen.
      */
     protected val detections = mutableListOf<Detection>()
-    private var imageDetails = ImageDetails(1f, 0, 0)
+    protected var imageDetails = ImageDetails(1f, 0, 0)
     private var cameraWidth: Int = 0
     private var cameraHeight: Int = 0
     private var scale: Float = 1f

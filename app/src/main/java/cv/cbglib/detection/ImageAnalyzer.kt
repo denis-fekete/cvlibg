@@ -10,8 +10,8 @@ import cv.cbglib.logging.MetricsOverlay
 class ImageAnalyzer(
     private val detectionOverlay: DetectionOverlay,
     private val metricsOverlay: MetricsOverlay? = null,
-    private val realtimeDetector: Detector,
-    private val precisionDetector: Detector,
+    private val realtimeDetector: Detector?,
+    private val qualityDetector: Detector?,
 ) : ImageAnalysis.Analyzer {
     private var resolutionInitialized = false
 
@@ -32,56 +32,61 @@ class ImageAnalyzer(
             return
         }
 
-        val bitmap = imageProxy.toBitmap()
-        imageProxy.close()
-
-        detectorRunning = true
-
         if (!resolutionInitialized) {
             detectionOverlay.setCameraResolution(imageProxy.width, imageProxy.height)
             resolutionInitialized = true
         }
 
-        val detectorResult: DetectorResult
+        val bitmap = imageProxy.toBitmap()
+        imageProxy.close()
+
+        detectorRunning = true
+
+        val detectorResult: DetectorResult?
 
         val totalTimeStart = SystemClock.elapsedRealtimeNanos()
-        if (useRealtimeDetector) {
+        if (realtimeDetector != null && useRealtimeDetector) {
             detectorResult = realtimeDetector.run(bitmap)
             detectorRunning = false
-        } else {
-            detectorResult = precisionDetector.run(bitmap)
+        } else if (qualityDetector != null) {
+            detectorResult = qualityDetector.run(bitmap)
             detectorRunning = false
 
             detectionOverlay.setBackgroundBitmap(bitmap)
             pauseAnalysis = true
+        } else {
+            detectorResult = null
         }
+
         val totalTimeEnd = SystemClock.elapsedRealtimeNanos()
 
-        metricsOverlay?.post {
-            metricsOverlay.updateLogData(
-                detectorResult.metrics,
-                if (detectorResult.showMetrics) totalTimeEnd - totalTimeStart else null
-            )
-        }
+        if (detectorResult != null) {
+            metricsOverlay?.post {
+                metricsOverlay.updateLogData(
+                    detectorResult.metrics,
+                    if (detectorResult.showMetrics) totalTimeEnd - totalTimeStart else null
+                )
+            }
 
-        // add new [Detection] boxes to draw and invalidate View that is drawing them
-        detectionOverlay.post {
-            detectionOverlay.updateBoxes(detectorResult.detections, detectorResult.details)
+            // add new [Detection] boxes to draw and invalidate View that is drawing them
+            detectionOverlay.post {
+                detectionOverlay.updateBoxes(detectorResult.detections, detectorResult.details)
+            }
         }
     }
 
     /**
      * Sets Analyzer internal state to use precise detector and freeze next image analysis. Finalized image analysis
-     * will be shown on [detectionOverlay]. To unfreeze and continue with realtime detection call [resumeAnalysis].
+     * will be shown on [detectionOverlay]. To unfreeze and continue with realtime detection call [resumeRealtimeAnalysis].
      */
-    fun preciseDetectAndPause() {
+    fun performSingleQualityAnalysis() {
         useRealtimeDetector = false
     }
 
     /**
      * Resumes analyzer to use realtime detector instead on precise detector.
      */
-    fun resumeAnalysis() {
+    fun resumeRealtimeAnalysis() {
         useRealtimeDetector = true
         pauseAnalysis = false
 
@@ -92,6 +97,7 @@ class ImageAnalyzer(
     }
 
     fun destroy() {
-        realtimeDetector.destroy()
+        realtimeDetector?.destroy()
+        qualityDetector?.destroy()
     }
 }

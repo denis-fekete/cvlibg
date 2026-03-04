@@ -20,12 +20,6 @@ class MainActivity : AppCompatActivity() {
 
         setupNavigation()
 
-        if (OpenCVLoader.initLocal()) {
-            Log.d("OpenCV", "OpenCV loaded successfully")
-        } else {
-            Log.e("OpenCV", "Failed to load OpenCV")
-        }
-
         PermissionService.checkCameraPermission(this, this)
         PermissionService.checkStoragePermission(this, this)
 

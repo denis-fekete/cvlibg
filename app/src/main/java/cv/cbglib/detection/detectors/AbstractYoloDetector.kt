@@ -9,7 +9,6 @@ import org.opencv.core.MatOfInt
 import org.opencv.core.MatOfRect2d
 import org.opencv.core.Rect2d
 import org.opencv.core.Scalar
-import org.opencv.core.Size
 import org.opencv.dnn.Dnn
 import org.opencv.imgproc.Imgproc
 import kotlin.collections.iterator
@@ -24,7 +23,13 @@ abstract class AbstractYoloDetector(
     confThreshold: Float = 0.6f,
     applyNMS: Boolean = true,
     nmsThreshold: Float = 0.5f
-) : Detector(modelPath, confThreshold, applyNMS, nmsThreshold) {
+) : Detector(
+    modelPath,
+    confThreshold,
+    applyNMS,
+    nmsThreshold,
+    android.util.Size(640, 480)
+) {
     // "cache" variables to prevent initializing new object each new frame
     protected var bitmapMat = Mat()
     protected var resized = Mat()
@@ -57,7 +62,7 @@ abstract class AbstractYoloDetector(
         val newW = (srcW * scale).roundToInt()
         val newH = (srcH * scale).roundToInt()
 
-        Imgproc.resize(src, resized, Size(newW.toDouble(), newH.toDouble()))
+        Imgproc.resize(src, resized, org.opencv.core.Size(newW.toDouble(), newH.toDouble()))
 
         // calculate padding, padded image is always centered
         val padX = (newSize - newW) / 2
@@ -152,7 +157,7 @@ abstract class AbstractYoloDetector(
 
         return finalDetections
     }
-    
+
     /**
      * Clean up variables that are used as "cache" (not actual cache but frequently used where reallocation each frame
      * does not make sense).

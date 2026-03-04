@@ -47,7 +47,7 @@ class MyApp : CustomApplication() {
         }
     }
 
-    override fun setupModels() {
+    override fun registerModels() {
         DetectorRegistry.link("ONNX Yolo8 RT", "YV8_N_ep40.onnx")
         { path -> YoloOnnxDetector(path) }
         DetectorRegistry.link("ONNX Yolo8 P", "YV8_M_ep50.onnx")
