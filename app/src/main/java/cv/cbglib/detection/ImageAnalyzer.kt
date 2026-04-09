@@ -79,14 +79,14 @@ class ImageAnalyzer(
      * Sets Analyzer internal state to use precise detector and freeze next image analysis. Finalized image analysis
      * will be shown on [detectionOverlay]. To unfreeze and continue with realtime detection call [resumeRealtimeAnalysis].
      */
-    fun performSingleQualityAnalysis() {
+    fun switchToDetailedAnalysis() {
         useRealtimeDetector = false
     }
 
     /**
      * Resumes analyzer to use realtime detector instead on precise detector.
      */
-    fun resumeRealtimeAnalysis() {
+    fun switchToFasterAnalysis() {
         useRealtimeDetector = true
         pauseAnalysis = false
 
@@ -94,6 +94,22 @@ class ImageAnalyzer(
         detectionOverlay.post {
             detectionOverlay.setBackgroundBitmap(null)
         }
+    }
+
+    /**
+     * Sets the logging of metrics to [value].
+     */
+    fun setMetricsEnabled(value: Boolean) {
+        realtimeDetector?.setMetricsEnabled(value)
+        qualityDetector?.setMetricsEnabled(value)
+    }
+
+    /**
+     * Sets the logging of verbose metrics to [value].
+     */
+    fun setVerboseMetricsEnabled(value: Boolean) {
+        realtimeDetector?.setVerboseMetricsEnabled(value)
+        qualityDetector?.setVerboseMetricsEnabled(value)
     }
 
     fun destroy() {

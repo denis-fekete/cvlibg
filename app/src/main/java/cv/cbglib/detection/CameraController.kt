@@ -40,20 +40,15 @@ open class CameraController(
     private val previewView: PreviewView,
     private val detectionOverlay: DetectionOverlay,
     private val metricsOverlay: MetricsOverlay?,
-    public val useRealtimeDetector: Boolean = true,
-    public val useQualityDetector: Boolean = true
+    private val realtimeDetector: Detector?,
+    private val qualityDetector: Detector?
 ) {
     private var cameraExecutorInitialized: Boolean = false
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var cameraProvider: ProcessCameraProvider
     private var imageAnalyzer: ImageAnalyzer? = null
     private lateinit var resolutionSelector: ResolutionSelector
-    private var realtimeDetector: Detector? = null
-    private var qualityDetector: Detector? = null
 
-    private val settingsService by lazy {
-        (context.applicationContext as MyApp).settingsService
-    }
 
     /**
      * Initializes all camera and image analysis related options.
@@ -62,7 +57,8 @@ open class CameraController(
         cameraProvider = ProcessCameraProvider.getInstance(context).await()
 
         // setup detectors, must be called before the getResolutionSelector() as it uses detectors for choosing the resolution
-        setupDetectors()
+        realtimeDetector?.build(context)
+        qualityDetector?.build(context)
 
         resolutionSelector = getResolutionSelector()
 
@@ -112,15 +108,15 @@ open class CameraController(
     /**
      * Starts realtime/faster detection method
      */
-    fun realtimeDetection() {
-        imageAnalyzer?.resumeRealtimeAnalysis()
+    fun switchToFasterAnalysis() {
+        imageAnalyzer?.switchToFasterAnalysis()
     }
 
     /**
      * Starts precises/slower detection method
      */
-    fun qualityDetection() {
-        imageAnalyzer?.performSingleQualityAnalysis()
+    fun switchToDetailedAnalysis() {
+        imageAnalyzer?.switchToDetailedAnalysis()
     }
 
     /**
@@ -133,44 +129,6 @@ open class CameraController(
         imageAnalyzer?.destroy()
     }
 
-    /**
-     * Sets up image analysis for realtime (low latency) detection. Uses values stored in
-     * [cv.cbglib.services.SettingsService].
-     */
-    private fun setupDetectors() {
-        if (useRealtimeDetector) {
-            try {
-                realtimeDetector = DetectorRegistry.createDetector(settingsService.realtimeModel)
-            } catch (exc: IOException) {
-                AlertDialog.Builder(context)
-                    .setTitle("Error loading model for real time detector")
-                    .setMessage("Model'${settingsService.realtimeModel}' could not be loaded. Please choose a different model in Settings.")
-                    .setPositiveButton("OK", null)
-                    .show()
-
-                return
-            }
-
-            realtimeDetector?.build(context, settingsService.showMetrics, settingsService.verboseMetrics)
-        }
-
-        if (useQualityDetector) {
-            try {
-                qualityDetector = DetectorRegistry.createDetector(settingsService.precisionModel)
-            } catch (exc: IOException) {
-                AlertDialog.Builder(context)
-                    .setTitle("Error loading model for real precision detector")
-                    .setMessage("Model'${settingsService.precisionModel}' could not be loaded. Please choose a different model in Settings.")
-                    .setPositiveButton("OK", null)
-                    .show()
-
-                return
-            }
-
-            qualityDetector?.build(context, settingsService.showMetrics, settingsService.verboseMetrics)
-        }
-    }
-
     protected open fun getResolutionSelector(): ResolutionSelector {
         val qualityDetectorSize: Size = qualityDetector?.inputDataSize ?: Size(0, 0)
         val realtimeDetectorSize: Size = realtimeDetector?.inputDataSize ?: Size(0, 0)
@@ -178,14 +136,11 @@ open class CameraController(
         val rtDetectorPixelCount = realtimeDetectorSize.width * realtimeDetectorSize.height
         val qDetectorPixelCount = qualityDetectorSize.width * qualityDetectorSize.height
 
-        val resultSize =
-            if (qDetectorPixelCount > rtDetectorPixelCount && qualityDetector != null) {
-                qualityDetector!!.inputDataSize
-            } else if (realtimeDetector != null) {
-                realtimeDetector!!.inputDataSize
-            } else {
-                Size(640, 480)
-            }
+        val resultSize = if (qDetectorPixelCount > rtDetectorPixelCount && qualityDetector != null) {
+            qualityDetector.inputDataSize
+        } else {
+            realtimeDetector?.inputDataSize ?: Size(640, 480)
+        }
 
         // minimal size with ration 16:9, fewer pixels, less accurate but, more performance
         return ResolutionSelector.Builder()
@@ -202,5 +157,19 @@ open class CameraController(
                 )
             )
             .build()
+    }
+
+    /**
+     * Sets the logging of metrics to [value].
+     */
+    fun setMetricsEnabled(value: Boolean) {
+        imageAnalyzer?.setMetricsEnabled(value)
+    }
+
+    /**
+     * Sets the logging of verbose metrics to [value].
+     */
+    fun setVerboseMetricsEnabled(value: Boolean) {
+        imageAnalyzer?.setVerboseMetricsEnabled(value)
     }
 }

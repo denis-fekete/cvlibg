@@ -2,27 +2,28 @@ package cv.demoapps.bangdemo.fragments
 
 import android.os.Bundle
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import cv.cbglib.fragments.BaseFragment
 import cv.demoapps.bangdemo.MyApp
 import cv.demoapps.bangdemo.R
 import cv.demoapps.bangdemo.data.CardDetail
 import cv.demoapps.bangdemo.views.LinkView
 
-// must match with argument name in nav_graph.xml
-private const val ARG_DETECTION_ID = "id"
+private const val ARG_DETECTION_ID = "id" // must match with argument name in nav_graph.xml
 
 /**
  * Fragment to used for Card details display,
- * Use the [CardDetailsFragment.newInstance] factory method to
+ * Use the [DetailsFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class CardDetailsFragment : BaseFragment(R.layout.fragment_card_details) {
+class DetailsFragment : Fragment() {
     private var linkId: String? = null
     lateinit var titleTextView: TextView
     lateinit var descriptionTextView: TextView
@@ -48,6 +49,14 @@ class CardDetailsFragment : BaseFragment(R.layout.fragment_card_details) {
             linkId = it.getString(ARG_DETECTION_ID)
         }
     }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return inflater.inflate(R.layout.fragment_card_details, container, false)
+    }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         titleTextView = view.findViewById<TextView>(R.id.titleText)
@@ -126,7 +135,7 @@ class CardDetailsFragment : BaseFragment(R.layout.fragment_card_details) {
          */
         @JvmStatic
         fun newInstance(id: String) =
-            CardDetailsFragment().apply {
+            DetailsFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_DETECTION_ID, id)
                 }

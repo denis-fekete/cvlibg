@@ -62,14 +62,12 @@ abstract class Detector(
      * @param showMetrics Boolean value whenever the metrics should be shown.
      * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
      */
-    fun build(context: Context, showMetrics: Boolean = false, verboseMetrics: Boolean = false) {
+    fun build(context: Context) {
         if (isBuilt) return
 
-        this.showMetrics = showMetrics
-        this.verboseMetrics = verboseMetrics
         val assetService = (context.applicationContext as MyApp).assetService
 
-        build(assetService, showMetrics, verboseMetrics)
+        build(assetService)
     }
 
 
@@ -80,17 +78,27 @@ abstract class Detector(
      * @param showMetrics Boolean value whenever the metrics should be shown.
      * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
      */
-    fun build(assetService: AssetService, showMetrics: Boolean = false, verboseMetrics: Boolean = false) {
+    fun build(assetService: AssetService) {
         if (isBuilt) return
-
-        this.showMetrics = showMetrics
-        this.verboseMetrics = verboseMetrics
 
         runtimeSetup(assetService)
 
         isBuilt = true
     }
 
+    /**
+     * Sets the logging of metrics to [value].
+     */
+    fun setMetricsEnabled(value: Boolean) {
+        showMetrics = value
+    }
+
+    /**
+     * Sets the logging of verbose metrics to [value].
+     */
+    fun setVerboseMetricsEnabled(value: Boolean) {
+        verboseMetrics = value
+    }
 
     /**
      * Generic function that performs action and measures time if [measure] is true. Returns the result of action and

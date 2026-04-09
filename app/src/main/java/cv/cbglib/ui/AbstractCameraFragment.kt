@@ -1,17 +1,18 @@
-package cv.cbglib.fragments
+package cv.cbglib.ui
 
 import android.os.Bundle
-import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.camera.view.PreviewView
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import cv.cbglib.detection.DetectionOverlay
 import cv.cbglib.detection.CameraController
 import cv.cbglib.logging.MetricsOverlay
 import cv.demoapps.bangdemo.R
-import kotlinx.coroutines.launch
+import cv.cbglib.detection.detectors.Detector
 
 /**
  * Abstract class containing code for fragments that contain camera preview with detections.
@@ -22,13 +23,22 @@ import kotlinx.coroutines.launch
  *
  * @param layoutRes is and android ID of layout the derived class if bound to (example: `R.layout.fragment_camera`)
  */
-abstract class AbstractCameraFragment(layoutRes: Int) : BaseFragment(layoutRes) {
-    private lateinit var cameraController: CameraController
+abstract class AbstractCameraFragment(private val layoutRes: Int) : Fragment() {
+    protected lateinit var cameraController: CameraController
     protected lateinit var cameraxView: PreviewView
     protected lateinit var detectionOverlay: DetectionOverlay
     protected var metricsOverlay: MetricsOverlay? = null
     protected lateinit var startQualityDetectionBtn: ImageButton
-    protected lateinit var exitQualityDetectionBtnn: ImageButton
+    protected lateinit var exitQualityDetectionBtn: ImageButton
+    protected var realtimeDetector: Detector? = null
+    protected var qualityDetector: Detector? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return inflater.inflate(layoutRes, container, false)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -36,37 +46,19 @@ abstract class AbstractCameraFragment(layoutRes: Int) : BaseFragment(layoutRes) 
         // find views by ID and initialize them
         initViews(view)
 
-        // scale view to use as much screen space, keep ration and crop excess
-        cameraxView.scaleType = PreviewView.ScaleType.FILL_CENTER
+        setupDetectors()
 
-        cameraController = CameraController(
+        cameraController = AbstractCameraBase.cameraControllerSetup(
             requireContext(),
             this as LifecycleOwner,
             cameraxView,
             detectionOverlay,
-            metricsOverlay
+            metricsOverlay,
+            startQualityDetectionBtn,
+            exitQualityDetectionBtn,
+            realtimeDetector,
+            qualityDetector
         )
-
-        lifecycleScope.launch {
-            try {
-                cameraController.start()
-            } catch (e: Exception) {
-                Log.e("CV", "Camera initialization failed: ${e.message}")
-            }
-        }
-
-        startQualityDetectionBtn.setOnClickListener {
-            cameraController.qualityDetection()
-            startQualityDetectionBtn.visibility = View.GONE
-            exitQualityDetectionBtnn.visibility = View.VISIBLE
-        }
-
-        exitQualityDetectionBtnn.visibility = View.GONE
-        exitQualityDetectionBtnn.setOnClickListener {
-            cameraController.realtimeDetection()
-            exitQualityDetectionBtnn.visibility = View.GONE
-            startQualityDetectionBtn.visibility = View.VISIBLE
-        }
     }
 
     /**
@@ -79,8 +71,14 @@ abstract class AbstractCameraFragment(layoutRes: Int) : BaseFragment(layoutRes) 
         detectionOverlay = view.findViewById<DetectionOverlay>(R.id.detectionOverlay)
         metricsOverlay = view.findViewById<MetricsOverlay>(R.id.metricsOverlay)
         startQualityDetectionBtn = view.findViewById<ImageButton>(R.id.startQualityDetectionBtn)
-        exitQualityDetectionBtnn = view.findViewById<ImageButton>(R.id.endQualityDetectionBtn)
+        exitQualityDetectionBtn = view.findViewById<ImageButton>(R.id.endQualityDetectionBtn)
     }
+
+    /**
+     * Abstract function for setting up [Detector] classes. Derived class must implement this function and initialize
+     * the [realtimeDetector], [qualityDetector], otherwise detections will not be performed [CameraController].
+     */
+    protected abstract fun setupDetectors()
 
     override fun onDestroyView() {
         super.onDestroyView()

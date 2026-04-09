@@ -7,7 +7,7 @@ import android.util.Log
 
 /**
  * Service to load images and ONNX models from assets folder. Must be initialized in class that subclasses
- * [Application]. In this case automatically done by subclassing [cv.cbglib.CustomApplication], for use in
+ * [Application]. In this case automatically done by subclassing [cv.cbglib.CVILIBGApplication], for use in
  * activities, fragments, etc... use:
  *
  * ```
@@ -15,8 +15,8 @@ import android.util.Log
  *         (context.applicationContext as SUBCLASSED_APP).assetService
  * ```
  *
- * Where SUBCLASSED_APP is a subclass of an [Application], or more precise [cv.cbglib.CustomApplication]. For more
- * detail see also [cv.cbglib.CustomApplication]
+ * Where SUBCLASSED_APP is a subclass of an [Application], or more precise [cv.cbglib.CVILIBGApplication]. For more
+ * detail see also [cv.cbglib.CVILIBGApplication]
  */
 class AssetService(
     private val app: Application,

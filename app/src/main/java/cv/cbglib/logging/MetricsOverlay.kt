@@ -66,7 +66,7 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
         // measure all text widths and add it to the textList variable
         textList.clear()
         data.forEach {
-            val text = "${it.key}: ${it.value / 1_000_000.0}ms\n"
+            val text = "${it.prefix}: ${it.value}${it.suffix}\n"
             textList.add(text)
 
             val textWidth = textPaint.measureText(text)
@@ -76,7 +76,7 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
         }
 
         if (total != null) {
-            textList.add("Total : ${total!! / 1_000_000}ms")
+            textList.add("Total : ${total!!}ms")
             maxWidth = max(maxWidth, textPaint.measureText(textList.last()))
 
             textList.add("Average (last $avgUpdateVal): ${average / 1_000_000}ms")

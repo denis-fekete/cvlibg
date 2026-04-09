@@ -2,27 +2,32 @@ package cv.demoapps.bangdemo.fragments
 
 import android.os.Bundle
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.NumberPicker
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
+import androidx.fragment.app.Fragment
 import cv.cbglib.commonUI.ResizableSpinnerAdapter
 import cv.cbglib.detection.detectors.DetectorRegistry
-import cv.cbglib.fragments.BaseFragment
 import cv.cbglib.services.SettingsService
 import cv.demoapps.bangdemo.MyApp
 import cv.demoapps.bangdemo.R
 
-class SettingsFragment : BaseFragment(R.layout.fragment_settings) {
+class SettingsFragment : Fragment() {
 
     private val settingsService by lazy {
         (requireContext().applicationContext as MyApp).settingsService
     }
 
-    private val assetService by lazy {
-        (requireContext().applicationContext as MyApp).assetService
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return inflater.inflate(R.layout.fragment_settings, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

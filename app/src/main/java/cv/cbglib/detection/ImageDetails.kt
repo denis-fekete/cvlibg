@@ -1,19 +1,31 @@
 package cv.cbglib.detection
 
 /**
- * Data class containing info about letterboxing that was done in ImageAnalyzer.
+ * Data class containing information about letterboxing and rescaling of the image during object detection process.
  *
- * In short, images must for ONNX model
- * must be scaled to 640x640 pixels. In order to not lose data a letterboxing method is applied. Meaning that image
- * from camera is scaled to match model expected image size. This bigger dimension of from camera (width or height) is
- * used for scaling, meaning the lesser dimension wil have blank spots on its side (if width is less than height, width
- * will have blank spots on left and right). These blank spots are filled with default value. In order to restore this
- * image for drawing detection and detecting clicks or (on touch events) the data must be stored
+ * Image data might need to be scaled to correct resolution for inference engine and object detection model to work.
+ * Scaling images to correct resolution wil work, however in order to preserve the aspect ratio of the image and not
+ * distort it, a letterboxing is introduced. This data is later used for reconstructing detected bounding boxes inside a
+ * [DetectionOverlay].
+ *
+ * Padding is centered and padded value is added to both start and end of the axis.
+ *
+ * Padding on the X axis:
+ * __________________________
+ * | PadX   | Image  | PadX |
+ * __________________________
+ *
+ * Padding on the Y axis:
+ * _________
+ * | PadY  |
+ * | Image |
+ * | PadY  |
+ * _________
  */
 data class ImageDetails(
     // used for scaling camera image into a model image size, used for reverse scaling to properly display detections
     val scale: Float,
-    // padding applied to in X axis, meaning camera image width<height and X axis was filled with default value
+    // padding applied to in X axis
     val padX: Int,
     // padding applied to in Y axis, meaning camera image height<camera and Y axis was filled with default value
     val padY: Int

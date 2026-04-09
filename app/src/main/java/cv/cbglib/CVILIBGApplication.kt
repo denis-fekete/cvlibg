@@ -7,7 +7,7 @@ import cv.cbglib.services.SettingsService
 import org.opencv.android.OpenCVLoader
 
 /**
- * Application that initializes [AssetService], needed for the [cv.cbglib.fragments.AbstractCameraFragment]. For use
+ * Application that initializes [AssetService], needed for the [cv.cbglib.ui.AbstractCameraFragment]. For use
  * subclass this class and set it in `AndroidManifest.xml`:
  *
  *  <application
@@ -17,7 +17,7 @@ import org.opencv.android.OpenCVLoader
  *  manifest). Continue adding code in `MyApp` class.
  *
  */
-abstract class CustomApplication : Application() {
+abstract class CVILIBGApplication : Application() {
     val assetService: AssetService by lazy {
         AssetService(this)
     }

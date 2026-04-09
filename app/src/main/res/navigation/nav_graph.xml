@@ -17,7 +17,7 @@
     </fragment>
     <fragment
             android:id = "@+id/cardDetailsFragment"
-            android:name = "cv.demoapps.bangdemo.fragments.CardDetailsFragment"
+            android:name = "cv.demoapps.bangdemo.fragments.DetailsFragment"
             android:label = "fragment_card_details"
             tools:layout = "@layout/fragment_card_details">
         <argument

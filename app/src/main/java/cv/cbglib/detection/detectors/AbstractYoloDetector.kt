@@ -13,6 +13,7 @@ import org.opencv.dnn.Dnn
 import org.opencv.imgproc.Imgproc
 import kotlin.collections.iterator
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
@@ -86,16 +87,71 @@ abstract class AbstractYoloDetector(
         return letterBoxMat
     }
 
-    protected open fun transpose(output: Array<FloatArray>): Array<FloatArray> {
-        val rows = output.size
-        val cols = output[0].size
+    /**
+     * Takes input array, and creates new array that is transposed.
+     *
+     * @param input Input array from which a values will be takes
+     * @return transposed array
+     */
+    protected open fun transpose(input: Array<FloatArray>): Array<FloatArray> {
+        val rows = input.size
+        val cols = input[0].size
         val transposed = Array(cols) { FloatArray(rows) }
         for (i in 0 until rows) {
             for (j in 0 until cols) {
-                transposed[j][i] = output[i][j]
+                transposed[j][i] = input[i][j]
             }
         }
         return transposed
+    }
+
+    /**
+     * Function that iterates through [data] that is [FloatArray], this array must be flat 1D array, however, the data
+     * must be stored in ` must be in [numOfAttributes]x[numOfDetections] shape. Accessing data is more intuitive in
+     * [numOfDetections]x[numOfAttributes], which would require a transposing that which might be too computationally
+     * expensive for realtime image processing. Therefore, this function simplifies that.
+     *
+     * Note: function was separated from the `thresholdingFilter` because of code duplication.
+     *
+     * @param data [FloatArray] containing the data from the inference run
+     * @param numOfAttributes number of attributes per detection, value is used as a column index
+     * @param numOfDetections number of detections, values is used as a row
+     * @param threshold thresholding used for filtering of detections
+     *
+     * @return [List] of [Detection] objects
+     */
+    protected open fun extractDetectionResults(
+        data: FloatArray,
+        numOfAttributes: Int,
+        numOfDetections: Int,
+        threshold: Float
+    ): MutableList<Detection> {
+        val detections = mutableListOf<Detection>()
+
+        for (col in 0 until numOfDetections) { // iterate through all detections
+            var bestClass = -1
+            var bestScore = 0f
+
+            for (row in 4 until numOfAttributes) {
+                val score = data[row * numOfDetections + col]
+                if (score > bestScore) {
+                    bestClass = row - 4
+                    bestScore = score
+                }
+            }
+
+            if (bestScore < threshold)
+                continue
+
+            val x = data[0 * numOfDetections + col]
+            val y = data[1 * numOfDetections + col]
+            val w = data[2 * numOfDetections + col]
+            val h = data[3 * numOfDetections + col]
+
+            detections.add(Detection(x, y, w, h, bestClass, bestScore))
+        }
+
+        return detections
     }
 
 
@@ -108,7 +164,7 @@ abstract class AbstractYoloDetector(
      * @param threshold NMS threshold value, by default [nmsThreshold] from [Detector] is used.
      * @return List of detections filtered by NMS algorithm.
      */
-    protected open fun nmsFilter(
+    protected open fun opencvNmsFilterByClass(
         detections: List<Detection>,
         threshold: Float = nmsThreshold
     ): List<Detection> {
@@ -156,6 +212,137 @@ abstract class AbstractYoloDetector(
         }
 
         return finalDetections
+    }
+
+    /**
+     * Removes overlapping [Detection]s by using Non-Maximum suppression on grouped [Detection] objects by detected class.
+     *
+     * @param detections List of [Detection] objects, must be mutable
+     * @param threshold NMS/IoU threshold, if two [Detection] objects exceed this value one of them (the one with lower
+     * confidence score) will be deleted.
+     */
+    protected open fun ilibgNmsFilterByClass(
+        detections: MutableList<Detection>,
+        threshold: Float = nmsThreshold
+    ): List<Detection> {
+        if (!applyNMS) return detections
+
+        if (detections.isEmpty()) return emptyList()
+
+        val keptDetections = mutableListOf<Detection>()
+
+        // group detections by class
+        val detectionsByClass = detections.groupBy { it.classIndex }
+
+        for (cls in detectionsByClass) {
+            val kept = ilibgNmsFilterOptimized(cls.value.toMutableList(), nmsThreshold)
+            keptDetections.addAll(kept)
+        }
+        return keptDetections
+    }
+
+    /**
+     * Removes overlapping [Detection]s by using Non-Maximum suppression.
+     *
+     * @param detections List of [Detection] objects, must be mutable
+     * @param threshold NMS/IoU threshold, if two [Detection] objects exceed this value one of them (the one with lower
+     * confidence score) will be deleted.
+     */
+    protected fun ilibgNmsFilterOptimized(detections: MutableList<Detection>, threshold: Float): List<Detection> {
+        if (detections.isEmpty()) return emptyList()
+
+        val keptDetections = mutableListOf<Detection>()
+
+        // important !! sort by score
+        detections.sortByDescending { it.score }
+
+        // mask for skipping detections, faster than removing them
+        val mask = BooleanArray(detections.size) { false }
+
+        for (idx in 0 until detections.size) {
+            if (mask[idx])
+                continue
+
+            // add the best detection to keptDetections list
+            val best = detections[idx]
+            keptDetections.add(best)
+            mask[idx] = true
+
+            // remove that have high area of intersection with the best detection with
+            for (i in idx + 1 until detections.size) {
+                if (mask[i])
+                    continue
+
+                val detection = detections[i]
+                val iou = computeIoU(best, detection)
+
+                if (iou > threshold) {
+                    mask[i] = true
+                }
+            }
+        }
+        return keptDetections
+    }
+
+    /**
+     * Removes overlapping [Detection]s by using Non-Maximum suppression.
+     *
+     * @param detections List of [Detection] objects, must be mutable
+     * @param threshold NMS/IoU threshold, if two [Detection] objects exceed this value one of them (the one with lower
+     * confidence score) will be deleted.
+     *
+     * @see <a href="https://www.baeldung.com/kotlin/list-remove-elements-while-iterating"> Remove Elements From a
+     * List While Iterating in Kotlin
+     */
+    protected fun ilibgNmsFilter(detections: MutableList<Detection>, threshold: Float): List<Detection> {
+        if (detections.isEmpty()) return emptyList()
+
+        val keptDetections = mutableListOf<Detection>()
+
+        // important !! sort by score
+        detections.sortByDescending { it.score }
+
+        while (detections.isNotEmpty()) {
+            // add the best detection to keptDetections list
+            val best = detections.first()
+            keptDetections.add(best)
+            detections.remove(best)
+
+            // remove that have high area of intersection with the best detection with
+            val iterator = detections.iterator()
+            while (iterator.hasNext()) {
+                val detection = iterator.next()
+                val iou = computeIoU(best, detection)
+
+                if (iou > threshold) {
+                    iterator.remove()
+                }
+            }
+        }
+        return keptDetections
+    }
+
+    /**
+     * Computes the Intersection over Union for given [Detection] objects
+     *
+     * @see <a href="https://learnopencv.com/non-maximum-suppression-theory-and-implementation-in-pytorch/"> Non Maximum
+     * Suppression: Theory and Implementation in PyTorch
+     * see
+     */
+    private fun computeIoU(first: Detection, second: Detection): Float {
+        // intersection box coordinates (top left) (bottom right) = (xx yy) (aa bb)
+        val xx = max(first.x1, second.x1)
+        val yy = max(first.y1, second.y1)
+        val aa = min(first.x2, second.x2)
+        val bb = min(first.y2, second.y2)
+
+        // intersection box dimensions
+        val intersectionW = max(0f, aa - xx)
+        val intersectionH = max(0f, bb - yy)
+        val intersectionArea = intersectionW * intersectionH
+
+        val unionArea = first.area + second.area - intersectionArea
+        return intersectionArea / unionArea
     }
 
     /**

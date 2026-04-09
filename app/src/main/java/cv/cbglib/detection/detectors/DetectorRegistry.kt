@@ -2,7 +2,7 @@ package cv.cbglib.detection.detectors
 
 /**
  * A data class that registers/links [Detector] derived classes to the name of model. The name of model can be shown in
- * UI or a static 'code' for specific model. See [link] function for usage.
+ * UI or a static 'code' for specific model. See [register] function for usage.
  */
 data class DetectorRegistry(
     val name: String,
@@ -26,7 +26,7 @@ data class DetectorRegistry(
          * ```
          * Where Detector is a class that was derived from abstract class [Detector].
          */
-        fun link(modelName: String, modelPath: String, factory: (String) -> Detector) {
+        fun register(modelName: String, modelPath: String, factory: (String) -> Detector) {
             registry[modelName] = DetectorRegistry(modelName, modelPath, factory)
         }
 
@@ -43,6 +43,18 @@ data class DetectorRegistry(
         fun createDetector(name: String): Detector {
             return registry[name]?.create()
                 ?: throw IllegalArgumentException("Model '$name' not registered")
+        }
+
+        /**
+         * Create an instance of Detector, first detector from the registry is chosen.
+         */
+        fun createDetector(): Detector {
+            if (registry.isNotEmpty()) {
+                val key = registry.keys.toList().first()
+                return createDetector(key)
+            } else {
+                throw IllegalArgumentException("No model were registered into DetectorRegistry")
+            }
         }
     }
 }
