@@ -76,7 +76,7 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
         }
 
         if (total != null) {
-            textList.add("Total : ${total!!}ms")
+            textList.add("Total : ${total!! / 1_000_000}ms")
             maxWidth = max(maxWidth, textPaint.measureText(textList.last()))
 
             textList.add("Average (last $avgUpdateVal): ${average / 1_000_000}ms")
