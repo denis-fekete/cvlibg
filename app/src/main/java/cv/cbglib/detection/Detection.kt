@@ -2,6 +2,7 @@ package cv.cbglib.detection
 
 import android.graphics.RectF
 import org.opencv.core.Rect2d
+import kotlin.math.max
 
 /**
  * Data class representing bounding boxes or detections, its highest rated class and confidence score for given class.
@@ -47,4 +48,29 @@ data class Detection(
             height.toDouble()
         )
     }
+
+    /**
+     * X1 value of (x1,y1) (x2,y2) == (left top) (right bottom) coordinate system
+     */
+    val x1 = x - width / 2.0f
+
+    /**
+     * X2 value of (x1,y1) (x2,y2) == (left top) (right bottom) coordinate system
+     */
+    val x2 = x + width / 2.0f
+
+    /**
+     * Y1 value of (x1,y1) (x2,y2) == (left top) (right bottom) coordinate system
+     */
+    val y1 = y - height / 2.0f
+
+    /**
+     * Y2 value of (x1,y1) (x2,y2) == (left top) (right bottom) coordinate system
+     */
+    val y2 = y + height / 2.0f
+
+    /**
+     * Area of the detection
+     */
+    val area = width * height
 }

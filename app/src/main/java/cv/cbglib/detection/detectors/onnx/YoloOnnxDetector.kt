@@ -16,6 +16,7 @@ import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
 import java.nio.FloatBuffer
+import java.util.EnumSet
 
 /**
  * Abstract class for all Yolo based detectors that use Onnx Runtime, containing common functions.
@@ -24,29 +25,37 @@ open class YoloOnnxDetector(
     modelPath: String,
     confThreshold: Float = 0.6f,
     applyNMS: Boolean = true,
-    nmsThreshold: Float = 0.5f
+    nmsThreshold: Float = 0.5f,
+    private val useNNAPI: Boolean = false,
 
-) : AbstractYoloDetector(modelPath, confThreshold, applyNMS, nmsThreshold) {
-    protected lateinit var ortSession: OrtSession
+    ) : AbstractYoloDetector(modelPath, confThreshold, applyNMS, nmsThreshold) {
+    protected lateinit var inferenceEngine: OrtSession
     protected var ortEnvironment: OrtEnvironment = OrtEnvironment.getEnvironment()
     protected lateinit var inputName: String
     protected val modelInputWidth = 640
 
     override fun runtimeSetup(assetService: AssetService) {
         val modelBytes = assetService.getModel(modelPath)
+        var runtimeInitialized = false
+        if (useNNAPI) {
+            try {
+                val sessionOptions = OrtSession.SessionOptions()
+                sessionOptions.addNnapi()
 
-        // try to use Nnapi for hardware accelerated detection, on fail use CPU
-        try {
-            val sessionOptions = OrtSession.SessionOptions()
-            sessionOptions.addNnapi()
-            ortSession = ortEnvironment.createSession(modelBytes, sessionOptions)
-            Log.i(javaClass.simpleName, "Loaded NNAPI for OnnxRuntime")
-        } catch (e: Exception) {
-            Log.e(javaClass.simpleName, "Failed to use NNAPI for OnnxRuntime, using CPU instead", e)
-            ortSession = ortEnvironment.createSession(modelBytes)
+                inferenceEngine = ortEnvironment.createSession(modelBytes, sessionOptions)
+                Log.i(javaClass.simpleName, "Loaded NNAPI for OnnxRuntime")
+                runtimeInitialized = true
+            } catch (e: Exception) {
+                Log.e(javaClass.simpleName, "Failed to use NNAPI for OnnxRuntime:", e)
+            }
         }
 
-        inputName = ortSession.inputNames.first()
+        if (!runtimeInitialized) {
+            inferenceEngine = ortEnvironment.createSession(modelBytes)
+            Log.i(javaClass.simpleName, "Loaded default runtime for OnnxRuntime")
+        }
+
+        inputName = inferenceEngine.inputNames.first()
     }
 
     override fun detect(image: Bitmap): DetectorResult {
@@ -68,40 +77,70 @@ open class YoloOnnxDetector(
         }
 
         // run model on tensor, and get result
-        val (results, timeDetection) = measureTime(showMetrics) { ortSession.run(mapOf(inputName to tensor)) }
-
-        // convert flat outputs into an 3D array
-        val result3D = results[0].value as Array<Array<FloatArray>> // [batch, values, detections]
+        val (results, timeDetection) = measureTime(showMetrics) { inferenceEngine.run(mapOf(inputName to tensor)) }
 
         // extract bounding boxes [Detection] objects from results that
-        val (detections, timeExtractDetections) = measureTime(showMetrics) { thresholdingFilter(result3D) }
+        val (detections, timeExtractDetections) = measureTime(showMetrics) { thresholdingFilter(results) }
 
         // apply NMS onto results
-        val (filteredDetections, timeNMS) = measureTime(showMetrics) { nmsFilter(detections) }
+        val (nsmFilteredDetections, timeNMS) = measureTime(showMetrics) { ilibgNmsFilterByClass(detections) }
 
         results.close()
         tensor.close()
 
         val metricsList = if (showMetrics && verboseMetrics) {
             listOf(
-                MetricsValue("LetterBox", timeLetterboxing),
-                MetricsValue("Tensor", timeTensor),
-                MetricsValue("Detection", timeDetection),
-                MetricsValue("Extract detections", timeExtractDetections),
-                MetricsValue("NMS", timeNMS),
+                MetricsValue("LetterBox", timeLetterboxing / 1_000_000f, "ms"),
+                MetricsValue("Tensor", timeTensor / 1_000_000f, "ms"),
+                MetricsValue("Detection", timeDetection / 1_000_000f, "ms"),
+                MetricsValue("Extract detections", timeExtractDetections / 1_000_000f, "ms"),
+                MetricsValue("NMS", timeNMS / 1_000_000f, "ms"),
+                MetricsValue("Detections", nsmFilteredDetections.size.toFloat()),
             )
         } else { // show metrics but only basic (total)
             emptyList()
         }
 
         return DetectorResult(
-            filteredDetections,
+            nsmFilteredDetections,
             imageDetails,
             showMetrics = showMetrics,
             metricsList
         )
     }
 
+    /**
+     * Extracts list of [cv.cbglib.detection.Detection] objects from OrtSession result. Value for thresholding is
+     * Results are in format `[batch, values, detections]` where the values are:
+     * x, y, w, h, class0 confidence, class1 confidence, class2 confidence...
+     *
+     * By default, the [threshold] value is determined by the [confThreshold] (see [cv.cbglib.detection.detectors.Detector]).
+     *
+     * @see <a href="https://onnxruntime.ai/docs/api/java/ai/onnxruntime/OnnxTensor.html">OnnxTensor Api Documentation
+     *
+     * @param results Onnx runtime results in array format that will be filtered.
+     * @return List of [cv.cbglib.detection.Detection] that pass the [confThreshold] confidence score threshold
+     */
+    protected open fun thresholdingFilter(
+        results: OrtSession.Result,
+        threshold: Float = confThreshold
+    ): MutableList<Detection> {
+        if (results.size() < 1)
+            return mutableListOf<Detection>()
+
+        val tensor = results[0] as OnnxTensor // get first result of the model
+        val buffer = tensor.floatBuffer // access the tensor as a FloatBuffer
+        val shape = tensor.info.shape
+
+        // expected shape of tensor 3D array [batch, attributes, detections]
+        val numOfAttributes = shape[1].toInt()
+        val numOfDetections = shape[2].toInt()
+
+        val data = FloatArray(buffer.remaining()) // data size = attributes * detections
+        buffer.get(data)
+
+        return extractDetectionResults(data, numOfAttributes, numOfDetections, threshold)
+    }
 
     /**
      * Extracts list of [cv.cbglib.detection.Detection] objects from OrtSession result. Value for thresholding is
@@ -160,7 +199,7 @@ open class YoloOnnxDetector(
      * @param mat input OpenCV [Mat] that will transform into [OnnxTensor]
      * @return [OnnxTensor] that can be put as an input to OnnxRuntime model
      */
-    protected fun matToTensor(mat: Mat): OnnxTensor? {
+    protected open fun matToTensor(mat: Mat): OnnxTensor? {
         if (mat.empty())
             return null
 

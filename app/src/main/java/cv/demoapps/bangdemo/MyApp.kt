@@ -1,26 +1,26 @@
 package cv.demoapps.bangdemo
 
 
-import cv.cbglib.CustomApplication
+import cv.cbglib.CVILIBGApplication
 import cv.cbglib.detection.detectors.DetectorRegistry
 import cv.cbglib.detection.detectors.onnx.Yolo26OnnxDetector
 import cv.cbglib.detection.detectors.onnx.YoloOnnxDetector
 import cv.cbglib.detection.detectors.opencv.YoloOpenCVDetector
-import cv.cbglib.services.JsonAssetService
+import cv.cbglib.services.JSONAssetService
 import cv.demoapps.bangdemo.data.CardDetail
 import cv.demoapps.bangdemo.data.Class2Link
 
-class MyApp : CustomApplication() {
-    lateinit var cardDetailsService: JsonAssetService<CardDetail, String>
-    lateinit var class2linkService: JsonAssetService<Class2Link, Int>
+class MyApp : CVILIBGApplication() {
+    lateinit var cardDetailsService: JSONAssetService<CardDetail, String>
+    lateinit var class2linkService: JSONAssetService<Class2Link, Int>
     var errorMessageCardDetail: String? = null
     var errorMessageClass2Link: String? = null
 
     override fun onCreate() {
         super.onCreate()
         try {
-            cardDetailsService = JsonAssetService(
-                this,
+            cardDetailsService = JSONAssetService(
+                app = this,
                 path = "details",
                 serializer = CardDetail.serializer(),
                 keySelector = { it.id },
@@ -33,7 +33,7 @@ class MyApp : CustomApplication() {
         }
 
         try {
-            class2linkService = JsonAssetService(
+            class2linkService = JSONAssetService(
                 this,
                 path = "Class2Link.json",
                 serializer = Class2Link.serializer(),
@@ -48,18 +48,25 @@ class MyApp : CustomApplication() {
     }
 
     override fun registerModels() {
-        DetectorRegistry.link("ONNX Yolo8 RT", "YV8_N_ep40.onnx")
+        DetectorRegistry.register("ONNX Yolo8 RT", "YV8_N_ep40.onnx")
         { path -> YoloOnnxDetector(path) }
-        DetectorRegistry.link("ONNX Yolo8 P", "YV8_M_ep50.onnx")
+
+        DetectorRegistry.register("ONNX Yolo8 RT no NMS", "YV8_N_ep40.onnx")
+        { path -> YoloOnnxDetector(path, applyNMS = false) }
+
+        DetectorRegistry.register("ONNX Yolo8 P", "YV8_M_ep50.onnx")
         { path -> YoloOnnxDetector(path) }
-        DetectorRegistry.link("ONNX Yolo11 RT(exp)", "Y11_N_ep10.onnx")
+        DetectorRegistry.register("ONNX Yolo11 RT(exp)", "Y11_N_ep10.onnx")
         { path -> YoloOnnxDetector(path) }
-        DetectorRegistry.link("ONNX Yolo 26 RT", "Y26_N_ep40.onnx")
+        DetectorRegistry.register("ONNX Yolo 26 RT", "Y26_N_ep40.onnx")
         { path -> Yolo26OnnxDetector(path) }
 
-        DetectorRegistry.link("OpenCV Yolo8 RT", "YV8_N_ep40.onnx")
+        DetectorRegistry.register("OpenCV Yolo8 RT", "YV8_N_ep40.onnx")
         { path -> YoloOpenCVDetector(path) }
-        DetectorRegistry.link("OpenCV Yolo8 P", "YV8_M_ep50.onnx")
+        DetectorRegistry.register("OpenCV Yolo8 P", "YV8_M_ep50.onnx")
         { path -> YoloOpenCVDetector(path) }
+
+        DetectorRegistry.register("ONNX Yolo 26 RT NNAPI", "YV26_N_ep40_OPTIMIZED.onnx")
+        { path -> Yolo26OnnxDetector(path, useNNAPI = true) }
     }
 }

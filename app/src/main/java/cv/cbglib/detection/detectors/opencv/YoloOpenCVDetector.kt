@@ -25,15 +25,15 @@ open class YoloOpenCVDetector(
     protected val modelInputWidth = 640
 
     protected var results = Mat()
-    protected lateinit var runtime: Net
+    protected lateinit var inferenceEngine: Net
 
     override fun runtimeSetup(assetService: AssetService) {
         val modelBytes = assetService.getModel(modelPath)
         val modelMat = MatOfByte(*modelBytes)
 
-        runtime = Dnn.readNetFromONNX(modelMat)
-        runtime.setPreferableBackend(Dnn.DNN_BACKEND_OPENCV)
-        runtime.setPreferableTarget(Dnn.DNN_TARGET_CPU)
+        inferenceEngine = Dnn.readNetFromONNX(modelMat)
+        inferenceEngine.setPreferableBackend(Dnn.DNN_BACKEND_OPENCV)
+        inferenceEngine.setPreferableTarget(Dnn.DNN_TARGET_CPU)
     }
 
     override fun detect(image: Bitmap): DetectorResult {
@@ -61,32 +61,33 @@ open class YoloOpenCVDetector(
             )
         }
 
-        runtime.setInput(blob)
+        inferenceEngine.setInput(blob)
         // run opencv net runtime and get results
         val (_, timeDetection) = measureTime(showMetrics) {
-            results = runtime.forward()
+            results = inferenceEngine.forward()
         }
 
         // extract bounding boxes [Detection] objects from results that
         val (detections, timeExtractDetections) = measureTime(showMetrics) { thresholdingFilter(results) }
 
         // apply NMS onto results
-        val (filteredDetections, timeNMS) = measureTime(showMetrics) { nmsFilter(detections) }
+        val (nsmFilteredDetections, timeNMS) = measureTime(showMetrics) { opencvNmsFilterByClass(detections) }
 
         val metricsList = if (showMetrics && verboseMetrics) {
             listOf(
-                MetricsValue("LetterBox", timeLetterboxing),
-                MetricsValue("Blob", timeBlob),
-                MetricsValue("Detection", timeDetection),
-                MetricsValue("Extract detections", timeExtractDetections),
-                MetricsValue("NMS", timeNMS),
+                MetricsValue("LetterBox", timeLetterboxing / 1_000_000f, "ms"),
+                MetricsValue("Blob", timeBlob / 1_000_000f, "ms"),
+                MetricsValue("Detection", timeDetection / 1_000_000f, "ms"),
+                MetricsValue("Extract detections", timeExtractDetections / 1_000_000f, "ms"),
+                MetricsValue("NMS", timeNMS / 1_000_000f, "ms"),
+                MetricsValue("Detections", nsmFilteredDetections.size.toFloat()),
             )
         } else {
             emptyList()
         }
 
         return DetectorResult(
-            filteredDetections,
+            nsmFilteredDetections,
             imageDetails,
             showMetrics = verboseMetrics,
             metrics = metricsList,
@@ -107,8 +108,6 @@ open class YoloOpenCVDetector(
         input: Mat,
         threshold: Float = confThreshold
     ): List<Detection> {
-        val detections = mutableListOf<Detection>()
-
         val numOfAttributes = input.size(1) // x,y,w,h, class_conf1, class_conf2, ...
         val numOfDetections = input.size(2) // detections
 
@@ -118,29 +117,12 @@ open class YoloOpenCVDetector(
         val values = FloatArray(numOfAttributes * numOfDetections)
         flattened.get(0, 0, values)
 
-        for (col in 0 until numOfDetections) { // iterate through all detections
-            var bestClass = -1
-            var bestScore = 0f
-
-            for (row in 4 until numOfAttributes) {
-                val score = values[row * numOfDetections + col]
-                if (score > bestScore) {
-                    bestClass = row - 4
-                    bestScore = score
-                }
-            }
-
-            if (bestScore < threshold)
-                continue
-
-            val x = values[0 * numOfDetections + col]
-            val y = values[1 * numOfDetections + col]
-            val w = values[2 * numOfDetections + col]
-            val h = values[3 * numOfDetections + col]
-
-            detections.add(Detection(x, y, w, h, bestClass, bestScore))
-        }
-        return detections
+        return extractDetectionResults(
+            values,
+            numOfDetections,
+            numOfAttributes,
+            threshold
+        )
     }
 
     override fun destroy() {

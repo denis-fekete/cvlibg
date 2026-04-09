@@ -14,7 +14,7 @@ import java.nio.charset.Charset
  * files are saved with correct charset. [path] may be a single JSON file or a directory. For path to directory all
  * files under the directory will be loaded and must be of same [charset] and [DataType].
  *
- * Declaration in class that subclassed [cv.cbglib.CustomApplication]:
+ * Declaration in class that subclassed [cv.cbglib.CVILIBGApplication]:
  * ```
  * val DATA_CLASS_SERVICE: JsonAssetService<DATA_CLASS_NAME> by lazy {
  *         JsonAssetService(
@@ -30,15 +30,15 @@ import java.nio.charset.Charset
  * better design.
  *
  * Use in any other activity, fragments, class, etc... (SUBCLASSED_APP is a class that subclassed
- * [cv.cbglib.CustomApplication] and was added to `AndroidManifest.xml`, for more
- * detail see [cv.cbglib.CustomApplication]):
+ * [cv.cbglib.CVILIBGApplication] and was added to `AndroidManifest.xml`, for more
+ * detail see [cv.cbglib.CVILIBGApplication]):
  * ```
  *     private val DATA_CLASS_NAME by lazy {
  *         (context.applicationContext as SUBCLASSED_APP).DATA_CLASS_SERVICE
  *     }
  * ```
  */
-class JsonAssetService<DataType : Any, KeyType : Any>(
+class JSONAssetService<DataType : Any, KeyType : Any>(
     private val app: Application,
     private val path: String,
     private val serializer: KSerializer<DataType>,
