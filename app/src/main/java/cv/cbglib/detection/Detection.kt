@@ -2,7 +2,6 @@ package cv.cbglib.detection
 
 import android.graphics.RectF
 import org.opencv.core.Rect2d
-import kotlin.math.max
 
 /**
  * Data class representing bounding boxes or detections, its highest rated class and confidence score for given class.

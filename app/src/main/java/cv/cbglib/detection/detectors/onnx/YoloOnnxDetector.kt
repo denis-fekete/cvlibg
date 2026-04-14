@@ -16,7 +16,6 @@ import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
 import java.nio.FloatBuffer
-import java.util.EnumSet
 
 /**
  * Abstract class for all Yolo based detectors that use Onnx Runtime, containing common functions.

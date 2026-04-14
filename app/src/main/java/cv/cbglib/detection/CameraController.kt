@@ -15,10 +15,7 @@ import androidx.camera.view.PreviewView
 import androidx.concurrent.futures.await
 import androidx.lifecycle.LifecycleOwner
 import cv.cbglib.detection.detectors.Detector
-import cv.cbglib.detection.detectors.DetectorRegistry
 import cv.cbglib.logging.MetricsOverlay
-import cv.demoapps.bangdemo.MyApp
-import java.io.IOException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 

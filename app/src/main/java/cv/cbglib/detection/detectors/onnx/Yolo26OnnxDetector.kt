@@ -3,7 +3,6 @@ package cv.cbglib.detection.detectors.onnx
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtSession
 import cv.cbglib.detection.Detection
-import kotlin.collections.get
 
 /**
  * Open class for Yolo model version 26
@@ -61,7 +60,6 @@ open class Yolo26OnnxDetector(
 
         // expected shape of tensor 3D array [batch, attributes, detections]
         val numOfDetections = shape[2].toInt()
-
         val data = FloatArray(buffer.remaining()) // data size = attributes * detections
         buffer.get(data)
 

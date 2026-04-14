@@ -68,5 +68,8 @@ class MyApp : CVILIBGApplication() {
 
         DetectorRegistry.register("ONNX Yolo 26 RT NNAPI", "YV26_N_ep40_OPTIMIZED.onnx")
         { path -> Yolo26OnnxDetector(path, useNNAPI = true) }
+
+        DetectorRegistry.register("ONNX Yolo 8 RT Newest", "YV8_N_ep50_OPTIMIZED.onnx")
+        { path -> YoloOnnxDetector(path) }
     }
 }

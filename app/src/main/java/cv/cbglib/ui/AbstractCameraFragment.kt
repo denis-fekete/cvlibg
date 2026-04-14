@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import androidx.camera.view.PreviewView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
@@ -28,8 +27,8 @@ abstract class AbstractCameraFragment(private val layoutRes: Int) : Fragment() {
     protected lateinit var cameraxView: PreviewView
     protected lateinit var detectionOverlay: DetectionOverlay
     protected var metricsOverlay: MetricsOverlay? = null
-    protected lateinit var startQualityDetectionBtn: ImageButton
-    protected lateinit var exitQualityDetectionBtn: ImageButton
+    protected lateinit var switchToDetailedDetectionButton: View
+    protected lateinit var switchToFastDetectionButton: View
     protected var realtimeDetector: Detector? = null
     protected var qualityDetector: Detector? = null
 
@@ -54,8 +53,8 @@ abstract class AbstractCameraFragment(private val layoutRes: Int) : Fragment() {
             cameraxView,
             detectionOverlay,
             metricsOverlay,
-            startQualityDetectionBtn,
-            exitQualityDetectionBtn,
+            switchToDetailedDetectionButton,
+            switchToFastDetectionButton,
             realtimeDetector,
             qualityDetector
         )
@@ -70,8 +69,8 @@ abstract class AbstractCameraFragment(private val layoutRes: Int) : Fragment() {
         cameraxView = view.findViewById<PreviewView>(R.id.cameraxView)
         detectionOverlay = view.findViewById<DetectionOverlay>(R.id.detectionOverlay)
         metricsOverlay = view.findViewById<MetricsOverlay>(R.id.metricsOverlay)
-        startQualityDetectionBtn = view.findViewById<ImageButton>(R.id.startQualityDetectionBtn)
-        exitQualityDetectionBtn = view.findViewById<ImageButton>(R.id.endQualityDetectionBtn)
+        switchToDetailedDetectionButton = view.findViewById<View>(R.id.startQualityDetectionBtn)
+        switchToFastDetectionButton = view.findViewById<View>(R.id.endQualityDetectionBtn)
     }
 
     /**

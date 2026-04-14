@@ -3,7 +3,6 @@ package cv.cbglib.ui
 import android.content.Context
 import android.util.Log
 import android.view.View
-import android.widget.ImageButton
 import androidx.camera.view.PreviewView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -24,8 +23,8 @@ class AbstractCameraBase {
             cameraxView: PreviewView,
             detectionOverlay: DetectionOverlay,
             metricsOverlay: MetricsOverlay?,
-            startQualityDetectionBtn: ImageButton,
-            exitQualityDetectionBtn: ImageButton,
+            switchToDetailedDetectionButton: View,
+            switchToFastDetectionButton: View,
             realtimeDetector: Detector?,
             qualityDetector: Detector?
         ): CameraController {
@@ -50,17 +49,17 @@ class AbstractCameraBase {
                 }
             }
 
-            startQualityDetectionBtn.setOnClickListener {
+            switchToDetailedDetectionButton.setOnClickListener {
                 cameraController.switchToDetailedAnalysis()
-                startQualityDetectionBtn.visibility = View.GONE
-                exitQualityDetectionBtn.visibility = View.VISIBLE
+                switchToDetailedDetectionButton.visibility = View.GONE
+                switchToFastDetectionButton.visibility = View.VISIBLE
             }
 
-            exitQualityDetectionBtn.visibility = View.GONE
-            exitQualityDetectionBtn.setOnClickListener {
+            switchToFastDetectionButton.visibility = View.GONE
+            switchToFastDetectionButton.setOnClickListener {
                 cameraController.switchToFasterAnalysis()
-                exitQualityDetectionBtn.visibility = View.GONE
-                startQualityDetectionBtn.visibility = View.VISIBLE
+                switchToFastDetectionButton.visibility = View.GONE
+                switchToDetailedDetectionButton.visibility = View.VISIBLE
             }
 
             return cameraController

@@ -1,7 +1,6 @@
 package cv.demoapps.bangdemo.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
