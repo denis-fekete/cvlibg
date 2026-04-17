@@ -5,15 +5,15 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.NumberPicker
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
-import cv.cbglib.commonUI.ResizableSpinnerAdapter
+import cv.cbglib.ui.ResizableSpinnerAdapter
 import cv.cbglib.detection.detectors.DetectorRegistry
 import cv.cbglib.services.SettingsService
+import cv.cbglib.ui.StringListSpinner
 import cv.demoapps.bangdemo.MyApp
 import cv.demoapps.bangdemo.R
 
@@ -32,77 +32,41 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val detectorRegistryModels = DetectorRegistry.getModelNames()
 
-        setupSpinnerWithStringValues(
-            R.id.realtimeModelSpinner,
-            DetectorRegistry.getModelNames(),
-            settingsService.realtimeModel
-        ) { selected: String ->
-            settingsService.realtimeModel = selected
+        val realtimeModelSpinner = view.findViewById<StringListSpinner>(R.id.realtimeModelSpinner)
+        realtimeModelSpinner.setup(
+            detectorRegistryModels,
+            settingsService.realtimeModel,
+            settingsService.fontSize.toFloat()
+        ) { selected: Int ->
+            settingsService.realtimeModel = detectorRegistryModels[selected]
             settingsService.save()
         }
 
-        setupSpinnerWithStringValues(
-            R.id.preciseModelSpinner,
-            DetectorRegistry.getModelNames(),
-            settingsService.precisionModel
-        ) { selected: String ->
-            settingsService.precisionModel = selected
+        val preciseModelSpinner = view.findViewById<StringListSpinner>(R.id.preciseModelSpinner)
+        preciseModelSpinner.setup(
+            detectorRegistryModels,
+            settingsService.precisionModel,
+            settingsService.fontSize.toFloat()
+        ) { selected: Int ->
+            settingsService.precisionModel = detectorRegistryModels[selected]
             settingsService.save()
         }
 
-        setupSpinnerWithStringValues(
-            R.id.languageSpinner,
+        val languageSpinner = view.findViewById<StringListSpinner>(R.id.languageSpinner)
+        languageSpinner.setup(
             SettingsService.languageOptions,
-            settingsService.language
-        ) { selected: String ->
-            settingsService.language = selected
+            settingsService.language,
+            settingsService.fontSize.toFloat()
+        ) { selected: Int ->
+            settingsService.language = SettingsService.languageOptions[selected]
             settingsService.save()
         }
 
         setupPerformanceMonitorSwitch()
 
         setupFontPicker(view)
-    }
-
-
-    /**
-     * Reusable function to setup Android Spinner UI element with String array values.
-     */
-    private fun setupSpinnerWithStringValues(
-        spinnerId: Int,
-        items: Collection<String>,
-        selectedItem: String?,
-        onItemChanged: (String) -> Unit
-    ) {
-        val spinner = view?.findViewById<Spinner>(spinnerId)
-        val itemArray = items.toTypedArray()
-
-        val modelAdapter = ResizableSpinnerAdapter(
-            requireContext(),
-            itemArray,
-            TypedValue.COMPLEX_UNIT_SP,
-            settingsService.fontSize.toFloat(),
-        )
-        spinner?.adapter = modelAdapter
-
-        val index = if (selectedItem != null) items.indexOf(selectedItem) else -1
-        spinner?.setSelection(if (index == -1) 0 else index, false)
-
-        spinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            var lastSelected: String = ""
-
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val current = itemArray[position]
-
-                if (current == lastSelected) return
-
-                lastSelected = current
-                onItemChanged(current)
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
     }
 
     /**

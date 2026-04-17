@@ -1,11 +1,12 @@
 package cv.cbglib.detection
 
-import android.os.SystemClock
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import cv.cbglib.detection.detectors.DetectorResult
 import cv.cbglib.detection.detectors.Detector
 import cv.cbglib.logging.MetricsOverlay
+import cv.cbglib.utils.Timer
+import cv.cbglib.utils.TimerResult
 
 class ImageAnalyzer(
     private val detectionOverlay: DetectionOverlay,
@@ -44,7 +45,7 @@ class ImageAnalyzer(
 
         val detectorResult: DetectorResult?
 
-        val totalTimeStart = SystemClock.elapsedRealtimeNanos()
+        val totalTimeStart = Timer.getTime()
         if (realtimeDetector != null && useRealtimeDetector) {
             detectorResult = realtimeDetector.run(bitmap)
             detectorRunning = false
@@ -57,14 +58,14 @@ class ImageAnalyzer(
         } else {
             detectorResult = null
         }
-
-        val totalTimeEnd = SystemClock.elapsedRealtimeNanos()
+        val totalTimeEnd = Timer.getTime()
 
         if (detectorResult != null) {
             metricsOverlay?.post {
                 metricsOverlay.updateLogData(
-                    detectorResult.metrics,
-                    if (detectorResult.showMetrics) totalTimeEnd - totalTimeStart else null
+                    detectorResult.performanceMetrics,
+                    detectorResult.otherMetrics,
+                    if (detectorResult.showMetrics) TimerResult(totalTimeEnd - totalTimeStart) else null
                 )
             }
 
@@ -77,7 +78,7 @@ class ImageAnalyzer(
 
     /**
      * Sets Analyzer internal state to use precise detector and freeze next image analysis. Finalized image analysis
-     * will be shown on [detectionOverlay]. To unfreeze and continue with realtime detection call [resumeRealtimeAnalysis].
+     * will be shown on [detectionOverlay]. To unfreeze and continue with realtime detection call [switchToFasterAnalysis].
      */
     fun switchToDetailedAnalysis() {
         useRealtimeDetector = false

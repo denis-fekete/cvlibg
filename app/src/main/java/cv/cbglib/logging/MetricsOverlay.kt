@@ -7,20 +7,26 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.util.AttributeSet
+import android.view.View
+import cv.cbglib.utils.TimerResult
+import java.util.Locale.getDefault
 import kotlin.math.max
 
 /**
- * [cv.cbglib.logging.MetricsOverlay] is derived from [LogOverlay], its purpose is draw performance related
- * metrics/logs onto the screen.
+ * View for drawing [cv.cbglib.detection.detectors.Detector] related metrics, such as performance, or detected objects.
+ * Its main purpose is to provide developers with quick debug tool showing performance.
  */
-class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<MetricsValue>(context, attrs) {
+class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     private var tmpAverage: Long = 0
     private var average: Long = 0
     private var cnt: Int = 0
     private val avgUpdateVal: Int = 10
     private var bgRect: RectF = RectF()
-    private var total: Long? = 0L
     private var textList = mutableListOf<String>()
+
+    private var performanceMetrics: MutableMap<String, TimerResult> = mutableMapOf()
+    private var otherMetrics: MutableMap<String, MetricsValue> = mutableMapOf()
+    private var totalTime: TimerResult? = null
 
     private val textBackgroundPaint = Paint().apply {
         color = Color.rgb(20, 20, 20)
@@ -36,15 +42,22 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
         alpha = 200
     }
 
-    fun updateLogData(data: List<MetricsValue>, total: Long?) {
-        this.data.clear()
-        this.data.addAll(data)
-        this.total = total
+    fun updateLogData(performance: Map<String, TimerResult>, other: Map<String, MetricsValue>, total: TimerResult?) {
+        performanceMetrics.clear()
+        otherMetrics.clear()
+
+        performanceMetrics.putAll(performance)
+        otherMetrics.putAll(other)
+
+        totalTime = total
+
         invalidate()
     }
 
-    override fun drawLogs(canvas: Canvas) {
-        if (data.isEmpty() && total == null) return
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        if (performanceMetrics.isEmpty() && otherMetrics.isEmpty() && totalTime == null) return
 
         val baseOffset = textPaint.fontMetrics.run { bottom - top }
         val startX = width * 0.02f
@@ -52,21 +65,22 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
         var offsetY = startY
         var maxWidth = 0f
 
-        if (total != null) {
+        if (totalTime != null) {
             // count average
             if (cnt >= avgUpdateVal) {
                 average = tmpAverage / avgUpdateVal
                 tmpAverage = 0
                 cnt = 0
             }
-            tmpAverage += total!!
+            tmpAverage += totalTime!!.nanos
             cnt++
         }
 
         // measure all text widths and add it to the textList variable
         textList.clear()
-        data.forEach {
-            val text = "${it.prefix}: ${it.value}${it.suffix}\n"
+
+        performanceMetrics.forEach {
+            val text = "${it.key.uppercase(getDefault())}: ${it.value.millis}ms\n"
             textList.add(text)
 
             val textWidth = textPaint.measureText(text)
@@ -75,8 +89,21 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
             }
         }
 
-        if (total != null) {
-            textList.add("Total : ${total!! / 1_000_000}ms")
+        textList.add("") // spacer
+
+        otherMetrics.forEach {
+            val text = "${it.value.prefix}: ${it.value.value}${it.value.suffix}\n"
+            textList.add(text)
+
+            val textWidth = textPaint.measureText(text)
+            if (maxWidth < textWidth) {
+                maxWidth = textWidth
+            }
+        }
+
+
+        if (totalTime != null) {
+            textList.add("Total : ${totalTime!!.millis}ms")
             maxWidth = max(maxWidth, textPaint.measureText(textList.last()))
 
             textList.add("Average (last $avgUpdateVal): ${average / 1_000_000}ms")
@@ -85,7 +112,8 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : LogOverlay<Metric
 
         // draw background rectangle
         val padding = 8
-        val textHeight = (data.size + 2) * baseOffset // +1 for Average, +1 for total
+        // +1 for Average, +1 for total, +1 for space
+        val textHeight = (textList.size) * baseOffset
 
         bgRect.left = startX - padding
         bgRect.top = startY - baseOffset - padding

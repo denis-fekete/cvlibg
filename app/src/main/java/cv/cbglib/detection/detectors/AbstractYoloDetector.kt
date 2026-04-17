@@ -2,6 +2,7 @@ package cv.cbglib.detection.detectors
 
 import cv.cbglib.detection.Detection
 import cv.cbglib.detection.ImageDetails
+import cv.cbglib.utils.TimerResult
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfFloat
@@ -355,5 +356,13 @@ abstract class AbstractYoloDetector(
         letterBoxMat.release()
         rgbMat.release()
         floatMat.release()
+    }
+
+    companion object {
+        val METRICS_LETTERBOX_KEY = "letterbox"
+        val METRICS_CONVERSION_KEY = "conversion"
+        val METRICS_INTERFACE_KEY = "inference"
+        val METRICS_EXTRACT_KEY = "extract"
+        val METRICS_NMS_KEY = "nms"
     }
 }

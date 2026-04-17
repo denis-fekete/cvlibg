@@ -1,6 +1,7 @@
 package cv.cbglib.services
 
 import android.app.Application
+import android.content.Context
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -107,5 +108,30 @@ class JSONAssetService<DataType : Any, KeyType : Any>(
         }
 
         return result
+    }
+
+    /**
+     * @return [Boolean] True if [fileName] ends with '.json'.
+     */
+    private fun isJsonFile(fileName: String): Boolean {
+        return fileName.endsWith(".json")
+    }
+
+    /**
+     * Saves the [items] of the [cv.cbglib.services.JSONAssetService] into the devices storage under the [fileName].
+     *
+     * @param fileName name the result '.json' file. If string doesn't end with '.json', it is appended.
+     */
+    fun save(fileName: String) {
+        val jsonString = Json.encodeToString(items)
+
+        val jsonFileName = if (isJsonFile(fileName))
+            fileName
+        else
+            "$fileName.json"
+
+        app.applicationContext.openFileOutput(jsonFileName, Context.MODE_PRIVATE)
+            .bufferedWriter(charset)
+            .use { it.write(jsonString) }
     }
 }

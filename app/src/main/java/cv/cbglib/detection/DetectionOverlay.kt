@@ -3,6 +3,8 @@ package cv.cbglib.detection
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -80,11 +82,28 @@ abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(c
         return tmpRect
     }
 
+    private val defaultPaint = Paint().apply {
+        color = Color.WHITE
+        style = Paint.Style.STROKE
+        strokeWidth = 5f
+        isAntiAlias = true
+        alpha = 200
+    }
+
     /**
      * Function is called each [onDraw] called (every time this view is invalidated).
      * Derived classes must implement this function!
      */
-    protected abstract fun drawDetections(canvas: Canvas)
+    protected open fun drawDetections(canvas: Canvas) {
+        detections.forEach { det ->
+            // scale detection into correct size, because detection from model might not have same width and height
+            // as camera images, or screen that this overlay is drawing onto
+            scaleDetectionToScreenRect(det) // result stored in tmpRect
+
+            canvas.drawRect(tmpRect, defaultPaint)
+        }
+    }
+
 
     /**
      * Cleans internal detection list and adds new boxes into it.

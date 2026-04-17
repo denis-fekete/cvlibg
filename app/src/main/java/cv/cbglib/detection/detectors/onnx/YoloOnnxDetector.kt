@@ -8,8 +8,8 @@ import android.util.Log
 import cv.cbglib.detection.Detection
 import cv.cbglib.detection.detectors.AbstractYoloDetector
 import cv.cbglib.detection.detectors.DetectorResult
-import cv.cbglib.logging.MetricsValue
 import cv.cbglib.services.AssetService
+import cv.cbglib.utils.Timer
 import org.opencv.android.Utils
 import org.opencv.core.Core
 import org.opencv.core.CvType
@@ -64,47 +64,47 @@ open class YoloOnnxDetector(
             bitmapMat
         )
         // resize image into expected size for model, apply letterboxing if needed
-        val (letterBoxMat, timeLetterboxing) = measureTime(showMetrics) {
+        val (letterBoxMat, letterboxingTime) = Timer.measure(showMetrics) {
             resizeAndLetterBox(bitmapMat, modelInputWidth)
         }
 
         // create tensor from Mat
-        val (tensor, timeTensor) = measureTime(showMetrics) { matToTensor(letterBoxMat) }
+        val (tensor, tensorConversion) = Timer.measure(showMetrics) { matToTensor(letterBoxMat) }
 
         if (tensor == null) {
-            return DetectorResult(emptyList(), imageDetails, false, emptyList())
+            return DetectorResult(emptyList(), imageDetails, false)
         }
 
         // run model on tensor, and get result
-        val (results, timeDetection) = measureTime(showMetrics) { inferenceEngine.run(mapOf(inputName to tensor)) }
+        val (results, inferenceTime) = Timer.measure(showMetrics) { inferenceEngine.run(mapOf(inputName to tensor)) }
 
         // extract bounding boxes [Detection] objects from results that
-        val (detections, timeExtractDetections) = measureTime(showMetrics) { thresholdingFilter(results) }
+        val (detections, extractionTime) = Timer.measure(showMetrics) { thresholdingFilter(results) }
 
         // apply NMS onto results
-        val (nsmFilteredDetections, timeNMS) = measureTime(showMetrics) { ilibgNmsFilterByClass(detections) }
+        val (nsmFilteredDetections, nmsTime) = Timer.measure(showMetrics) { ilibgNmsFilterByClass(detections) }
 
         results.close()
         tensor.close()
 
-        val metricsList = if (showMetrics && verboseMetrics) {
-            listOf(
-                MetricsValue("LetterBox", timeLetterboxing / 1_000_000f, "ms"),
-                MetricsValue("Tensor", timeTensor / 1_000_000f, "ms"),
-                MetricsValue("Detection", timeDetection / 1_000_000f, "ms"),
-                MetricsValue("Extract detections", timeExtractDetections / 1_000_000f, "ms"),
-                MetricsValue("NMS", timeNMS / 1_000_000f, "ms"),
-                MetricsValue("Detections", nsmFilteredDetections.size.toFloat()),
+
+        val performanceMetrics = if (showMetrics && verboseMetrics) {
+            mapOf(
+                METRICS_LETTERBOX_KEY to letterboxingTime,
+                METRICS_CONVERSION_KEY to tensorConversion,
+                METRICS_INTERFACE_KEY to inferenceTime,
+                METRICS_EXTRACT_KEY to extractionTime,
+                METRICS_NMS_KEY to nmsTime,
             )
-        } else { // show metrics but only basic (total)
-            emptyList()
+        } else {
+            emptyMap()
         }
 
         return DetectorResult(
             nsmFilteredDetections,
             imageDetails,
             showMetrics = showMetrics,
-            metricsList
+            performanceMetrics = performanceMetrics,
         )
     }
 
@@ -125,7 +125,7 @@ open class YoloOnnxDetector(
         threshold: Float = confThreshold
     ): MutableList<Detection> {
         if (results.size() < 1)
-            return mutableListOf<Detection>()
+            return mutableListOf()
 
         val tensor = results[0] as OnnxTensor // get first result of the model
         val buffer = tensor.floatBuffer // access the tensor as a FloatBuffer
@@ -211,6 +211,9 @@ open class YoloOnnxDetector(
         // separate channels
         val channels = ArrayList<Mat>()
         Core.split(floatMat, channels)
+
+        if (channels.size != 3)
+            return null
 
         // onnx model expects an CHW format in its tensor, CHW: [(R1, R2, R3, ...), [G1, G2, ...], [B1, ... )]
         val height = mat.rows()

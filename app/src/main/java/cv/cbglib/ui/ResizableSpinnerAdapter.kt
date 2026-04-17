@@ -1,5 +1,6 @@
-package cv.cbglib.commonUI
+package cv.cbglib.ui
 
+import android.R
 import android.content.Context
 import android.util.TypedValue
 import android.view.View
@@ -21,9 +22,9 @@ class ResizableSpinnerAdapter(
     private val items: Array<String>,
     private var textUnit: Int = TypedValue.COMPLEX_UNIT_SP,
     private var textSize: Float
-) : ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, items) {
+) : ArrayAdapter<String>(context, R.layout.simple_spinner_item, items) {
     init {
-        setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        setDropDownViewResource(R.layout.simple_spinner_dropdown_item)
     }
 
     fun setTextSize(unit: Int = TypedValue.COMPLEX_UNIT_SP, newSize: Float) {

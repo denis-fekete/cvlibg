@@ -23,15 +23,16 @@ class AssetService(
     private val pathToModels: String = "models",
     private val allowedExtensions: List<String> = listOf(".onnx")
 ) {
-    val availableModels: Array<String> by lazy {
+    val availableModels: List<String> by lazy {
         try {
-            val files = app.assets.list(pathToModels) ?: return@lazy emptyArray<String>()
+            val files = app.assets.list(pathToModels) ?: return@lazy emptyList<String>()
 
+            // return all files if extensions are not specified
             if (allowedExtensions.isEmpty()) {
-                return@lazy files
+                return@lazy files.toList()
             }
 
-            var availableModels: ArrayList<String> = arrayListOf()
+            var availableModels = mutableListOf<String>()
             for (file in files) {
                 for (extension in allowedExtensions) {
                     if (file.endsWith(extension, ignoreCase = true)) {
@@ -39,10 +40,10 @@ class AssetService(
                     }
                 }
             }
-            return@lazy availableModels.toTypedArray()
+            return@lazy availableModels
         } catch (e: Exception) {
-            e.message?.let { Log.e("CBGLIB", it) }
-            emptyArray<String>()
+            e.message?.let { Log.e("AssetService", it) }
+            return@lazy emptyList<String>()
         }
     }
 

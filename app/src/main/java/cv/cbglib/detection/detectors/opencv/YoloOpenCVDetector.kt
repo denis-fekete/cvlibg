@@ -4,8 +4,8 @@ import android.graphics.Bitmap
 import cv.cbglib.detection.Detection
 import cv.cbglib.detection.detectors.AbstractYoloDetector
 import cv.cbglib.detection.detectors.DetectorResult
-import cv.cbglib.logging.MetricsValue
 import cv.cbglib.services.AssetService
+import cv.cbglib.utils.Timer
 import org.opencv.android.Utils
 import org.opencv.core.CvType
 import org.opencv.core.Mat
@@ -43,13 +43,14 @@ open class YoloOpenCVDetector(
             bitmapMat
         )
         // resize image into expected size for model, apply letterboxing if needed
-        val (letterBoxMat, timeLetterboxing) = measureTime(showMetrics) {
+        val (letterBoxMat, letterboxingTime) = Timer.measure(showMetrics) {
             resizeAndLetterBox(bitmapMat, modelInputWidth)
         }
 
         // create tensor from Mat
-        Imgproc.cvtColor(letterBoxMat, rgbMat, Imgproc.COLOR_RGBA2RGB)
-        val (blob, timeBlob) = measureTime(showMetrics) {
+        val (blob, blobConversion) = Timer.measure(showMetrics) {
+            Imgproc.cvtColor(letterBoxMat, rgbMat, Imgproc.COLOR_RGBA2RGB)
+
             Dnn.blobFromImage(
                 rgbMat,
                 1.0 / 255.0,
@@ -63,36 +64,36 @@ open class YoloOpenCVDetector(
 
         inferenceEngine.setInput(blob)
         // run opencv net runtime and get results
-        val (_, timeDetection) = measureTime(showMetrics) {
+        val (_, inferenceTime) = Timer.measure(showMetrics) {
             results = inferenceEngine.forward()
         }
 
         // extract bounding boxes [Detection] objects from results that
-        val (detections, timeExtractDetections) = measureTime(showMetrics) { thresholdingFilter(results) }
+        val (detections, extractionTime) = Timer.measure(showMetrics) { thresholdingFilter(results) }
 
         // apply NMS onto results
-        val (nsmFilteredDetections, timeNMS) = measureTime(showMetrics) { opencvNmsFilterByClass(detections) }
+        val (nsmFilteredDetections, nmsTime) = Timer.measure(showMetrics) { opencvNmsFilterByClass(detections) }
 
-        val metricsList = if (showMetrics && verboseMetrics) {
-            listOf(
-                MetricsValue("LetterBox", timeLetterboxing / 1_000_000f, "ms"),
-                MetricsValue("Blob", timeBlob / 1_000_000f, "ms"),
-                MetricsValue("Detection", timeDetection / 1_000_000f, "ms"),
-                MetricsValue("Extract detections", timeExtractDetections / 1_000_000f, "ms"),
-                MetricsValue("NMS", timeNMS / 1_000_000f, "ms"),
-                MetricsValue("Detections", nsmFilteredDetections.size.toFloat()),
+        val performanceMetrics = if (showMetrics && verboseMetrics) {
+            mapOf(
+                METRICS_LETTERBOX_KEY to letterboxingTime,
+                METRICS_CONVERSION_KEY to blobConversion,
+                METRICS_INTERFACE_KEY to inferenceTime,
+                METRICS_EXTRACT_KEY to extractionTime,
+                METRICS_NMS_KEY to nmsTime,
             )
         } else {
-            emptyList()
+            emptyMap()
         }
 
         return DetectorResult(
             nsmFilteredDetections,
             imageDetails,
-            showMetrics = verboseMetrics,
-            metrics = metricsList,
+            showMetrics = showMetrics,
+            performanceMetrics = performanceMetrics,
         )
     }
+
 
     /**
      * Extracts list of [cv.cbglib.detection.Detection] objects from OpenCV [Net] result. Value for thresholding is
