@@ -69,9 +69,4 @@ abstract class AbstractCameraActivity(private val layoutRes: Int) : AppCompatAct
      * the [realtimeDetector], [qualityDetector], otherwise detections will not be performed [CameraController].
      */
     protected abstract fun setupDetectors()
-
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraController.stop()
-    }
 }

@@ -2,51 +2,38 @@ package cv.cbglib.detection.detectors.onnx
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtSession
+import android.util.Size
 import cv.cbglib.detection.Detection
+import cv.cbglib.detection.detectors.AbstractYoloDetector
 
 /**
- * Open class for Yolo model version 26
+ * Class implementing abstract [cv.cbglib.detection.detectors.Detector] and [AbstractYoloDetector]. This class uses
+ * OpenCV's [org.opencv.dnn.Net] as an inference runtime/engine. This detector supports YOLO 26 version.
+ *
+ * This detector scales [Detection] objects to input image resolution.
+ *
+ * @param modelPath path to the ONNX model in assets
+ * @param confThreshold threshold used for filtering detections
+ * @param applyNMS use or not use Non-Maximum Suppression
+ * @param nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
+ * @param inputDataSize expected size for model loaded from the [modelPath]
+ * @param useNNAPI whenever to use ONNX's NNAPI for accelerated inference
  */
 open class Yolo26OnnxDetector(
     modelPath: String,
     confThreshold: Float = 0.6f,
+    inputDataSize: Size = Size(640, 640),
     useNNAPI: Boolean = false,
 ) : YoloOnnxDetector(
     modelPath,
     confThreshold,
     applyNMS = false,
     0f,
+    inputDataSize,
     useNNAPI,
 ) {
-    override fun thresholdingFilter(
-        results: Array<Array<FloatArray>>,
-        threshold: Float
-    ): List<Detection> {
-        // remove batch dimension as model only outputs one batch
-        val rawDetections = results[0] // [values, detections]
-
-        val detections = mutableListOf<Detection>()
-
-        for (value in rawDetections) {
-            val score = value[4]
-            if (score < confThreshold)
-                continue
-
-            val bestClass = value[5].toInt()
-            val left = value[0]
-            val top = value[1]
-            val right = value[2]
-            val bottom = value[3]
-            val width = right - left
-            val height = bottom - top
-
-            // Yolo 26 is not mid centered output is not mid centered, but uses corners instead
-            detections.add(Detection(left + width / 2, top + height / 2, width, height, bestClass, score))
-        }
-
-        return detections
-    }
-
+    override val detectorName = "Yolo26OnnxDetector"
+    
     override fun thresholdingFilter(
         results: OrtSession.Result,
         threshold: Float
@@ -76,15 +63,19 @@ open class Yolo26OnnxDetector(
             val top = data[index + 1]
             val right = data[index + 2]
             val bottom = data[index + 3]
-            val width = right - left
-            val height = bottom - top
+
+            val w = right - left
+            val h = bottom - top
+
+            val sX = ((left + w / 2) - imageDetails.padX) / imageDetails.scale
+            val sY = ((top + h / 2) - imageDetails.padY) / imageDetails.scale
+            val sW = w / imageDetails.scale
+            val sH = h / imageDetails.scale
 
             // Yolo 26 is not mid centered output is not mid centered, but uses corners instead
-            detections.add(Detection(left + width / 2, top + height / 2, width, height, bestClass, score))
+            detections.add(Detection(sX, sY, sW, sH, bestClass, score))
         }
 
         return detections
     }
-
-
 }

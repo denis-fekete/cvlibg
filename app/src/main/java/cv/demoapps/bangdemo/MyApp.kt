@@ -5,16 +5,27 @@ import cv.cbglib.CVILIBGApplication
 import cv.cbglib.detection.detectors.DetectorRegistry
 import cv.cbglib.detection.detectors.onnx.Yolo26OnnxDetector
 import cv.cbglib.detection.detectors.onnx.YoloOnnxDetector
-import cv.cbglib.detection.detectors.opencv.YoloOpenCVDetector
 import cv.cbglib.services.JSONAssetService
+import cv.cbglib.services.JSONStorageService
+import cv.cbglib.services.SettingsService
 import cv.demoapps.bangdemo.data.CardDetail
 import cv.demoapps.bangdemo.data.Class2Link
+import cv.demoapps.bangdemo.data.UserPreferences
 
 class MyApp : CVILIBGApplication() {
     lateinit var cardDetailsService: JSONAssetService<CardDetail, String>
     lateinit var class2linkService: JSONAssetService<Class2Link, Int>
     var errorMessageCardDetail: String? = null
     var errorMessageClass2Link: String? = null
+
+    val settingsService: SettingsService<UserPreferences> by lazy {
+        SettingsService(
+            this,
+            "settings.json",
+            UserPreferences.serializer(),
+            Charsets.UTF_16BE
+        ) { UserPreferences() }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -26,7 +37,7 @@ class MyApp : CVILIBGApplication() {
                 keySelector = { it.id },
                 Charsets.UTF_16BE
             )
-            // forcing load, these will always be used, better to load them now
+            // forcing load
             cardDetailsService.items
         } catch (exc: Exception) {
             errorMessageCardDetail = "JsonAssetService failed for assets/details/: Error message: ${exc.message}"
@@ -40,7 +51,7 @@ class MyApp : CVILIBGApplication() {
                 keySelector = { it.classId },
                 Charsets.UTF_8
             )
-            // forcing load, these will always be used, better to load them now
+            // forcing load
             class2linkService.items
         } catch (exc: Exception) {
             errorMessageClass2Link = "JsonAssetService failed for Class2Link.json: Error message: ${exc.message}"
@@ -48,28 +59,64 @@ class MyApp : CVILIBGApplication() {
     }
 
     override fun registerModels() {
-        DetectorRegistry.register("ONNX Yolo8 RT", "YV8_N_ep40.onnx")
+//        DetectorRegistry.register("Yolo 26 ALPHA40", "Y26_ALPHA40.onnx")
+//        { path -> Yolo26OnnxDetector(path) }
+//
+//        DetectorRegistry.register("Yolo 26 ALPHA240", "Y26_ALPHA240.onnx")
+//        { path -> Yolo26OnnxDetector(path) }
+//
+//
+//        DetectorRegistry.register("Yolo 26 BETA40", "Y26_BETA40.onnx")
+//        { path -> Yolo26OnnxDetector(path) }
+//
+//        DetectorRegistry.register("Yolo 26 GAMMA40", "Y26_GAMMA40.onnx")
+//        { path -> Yolo26OnnxDetector(path) }
+
+        DetectorRegistry.register("Y8_N_ep50_b8_w3_bg_added_CPU", "Y8_N_ep50_b8_w3_bg_added_CPU.onnx")
         { path -> YoloOnnxDetector(path) }
 
-        DetectorRegistry.register("ONNX Yolo8 RT no NMS", "YV8_N_ep40.onnx")
-        { path -> YoloOnnxDetector(path, applyNMS = false) }
+        DetectorRegistry.register(
+            "Y8_N_ep50_b8_w3_bg_added_CPU_OPTIMIZED",
+            "Y8_N_ep50_b8_w3_bg_added_CPU_OPTIMIZED.onnx"
+        )
+        { path -> YoloOnnxDetector(path) }
 
-        DetectorRegistry.register("ONNX Yolo8 P", "YV8_M_ep50.onnx")
+        DetectorRegistry.register(
+            "Y8_N_ep50_b8_w3_bg_added_GPU",
+            "Y8_N_ep50_b8_w3_bg_added_GPU.onnx"
+        )
         { path -> YoloOnnxDetector(path) }
-        DetectorRegistry.register("ONNX Yolo11 RT(exp)", "Y11_N_ep10.onnx")
+
+        DetectorRegistry.register(
+            "Y8_N_ep50_b8_w3_bg_added_NONSIMPLIFIED",
+            "Y8_N_ep50_b8_w3_bg_added_NONSIMPLIFIED.onnx"
+        )
         { path -> YoloOnnxDetector(path) }
-        DetectorRegistry.register("ONNX Yolo 26 RT", "Y26_N_ep40.onnx")
+
+
+        DetectorRegistry.register(
+            "Y26_sy_ep40_gamma_CPU",
+            "Y26_sy_ep40_gamma_CPU.onnx"
+        )
         { path -> Yolo26OnnxDetector(path) }
 
-        DetectorRegistry.register("OpenCV Yolo8 RT", "YV8_N_ep40.onnx")
-        { path -> YoloOpenCVDetector(path) }
-        DetectorRegistry.register("OpenCV Yolo8 P", "YV8_M_ep50.onnx")
-        { path -> YoloOpenCVDetector(path) }
 
-        DetectorRegistry.register("ONNX Yolo 26 RT NNAPI", "YV26_N_ep40_OPTIMIZED.onnx")
-        { path -> Yolo26OnnxDetector(path, useNNAPI = true) }
+        DetectorRegistry.register(
+            "Y26_sy_ep40_gamma_CPU_OPTIMIZED",
+            "Y26_sy_ep40_gamma_CPU_OPTIMIZED.onnx"
+        )
+        { path -> Yolo26OnnxDetector(path) }
 
-        DetectorRegistry.register("ONNX Yolo 8 RT Newest", "YV8_N_ep50_OPTIMIZED.onnx")
-        { path -> YoloOnnxDetector(path) }
+        DetectorRegistry.register(
+            "Y26_sy_ep40_gamma_GPU",
+            "Y26_sy_ep40_gamma_GPU.onnx"
+        )
+        { path -> Yolo26OnnxDetector(path) }
+
+        DetectorRegistry.register(
+            "Y26_sy_ep40_gamma_NONSIMPLIFIED",
+            "Y26_sy_ep40_gamma_NONSIMPLIFIED.onnx"
+        )
+        { path -> Yolo26OnnxDetector(path) }
     }
 }

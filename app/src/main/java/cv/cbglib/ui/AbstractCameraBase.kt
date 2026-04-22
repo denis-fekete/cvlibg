@@ -33,12 +33,13 @@ class AbstractCameraBase {
 
             val cameraController = CameraController(
                 context,
-                lifecycleOwner,
                 cameraxView,
                 detectionOverlay,
                 metricsOverlay,
                 realtimeDetector,
-                qualityDetector
+                qualityDetector,
+                lifecycleOwner,
+                true
             )
 
             lifecycleOwner.lifecycleScope.launch {

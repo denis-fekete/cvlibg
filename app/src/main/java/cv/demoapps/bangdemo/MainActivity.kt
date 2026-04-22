@@ -10,6 +10,7 @@ import cv.cbglib.services.PermissionService
 class MainActivity : AppCompatActivity() {
     private lateinit var btnCamera: ImageButton
     private lateinit var btnSettings: ImageButton
+    private lateinit var btnBenchmark: ImageButton
     private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +47,7 @@ class MainActivity : AppCompatActivity() {
 
         btnCamera = findViewById<ImageButton>(R.id.btnNavCamera)
         btnSettings = findViewById<ImageButton>(R.id.btnNavSettings)
+        btnBenchmark = findViewById<ImageButton>(R.id.btnBenchmarks)
 
         btnCamera.setOnClickListener {
             navController.navigate(R.id.cameraFragment)
@@ -53,6 +55,10 @@ class MainActivity : AppCompatActivity() {
 
         btnSettings.setOnClickListener {
             navController.navigate(R.id.settingsFragment)
+        }
+
+        btnBenchmark.setOnClickListener {
+            navController.navigate(R.id.benchmarkFragment)
         }
     }
 }

@@ -21,12 +21,7 @@ abstract class CVILIBGApplication : Application() {
     val assetService: AssetService by lazy {
         AssetService(this)
     }
-
-    val settingsService: SettingsService by lazy {
-        SettingsService(this)
-    }
-
-
+    
     override fun onCreate() {
         super.onCreate()
         registerModels()

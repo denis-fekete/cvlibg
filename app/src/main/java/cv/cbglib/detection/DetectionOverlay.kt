@@ -60,25 +60,33 @@ abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(c
     }
 
     /**
-     * Scales [Detection] to current screen, [cv.cbglib.detection.detectors.Detector]s might use different size as
-     * inputs to models. Info about current image is stored in [imageDetails] that is updated alongside new
-     * [detections] in [updateBoxes] function that is called by inside [ImageAnalyzer].
+     * Scales [Detection] objects from [cv.cbglib.detection.detectors.Detector] resolution (same as resolution provided
+     * as its input [Bitmap]) into a resolution used by the smartphones screen.
+     *
+     * This method uses [tmpRect] variable!s
+     *
+     * @param det [Detection] object to be scaled
+     * @param detectionScaledToCamera whenever the detection was scaled to camera resolution, if not it will be scaled
+     * using [imageDetails].
+     *
+     * @return [RectF] object with correct resolution.
      */
-    protected fun scaleDetectionToScreenRect(det: Detection): RectF {
+    protected fun scaleDetectionToScreenRect(det: Detection, detectionScaledToCamera: Boolean = true): RectF {
         tmpRect = det.toRectF()
 
-        val fixedLeft = (tmpRect.left - imageDetails.padX) / imageDetails.scale
-        val fixedTop = (tmpRect.top - imageDetails.padY) / imageDetails.scale
-        val fixedRight = (tmpRect.right - imageDetails.padX) / imageDetails.scale
-        val fixedBottom = (tmpRect.bottom - imageDetails.padY) / imageDetails.scale
+        if (!detectionScaledToCamera) {
+            tmpRect.left = (tmpRect.left - imageDetails.padX) / imageDetails.scale
+            tmpRect.top = (tmpRect.top - imageDetails.padY) / imageDetails.scale
+            tmpRect.right = (tmpRect.right - imageDetails.padX) / imageDetails.scale
+            tmpRect.bottom = (tmpRect.bottom - imageDetails.padY) / imageDetails.scale
+        }
 
         tmpRect.set(
-            fixedLeft * scale - cropX,
-            fixedTop * scale - cropY,
-            fixedRight * scale - cropX,
-            fixedBottom * scale - cropY
+            tmpRect.left * scale - cropX,
+            tmpRect.top * scale - cropY,
+            tmpRect.right * scale - cropX,
+            tmpRect.bottom * scale - cropY
         )
-
         return tmpRect
     }
 
@@ -98,8 +106,7 @@ abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(c
         detections.forEach { det ->
             // scale detection into correct size, because detection from model might not have same width and height
             // as camera images, or screen that this overlay is drawing onto
-            scaleDetectionToScreenRect(det) // result stored in tmpRect
-
+            tmpRect = scaleDetectionToScreenRect(det) // result stored in tmpRect
             canvas.drawRect(tmpRect, defaultPaint)
         }
     }

@@ -1,67 +1,44 @@
 package cv.cbglib.services
 
 import android.app.Application
-import android.content.Context
-import android.content.SharedPreferences
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import java.io.File
+import java.nio.charset.Charset
 
-class SettingsService(
+class SettingsService<DataType : Any>(
     private val app: Application,
+    private val filename: String,
+    private val serializer: KSerializer<DataType>,
+    private val charset: Charset = Charsets.UTF_8,
+    private val defaultValue: () -> DataType
 ) {
-    lateinit var language: String // TODO: implement behavior
-    var fontSize: Int = 0
-    lateinit var realtimeModel: String
-    lateinit var precisionModel: String
-    var showMetrics: Boolean = false
-    var verboseMetrics: Boolean = false
-    var framesToSkip: Int = 5
-
-    var sPref: SharedPreferences = app.getSharedPreferences(
-        "settings",
-        Context.MODE_PRIVATE
-    )
-
-    init {
-        load()
-    }
-
     /**
-     * Loads settings from `SharedPreferences`.
+     * Data class of [DataType]. [DataType] must be `@Serializable`.
      */
-    fun load() {
-        realtimeModel = sPref.getString("realtimeModel", null).toString()
-        precisionModel = sPref.getString("precisionModel", null).toString()
-        language = sPref.getString("language", "").toString()
+    val data: DataType by lazy {
+        val file = File(app.applicationContext.filesDir, filename)
 
-        fontSize = sPref.getInt("fontSize", 0)
+        if (!file.exists()) {
+            return@lazy defaultValue()
+        }
 
-        showMetrics = sPref.getBoolean("showPerformance", false)
-        verboseMetrics = sPref.getBoolean("verbosePerformance", true)
+        val jsonText = file.bufferedReader(charset)
+            .use { it.readText() }
+            .removePrefix("\uFEFF") // removes ByteOrderMark from start of the file
 
-        framesToSkip = sPref.getInt("framesToSkip", 0)
+        val jsonObject = Json.decodeFromString(serializer, jsonText)
+        return@lazy jsonObject
     }
 
     /**
-     * Saves settings to the `SharedPreferences`.
+     * Saves the [items] of the [cv.cbglib.services.JSONAssetService] into the devices storage under the [fileName].
+     *
+     * @param fileName name the result '.json' file. If string doesn't end with '.json', it is appended.
      */
     fun save() {
-        val editor = sPref.edit()
-        editor.apply {
-            putString("realtimeModel", realtimeModel)
-            putString("precisionModel", precisionModel)
-
-            putString("language", language)
-
-            putInt("fontSize", fontSize)
-
-            putBoolean("showPerformance", showMetrics)
-            putBoolean("verbosePerformance", verboseMetrics)
-
-            putInt("framesToSkip", framesToSkip)
-
-        }.apply()
-    }
-
-    companion object {
-        val languageOptions = listOf("Čestina", "English", "Slovenčina")
+        val file = File(app.applicationContext.filesDir, filename)
+        val jsonText = Json.encodeToString(serializer, data)
+        file.bufferedWriter(charset).use { it.write(jsonText) }
     }
 }

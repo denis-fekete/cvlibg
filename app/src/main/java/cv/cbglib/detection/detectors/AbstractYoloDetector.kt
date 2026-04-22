@@ -1,8 +1,8 @@
 package cv.cbglib.detection.detectors
 
+import android.util.Size
 import cv.cbglib.detection.Detection
 import cv.cbglib.detection.ImageDetails
-import cv.cbglib.utils.TimerResult
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfFloat
@@ -14,23 +14,33 @@ import org.opencv.dnn.Dnn
 import org.opencv.imgproc.Imgproc
 import kotlin.collections.iterator
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * Abstract class for all Yolo based detectors, containing common functions.
+ * Class implementing abstract [cv.cbglib.detection.detectors.Detector]. This class contains common methods and
+ * variables for more specific implementation of YOLO detectors.
+ *
+ * This detector scales [Detection] objects to input image resolution.
+ *
+ * @param modelPath path to the ONNX model in assets
+ * @param confThreshold threshold used for filtering detections
+ * @param applyNMS use or not use Non-Maximum Suppression
+ * @param nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
+ * @param inputDataSize expected size for model loaded from the [modelPath]
  */
 abstract class AbstractYoloDetector(
     modelPath: String,
     confThreshold: Float = 0.6f,
     applyNMS: Boolean = true,
-    nmsThreshold: Float = 0.5f
+    nmsThreshold: Float = 0.5f,
+    inputDataSize: Size = Size(640, 640)
+
 ) : Detector(
     modelPath,
     confThreshold,
     applyNMS,
     nmsThreshold,
-    android.util.Size(640, 480)
+    inputDataSize
 ) {
     // "cache" variables to prevent initializing new object each new frame
     protected var bitmapMat = Mat()
@@ -144,12 +154,18 @@ abstract class AbstractYoloDetector(
             if (bestScore < threshold)
                 continue
 
+            imageDetails.scale
             val x = data[0 * numOfDetections + col]
             val y = data[1 * numOfDetections + col]
             val w = data[2 * numOfDetections + col]
             val h = data[3 * numOfDetections + col]
 
-            detections.add(Detection(x, y, w, h, bestClass, bestScore))
+            val sX = (x - imageDetails.padX) / imageDetails.scale
+            val sY = (y - imageDetails.padY) / imageDetails.scale
+            val sW = w / imageDetails.scale
+            val sH = h / imageDetails.scale
+
+            detections.add(Detection(sX, sY, sW, sH, bestClass, bestScore))
         }
 
         return detections
@@ -188,7 +204,7 @@ abstract class AbstractYoloDetector(
             val matRects = MatOfRect2d(*rect2dArr)
 
             // scores
-            val scores = FloatArray(classDetections.size) { i -> classDetections[i].score }
+            val scores = FloatArray(classDetections.size) { i -> classDetections[i].confidence }
             val matScores = MatOfFloat(*scores)
 
             // run NMS for this class
@@ -255,7 +271,7 @@ abstract class AbstractYoloDetector(
         val keptDetections = mutableListOf<Detection>()
 
         // important !! sort by score
-        detections.sortByDescending { it.score }
+        detections.sortByDescending { it.confidence }
 
         // mask for skipping detections, faster than removing them
         val mask = BooleanArray(detections.size) { false }
@@ -275,7 +291,7 @@ abstract class AbstractYoloDetector(
                     continue
 
                 val detection = detections[i]
-                val iou = computeIoU(best, detection)
+                val iou = Detection.computeIoU(best, detection)
 
                 if (iou > threshold) {
                     mask[i] = true
@@ -301,7 +317,7 @@ abstract class AbstractYoloDetector(
         val keptDetections = mutableListOf<Detection>()
 
         // important !! sort by score
-        detections.sortByDescending { it.score }
+        detections.sortByDescending { it.confidence }
 
         while (detections.isNotEmpty()) {
             // add the best detection to keptDetections list
@@ -313,7 +329,7 @@ abstract class AbstractYoloDetector(
             val iterator = detections.iterator()
             while (iterator.hasNext()) {
                 val detection = iterator.next()
-                val iou = computeIoU(best, detection)
+                val iou = Detection.computeIoU(best, detection)
 
                 if (iou > threshold) {
                     iterator.remove()
@@ -323,28 +339,6 @@ abstract class AbstractYoloDetector(
         return keptDetections
     }
 
-    /**
-     * Computes the Intersection over Union for given [Detection] objects
-     *
-     * @see <a href="https://learnopencv.com/non-maximum-suppression-theory-and-implementation-in-pytorch/"> Non Maximum
-     * Suppression: Theory and Implementation in PyTorch
-     * see
-     */
-    private fun computeIoU(first: Detection, second: Detection): Float {
-        // intersection box coordinates (top left) (bottom right) = (xx yy) (aa bb)
-        val xx = max(first.x1, second.x1)
-        val yy = max(first.y1, second.y1)
-        val aa = min(first.x2, second.x2)
-        val bb = min(first.y2, second.y2)
-
-        // intersection box dimensions
-        val intersectionW = max(0f, aa - xx)
-        val intersectionH = max(0f, bb - yy)
-        val intersectionArea = intersectionW * intersectionH
-
-        val unionArea = first.area + second.area - intersectionArea
-        return intersectionArea / unionArea
-    }
 
     /**
      * Clean up variables that are used as "cache" (not actual cache but frequently used where reallocation each frame
@@ -359,10 +353,10 @@ abstract class AbstractYoloDetector(
     }
 
     companion object {
-        val METRICS_LETTERBOX_KEY = "letterbox"
-        val METRICS_CONVERSION_KEY = "conversion"
-        val METRICS_INTERFACE_KEY = "inference"
-        val METRICS_EXTRACT_KEY = "extract"
-        val METRICS_NMS_KEY = "nms"
+        const val METRICS_LETTERBOX_KEY = "letterbox"
+        const val METRICS_CONVERSION_KEY = "conversion"
+        const val METRICS_INTERFACE_KEY = "inference"
+        const val METRICS_EXTRACT_KEY = "extract"
+        const val METRICS_NMS_KEY = "nms"
     }
 }

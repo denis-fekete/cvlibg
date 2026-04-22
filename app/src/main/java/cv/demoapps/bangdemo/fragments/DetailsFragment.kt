@@ -75,7 +75,7 @@ class DetailsFragment : Fragment() {
 
         titleTextView.text = thisCard.title
         descriptionTextView.text = thisCard.description
-        descriptionTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, settingsService.fontSize.toFloat())
+        descriptionTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, settingsService.data.fontSize.toFloat())
 
         if (thisCard.imagePath != null) {
             val bitmap =
@@ -103,7 +103,7 @@ class DetailsFragment : Fragment() {
                         context,
                         null,
                         TypedValue.COMPLEX_UNIT_SP,
-                        settingsService.fontSize.toFloat(),
+                        settingsService.data.fontSize.toFloat(),
                         bitmap
                     )
                 } else {
@@ -111,7 +111,7 @@ class DetailsFragment : Fragment() {
                         context,
                         linkCard.title,
                         TypedValue.COMPLEX_UNIT_SP,
-                        settingsService.fontSize.toFloat(),
+                        settingsService.data.fontSize.toFloat(),
                         null
                     )
                 }

@@ -2,8 +2,8 @@ package cv.cbglib.detection.detectors
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.os.SystemClock
 import android.util.Size
+import cv.cbglib.detection.Detection
 import cv.cbglib.services.AssetService
 import cv.demoapps.bangdemo.MyApp
 
@@ -11,15 +11,16 @@ import cv.demoapps.bangdemo.MyApp
  * Abstract class for all classes that will detect objects. Should work as a common interface for all derived Detectors.
  */
 abstract class Detector(
-    protected val modelPath: String,
+    public val modelPath: String,
     protected val confThreshold: Float = 0.6f,
     protected val applyNMS: Boolean = true,
     protected val nmsThreshold: Float = 0.5f,
-    public val inputDataSize: Size
+    val inputDataSize: Size = Size(640, 640)
 ) {
     private var isBuilt: Boolean = false
     protected var showMetrics: Boolean = false
     protected var verboseMetrics: Boolean = false
+    protected open val detectorName = "Detector"
 
     /**
      * Abstract function that takes [Bitmap] containing camera image as input and returns [DetectorResult].
@@ -45,7 +46,11 @@ abstract class Detector(
 
     /**
      * Runs image detection analysis and returns [DetectorResult] containing detections, image information and
-     * optionally metrics.
+     * optionally metrics. Output [Detection]s may and may not be scaled to input image, this depends on implementation.
+     *
+     * @param image input [Bitmap] containing the image to be analyzed
+     *
+     * @return [DetectorResult] object containing list [Detection] objects and metrics if enabled.
      */
     fun run(image: Bitmap): DetectorResult {
         if (!isBuilt) {
@@ -64,9 +69,7 @@ abstract class Detector(
      */
     fun build(context: Context) {
         if (isBuilt) return
-
         val assetService = (context.applicationContext as MyApp).assetService
-
         build(assetService)
     }
 
@@ -80,9 +83,7 @@ abstract class Detector(
      */
     fun build(assetService: AssetService) {
         if (isBuilt) return
-
         runtimeSetup(assetService)
-
         isBuilt = true
     }
 
@@ -99,6 +100,25 @@ abstract class Detector(
     fun setVerboseMetricsEnabled(value: Boolean) {
         verboseMetrics = value
     }
+    
+    override fun toString(): String {
+        return "$detectorName(" +
+                "modelPath=$modelPath, " +
+                "confThreshold=$confThreshold, " +
+                "nmsThreshold=$nmsThreshold, " +
+                "applyNMS=$applyNMS, )" +
+                "inputDataSize=(${inputDataSize.width},${inputDataSize.height}))"
+    }
 
-
+    /**
+     * To string function for CSV export
+     */
+    open fun toCsvString(): String {
+        return "$detectorName," +
+                "$modelPath, " +
+                "(confThreshold=$confThreshold;" +
+                "nmsThreshold=$nmsThreshold;" +
+                "applyNMS=$applyNMS;" +
+                "inputDataSize=(${inputDataSize.width},${inputDataSize.height}))"
+    }
 }

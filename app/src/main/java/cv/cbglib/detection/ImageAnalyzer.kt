@@ -21,6 +21,8 @@ class ImageAnalyzer(
 
     @Volatile
     private var useRealtimeDetector = true
+
+    @Volatile
     private var pauseAnalysis = false
 
     /**
@@ -28,14 +30,16 @@ class ImageAnalyzer(
      * and is an in buffers, these should be freed as fast as possible.
      */
     override fun analyze(imageProxy: ImageProxy) {
-        if (detectorRunning || pauseAnalysis) {
-            imageProxy.close()
-            return
-        }
-
+        // used for scaling camera resolution to screen resolution
+        // this can be before checking whenever analysis should run
         if (!resolutionInitialized) {
             detectionOverlay.setCameraResolution(imageProxy.width, imageProxy.height)
             resolutionInitialized = true
+        }
+
+        if (detectorRunning || pauseAnalysis) {
+            imageProxy.close()
+            return
         }
 
         val bitmap = imageProxy.toBitmap()
@@ -111,6 +115,14 @@ class ImageAnalyzer(
     fun setVerboseMetricsEnabled(value: Boolean) {
         realtimeDetector?.setVerboseMetricsEnabled(value)
         qualityDetector?.setVerboseMetricsEnabled(value)
+    }
+
+    fun pauseAnalysis() {
+        pauseAnalysis = true
+    }
+
+    fun unpauseAnalysis() {
+        pauseAnalysis = false
     }
 
     fun destroy() {

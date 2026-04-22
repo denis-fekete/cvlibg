@@ -5,6 +5,7 @@ import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import android.graphics.Bitmap
 import android.util.Log
+import android.util.Size
 import cv.cbglib.detection.Detection
 import cv.cbglib.detection.detectors.AbstractYoloDetector
 import cv.cbglib.detection.detectors.DetectorResult
@@ -17,18 +18,30 @@ import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
 import java.nio.FloatBuffer
 
+
 /**
- * Abstract class for all Yolo based detectors that use Onnx Runtime, containing common functions.
+ * Class implementing abstract [cv.cbglib.detection.detectors.Detector] and [AbstractYoloDetector]. This class uses
+ * ONNX's runtime as an inference runtime/engine. This detector supports YOLO version from 8 to 11.
+ *
+ * This detector scales [Detection] objects to input image resolution.
+ *
+ * @param modelPath path to the ONNX model in assets
+ * @param confThreshold threshold used for filtering detections
+ * @param applyNMS use or not use Non-Maximum Suppression
+ * @param nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
+ * @param inputDataSize expected size for model loaded from the [modelPath]
+ * @param useNNAPI whenever to use ONNX's NNAPI for accelerated inference
  */
 open class YoloOnnxDetector(
     modelPath: String,
     confThreshold: Float = 0.6f,
     applyNMS: Boolean = true,
     nmsThreshold: Float = 0.5f,
+    inputDataSize: Size = Size(640, 640),
     private val useNNAPI: Boolean = false,
-
-    ) : AbstractYoloDetector(modelPath, confThreshold, applyNMS, nmsThreshold) {
-    protected lateinit var inferenceEngine: OrtSession
+) : AbstractYoloDetector(modelPath, confThreshold, applyNMS, nmsThreshold, inputDataSize) {
+    override val detectorName = "YoloOnnxDetector"
+    protected lateinit var inferenceRuntime: OrtSession
     protected var ortEnvironment: OrtEnvironment = OrtEnvironment.getEnvironment()
     protected lateinit var inputName: String
     protected val modelInputWidth = 640
@@ -41,7 +54,7 @@ open class YoloOnnxDetector(
                 val sessionOptions = OrtSession.SessionOptions()
                 sessionOptions.addNnapi()
 
-                inferenceEngine = ortEnvironment.createSession(modelBytes, sessionOptions)
+                inferenceRuntime = ortEnvironment.createSession(modelBytes, sessionOptions)
                 Log.i(javaClass.simpleName, "Loaded NNAPI for OnnxRuntime")
                 runtimeInitialized = true
             } catch (e: Exception) {
@@ -50,11 +63,11 @@ open class YoloOnnxDetector(
         }
 
         if (!runtimeInitialized) {
-            inferenceEngine = ortEnvironment.createSession(modelBytes)
+            inferenceRuntime = ortEnvironment.createSession(modelBytes)
             Log.i(javaClass.simpleName, "Loaded default runtime for OnnxRuntime")
         }
 
-        inputName = inferenceEngine.inputNames.first()
+        inputName = inferenceRuntime.inputNames.first()
     }
 
     override fun detect(image: Bitmap): DetectorResult {
@@ -76,7 +89,7 @@ open class YoloOnnxDetector(
         }
 
         // run model on tensor, and get result
-        val (results, inferenceTime) = Timer.measure(showMetrics) { inferenceEngine.run(mapOf(inputName to tensor)) }
+        val (results, inferenceTime) = Timer.measure(showMetrics) { inferenceRuntime.run(mapOf(inputName to tensor)) }
 
         // extract bounding boxes [Detection] objects from results that
         val (detections, extractionTime) = Timer.measure(showMetrics) { thresholdingFilter(results) }
@@ -140,57 +153,7 @@ open class YoloOnnxDetector(
 
         return extractDetectionResults(data, numOfAttributes, numOfDetections, threshold)
     }
-
-    /**
-     * Extracts list of [cv.cbglib.detection.Detection] objects from OrtSession result. Value for thresholding is
-     * Results are in format `[batch, values, detections]` where the values are:
-     * x, y, w, h, class0 confidence, class1 confidence, class2 confidence...
-     *
-     * By default, the [threshold] value is determined by the [confThreshold] (see [cv.cbglib.detection.detectors.Detector]).
-     *
-     * @param results Onnx runtime results in array format that will be filtered.
-     * @return List of [cv.cbglib.detection.Detection] that pass the [confThreshold] confidence score threshold
-     */
-    protected open fun thresholdingFilter(
-        results: Array<Array<FloatArray>>,
-        threshold: Float = confThreshold
-    ): List<Detection> {
-        // remove batch dimension as model only outputs one batch
-        val rawDetections = results[0] // [values, detections]
-
-        // transpose from [values, detections] into more user friendly [detections, values]
-        val transposedDetections = transpose(rawDetections)
-
-        val detections = mutableListOf<Detection>()
-
-        for (value in transposedDetections) {
-            val classScores = value.sliceArray(4 until value.size)
-
-            var bestScore = 0f
-            var bestClass = -1
-
-            for (i in classScores.indices) {
-                val score = classScores[i]
-                if (score > bestScore) {
-                    bestScore = score
-                    bestClass = i
-                }
-            }
-
-            if (bestScore < threshold)
-                continue
-
-            val x = value[0]
-            val y = value[1]
-            val w = value[2]
-            val h = value[3]
-
-            detections.add(Detection(x, y, w, h, bestClass, bestScore))
-        }
-
-        return detections
-    }
-
+    
     /**
      * Converts OpenCV Mat containing input image into an OnnxTensor that can be put into OnnxSession for object
      * detection. OpenCV uses HWC format, where the ONNX expects and CHW format, for that and image has to converted.
@@ -231,5 +194,25 @@ open class YoloOnnxDetector(
 
         // create tensor, wrap used as a View, no copying, better performance
         return OnnxTensor.createTensor(ortEnvironment, FloatBuffer.wrap(chw), shape)
+    }
+
+    override fun toString(): String {
+        return "$detectorName(" +
+                "modelPath=$modelPath, " +
+                "confThreshold=$confThreshold, " +
+                "nmsThreshold=$nmsThreshold, " +
+                "applyNMS=$applyNMS," +
+                "inputDataSize=(${inputDataSize.width},${inputDataSize.height})," +
+                "useNNAPI=${useNNAPI})"
+    }
+
+    override fun toCsvString(): String {
+        return "$detectorName," +
+                "$modelPath," +
+                "(confThreshold=$confThreshold;" +
+                "nmsThreshold=$nmsThreshold;" +
+                "applyNMS=$applyNMS;" +
+                "inputDataSize=(${inputDataSize.width},${inputDataSize.height});" +
+                "useNNAPI=${useNNAPI})"
     }
 }

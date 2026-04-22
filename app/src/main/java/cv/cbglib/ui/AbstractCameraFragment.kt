@@ -78,9 +78,4 @@ abstract class AbstractCameraFragment(private val layoutRes: Int) : Fragment() {
      * the [realtimeDetector], [qualityDetector], otherwise detections will not be performed [CameraController].
      */
     protected abstract fun setupDetectors()
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        cameraController.stop()
-    }
 }

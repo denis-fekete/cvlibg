@@ -16,6 +16,8 @@ import cv.cbglib.services.SettingsService
 import cv.cbglib.ui.StringListSpinner
 import cv.demoapps.bangdemo.MyApp
 import cv.demoapps.bangdemo.R
+import cv.demoapps.bangdemo.data.Language
+import cv.demoapps.bangdemo.data.uiLabel
 
 class SettingsFragment : Fragment() {
 
@@ -37,30 +39,32 @@ class SettingsFragment : Fragment() {
         val realtimeModelSpinner = view.findViewById<StringListSpinner>(R.id.realtimeModelSpinner)
         realtimeModelSpinner.setup(
             detectorRegistryModels,
-            settingsService.realtimeModel,
-            settingsService.fontSize.toFloat()
+            settingsService.data.realtimeModel,
+            settingsService.data.fontSize.toFloat()
         ) { selected: Int ->
-            settingsService.realtimeModel = detectorRegistryModels[selected]
+            settingsService.data.realtimeModel = detectorRegistryModels[selected]
             settingsService.save()
         }
 
         val preciseModelSpinner = view.findViewById<StringListSpinner>(R.id.preciseModelSpinner)
         preciseModelSpinner.setup(
             detectorRegistryModels,
-            settingsService.precisionModel,
-            settingsService.fontSize.toFloat()
+            settingsService.data.precisionModel,
+            settingsService.data.fontSize.toFloat()
         ) { selected: Int ->
-            settingsService.precisionModel = detectorRegistryModels[selected]
+            settingsService.data.precisionModel = detectorRegistryModels[selected]
             settingsService.save()
         }
 
+        val languages = Language.entries
+
         val languageSpinner = view.findViewById<StringListSpinner>(R.id.languageSpinner)
         languageSpinner.setup(
-            SettingsService.languageOptions,
-            settingsService.language,
-            settingsService.fontSize.toFloat()
+            languages.map { it.uiLabel() },
+            settingsService.data.language.uiLabel(),
+            settingsService.data.fontSize.toFloat()
         ) { selected: Int ->
-            settingsService.language = SettingsService.languageOptions[selected]
+            settingsService.data.language = languages[selected]
             settingsService.save()
         }
 
@@ -75,18 +79,18 @@ class SettingsFragment : Fragment() {
     private fun setupPerformanceMonitorSwitch() {
 
         val switchShow = view?.findViewById<SwitchCompat>(R.id.showPerformanceSwitch)
-        switchShow?.isChecked = settingsService.showMetrics
+        switchShow?.isChecked = settingsService.data.showMetrics
 
         switchShow?.setOnCheckedChangeListener { _, isChecked ->
-            settingsService.showMetrics = isChecked
+            settingsService.data.showMetrics = isChecked
             settingsService.save()
         }
 
         val switchVerbose = view?.findViewById<SwitchCompat>(R.id.verbosePerformanceSwitch)
-        switchVerbose?.isChecked = settingsService.verboseMetrics
+        switchVerbose?.isChecked = settingsService.data.verboseMetrics
 
         switchVerbose?.setOnCheckedChangeListener { _, isChecked ->
-            settingsService.verboseMetrics = isChecked
+            settingsService.data.verboseMetrics = isChecked
             settingsService.save()
         }
     }
@@ -98,11 +102,11 @@ class SettingsFragment : Fragment() {
         val picker = view.findViewById<NumberPicker>(R.id.fontSizePicker)
         picker.minValue = 10
         picker.maxValue = 30
-        picker.value = settingsService.fontSize
+        picker.value = settingsService.data.fontSize
         updateFontSize()
 
         picker.setOnValueChangedListener { _, _, newValue ->
-            settingsService.fontSize = newValue
+            settingsService.data.fontSize = newValue
             settingsService.save()
             updateFontSize()
         }
@@ -121,7 +125,7 @@ class SettingsFragment : Fragment() {
         )
         for (i in textIds) {
             view?.findViewById<TextView>(i)
-                ?.setTextSize(TypedValue.COMPLEX_UNIT_SP, settingsService.fontSize.toFloat())
+                ?.setTextSize(TypedValue.COMPLEX_UNIT_SP, settingsService.data.fontSize.toFloat())
         }
 
         val spinnerIds = arrayOf(
@@ -133,7 +137,7 @@ class SettingsFragment : Fragment() {
         for (i in spinnerIds) {
             val adapter = view?.findViewById<Spinner>(i)?.adapter
             if (adapter is ResizableSpinnerAdapter) {
-                adapter.setTextSize(TypedValue.COMPLEX_UNIT_SP, settingsService.fontSize.toFloat())
+                adapter.setTextSize(TypedValue.COMPLEX_UNIT_SP, settingsService.data.fontSize.toFloat())
             }
         }
     }

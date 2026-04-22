@@ -1,6 +1,7 @@
 package cv.cbglib.detection.detectors.opencv
 
 import android.graphics.Bitmap
+import android.util.Size
 import cv.cbglib.detection.Detection
 import cv.cbglib.detection.detectors.AbstractYoloDetector
 import cv.cbglib.detection.detectors.DetectorResult
@@ -11,30 +12,42 @@ import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.MatOfByte
 import org.opencv.core.Scalar
-import org.opencv.core.Size
 import org.opencv.dnn.Dnn
 import org.opencv.dnn.Net
 import org.opencv.imgproc.Imgproc
 
+/**
+ * Class implementing abstract [cv.cbglib.detection.detectors.Detector] and [AbstractYoloDetector]. This class uses
+ * OpenCV's [org.opencv.dnn.Net] as an inference runtime/engine.
+ *
+ * This detector scales [Detection] objects to input image resolution.
+ *
+ * @param modelPath path to the ONNX model in assets
+ * @param confThreshold threshold used for filtering detections
+ * @param applyNMS use or not use Non-Maximum Suppression
+ * @param nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
+ * @param inputDataSize expected size for model loaded from the [modelPath]
+ */
 open class YoloOpenCVDetector(
     modelPath: String,
     confThreshold: Float = 0.6f,
     applyNMS: Boolean = true,
-    nmsThreshold: Float = 0.5f
-) : AbstractYoloDetector(modelPath, confThreshold, applyNMS, nmsThreshold) {
-    protected val modelInputWidth = 640
-
+    nmsThreshold: Float = 0.5f,
+    inputDataSize: Size = Size(640, 640)
+) : AbstractYoloDetector(modelPath, confThreshold, applyNMS, nmsThreshold, inputDataSize) {
+    override val detectorName = "YoloOpenCVDetector"
     protected var results = Mat()
-    protected lateinit var inferenceEngine: Net
+    protected lateinit var inferenceRuntime: Net
 
     override fun runtimeSetup(assetService: AssetService) {
         val modelBytes = assetService.getModel(modelPath)
         val modelMat = MatOfByte(*modelBytes)
 
-        inferenceEngine = Dnn.readNetFromONNX(modelMat)
-        inferenceEngine.setPreferableBackend(Dnn.DNN_BACKEND_OPENCV)
-        inferenceEngine.setPreferableTarget(Dnn.DNN_TARGET_CPU)
+        inferenceRuntime = Dnn.readNetFromONNX(modelMat)
+        inferenceRuntime.setPreferableBackend(Dnn.DNN_BACKEND_OPENCV)
+        inferenceRuntime.setPreferableTarget(Dnn.DNN_TARGET_CPU)
     }
+
 
     override fun detect(image: Bitmap): DetectorResult {
         // convert Bitmap => OpenCV.Mat
@@ -44,7 +57,7 @@ open class YoloOpenCVDetector(
         )
         // resize image into expected size for model, apply letterboxing if needed
         val (letterBoxMat, letterboxingTime) = Timer.measure(showMetrics) {
-            resizeAndLetterBox(bitmapMat, modelInputWidth)
+            resizeAndLetterBox(bitmapMat, inputDataSize.width)
         }
 
         // create tensor from Mat
@@ -54,7 +67,7 @@ open class YoloOpenCVDetector(
             Dnn.blobFromImage(
                 rgbMat,
                 1.0 / 255.0,
-                Size(rgbMat.cols().toDouble(), rgbMat.rows().toDouble()),
+                org.opencv.core.Size(rgbMat.cols().toDouble(), rgbMat.rows().toDouble()),
                 Scalar(0.0, 0.0, 0.0),
                 false,
                 false,
@@ -62,10 +75,10 @@ open class YoloOpenCVDetector(
             )
         }
 
-        inferenceEngine.setInput(blob)
+        inferenceRuntime.setInput(blob)
         // run opencv net runtime and get results
         val (_, inferenceTime) = Timer.measure(showMetrics) {
-            results = inferenceEngine.forward()
+            results = inferenceRuntime.forward()
         }
 
         // extract bounding boxes [Detection] objects from results that

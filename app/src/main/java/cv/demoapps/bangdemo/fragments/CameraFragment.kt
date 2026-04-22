@@ -9,7 +9,6 @@ import cv.cbglib.detection.detectors.DetectorRegistry
 import cv.cbglib.ui.AbstractCameraFragment
 import cv.demoapps.bangdemo.MyApp
 import cv.demoapps.bangdemo.R
-import java.io.IOException
 
 /**
  * [CameraFragment] is class derived from [AbstractCameraFragment]. Basic functionality can be achieved by simply
@@ -39,13 +38,13 @@ class CameraFragment : AbstractCameraFragment(R.layout.fragment_camera) {
 
     override fun setupDetectors() {
         try {
-            realtimeDetector = DetectorRegistry.createDetector(settingsService.realtimeModel)
-            realtimeDetector?.setMetricsEnabled(settingsService.showMetrics)
-            realtimeDetector?.setVerboseMetricsEnabled(settingsService.verboseMetrics)
+            realtimeDetector = DetectorRegistry.createDetector(settingsService.data.realtimeModel)
+            realtimeDetector?.setMetricsEnabled(settingsService.data.showMetrics)
+            realtimeDetector?.setVerboseMetricsEnabled(settingsService.data.verboseMetrics)
         } catch (exc: Exception) {
             AlertDialog.Builder(requireContext())
                 .setTitle("Error loading model for real time detector")
-                .setMessage("Model'${settingsService.realtimeModel}' could not be loaded. Please choose a different model in Settings.")
+                .setMessage("Model'${settingsService.data.realtimeModel}' could not be loaded. Please choose a different model in Settings.")
                 .setPositiveButton("OK", null)
                 .show()
 
@@ -53,13 +52,13 @@ class CameraFragment : AbstractCameraFragment(R.layout.fragment_camera) {
         }
 
         try {
-            qualityDetector = DetectorRegistry.createDetector(settingsService.precisionModel)
-            qualityDetector?.setMetricsEnabled(settingsService.showMetrics)
-            qualityDetector?.setVerboseMetricsEnabled(settingsService.verboseMetrics)
-        } catch (exc: IOException) {
+            qualityDetector = DetectorRegistry.createDetector(settingsService.data.precisionModel)
+            qualityDetector?.setMetricsEnabled(settingsService.data.showMetrics)
+            qualityDetector?.setVerboseMetricsEnabled(settingsService.data.verboseMetrics)
+        } catch (exc: Exception) {
             AlertDialog.Builder(requireContext())
                 .setTitle("Error loading model for real precision detector")
-                .setMessage("Model'${settingsService.precisionModel}' could not be loaded. Please choose a different model in Settings.")
+                .setMessage("Model'${settingsService.data.precisionModel}' could not be loaded. Please choose a different model in Settings.")
                 .setPositiveButton("OK", null)
                 .show()
 
