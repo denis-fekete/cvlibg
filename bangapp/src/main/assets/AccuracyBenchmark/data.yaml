@@ -1,0 +1,49 @@
+filePath: AccuracyBenchmark
+train: images/train
+val: images/val
+names:
+  0: bang
+  1: bart_cassidy
+  2: barile
+  3: birra
+  4: black_jack
+  5: calamity_janet
+  6: cat_balou
+  7: diligenza
+  8: dinamite
+  9: duello
+  10: el_gringo
+  11: emporio
+  12: fuorilegge
+  13: gatling
+  14: indiani
+  15: jesse_jones
+  16: jourdonnais
+  17: kit_carlson
+  18: lucky_duke
+  19: mancato
+  20: mirino
+  21: mustang
+  22: panico
+  23: paul_regret
+  24: pedro_ramirez
+  25: prigione
+  26: remington
+  27: rev_carabine
+  28: rinnegato
+  29: rose_doolan
+  30: saloon
+  31: sceriffo
+  32: schofield
+  33: sid_ketchum
+  34: slab_the_killer
+  35: suzzy_lafayette
+  36: vice
+  37: volcanic
+  38: vulture_sam
+  39: wells_farco
+  40: willy_the_kid
+  41: winchester
+  42: bg_card
+  43: bg_character
+  44: bg_role

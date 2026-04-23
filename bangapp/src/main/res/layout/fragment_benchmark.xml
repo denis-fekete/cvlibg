@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android = "http://schemas.android.com/apk/res/android"
+        xmlns:app = "http://schemas.android.com/apk/res-auto"
+        xmlns:tools = "http://schemas.android.com/tools"
+        android:layout_width = "match_parent"
+        android:layout_height = "match_parent"
+        android:layout_marginHorizontal = "16dp"
+        android:layout_marginVertical = "16dp"
+        tools:context = ".fragments.BenchmarkFragment">
+
+    <TextView
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:text = "Benchmark"
+            android:id = "@+id/benchmarkTitle"
+            android:textAlignment = "center"
+            android:textSize = "32sp"
+            app:layout_constraintTop_toTopOf = "parent"
+            app:layout_constraintEnd_toEndOf = "parent"
+            app:layout_constraintStart_toStartOf = "parent"
+            />
+
+    <TextView
+            android:text = "Choose benchmark"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:id = "@+id/textChooseBenchmark"
+            app:layout_constraintTop_toBottomOf = "@+id/benchmarkTitle"
+            app:layout_constraintEnd_toEndOf = "parent"
+            app:layout_constraintStart_toStartOf = "parent"
+            android:layout_marginTop = "20dp"
+            />
+
+    <com.fekete.cvlibg.ui.StringListSpinner
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:id = "@+id/benchmarkSpinner"
+            app:layout_constraintTop_toBottomOf = "@+id/textChooseBenchmark"
+            app:layout_constraintStart_toStartOf = "parent"
+            />
+
+    <LinearLayout
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:weightSum = "2"
+            android:id = "@+id/chooseBenchmarkLayout"
+            android:orientation = "horizontal"
+            android:layout_marginTop = "20dp"
+            app:layout_constraintTop_toBottomOf = "@+id/benchmarkSpinner"
+            app:layout_constraintStart_toStartOf = "parent"
+            app:layout_constraintEnd_toEndOf = "parent">
+
+        <TextView
+                android:text = "Choose model"
+                android:layout_width = "0dp"
+                android:layout_height = "wrap_content"
+                android:id = "@+id/textChooseBenchmarkModel"
+                android:layout_weight = "1"
+                />
+
+        <CheckBox
+                android:layout_width = "0dp"
+                android:layout_height = "wrap_content"
+                android:id = "@+id/benchmarkAllCheckbox"
+                android:text = "Benchmark all"
+                android:layout_weight = "1"/>
+
+    </LinearLayout>
+
+    <com.fekete.cvlibg.ui.StringListSpinner
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:id = "@+id/benchmarkModelSpinner"
+            app:layout_constraintTop_toBottomOf = "@+id/chooseBenchmarkLayout"
+            app:layout_constraintStart_toStartOf = "parent"
+            />
+
+
+    <TextView
+            android:text = "Number of detection runs"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:id = "@+id/textNumberOfRuns"
+            app:layout_constraintTop_toBottomOf = "@+id/benchmarkModelSpinner"
+            app:layout_constraintStart_toStartOf = "parent"
+            android:layout_marginTop = "20dp"
+            />
+
+
+    <EditText
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:inputType = "number"
+            android:ems = "10"
+            android:id = "@+id/numberOfRunsEdit"
+            app:layout_constraintTop_toBottomOf = "@+id/textNumberOfRuns"
+            android:layout_marginTop = "20dp"
+            />
+
+    <LinearLayout
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:orientation = "horizontal"
+            app:layout_constraintStart_toStartOf = "parent"
+            app:layout_constraintEnd_toEndOf = "parent"
+            app:layout_constraintTop_toBottomOf = "@+id/numberOfRunsEdit"
+            android:weightSum = "2"
+            android:id = "@+id/controlsLayout"
+            android:layout_marginTop = "20dp">
+
+        <Button
+                android:text = "Start"
+                android:layout_width = "0dp"
+                android:layout_height = "match_parent"
+                android:layout_weight = "1"
+                android:id = "@+id/benchmarkStartButton"
+                tools:layout_editor_absoluteX = "51dp"
+                />
+
+        <Button
+                android:text = "Stop"
+                android:layout_width = "0dp"
+                android:layout_weight = "1"
+                android:layout_height = "match_parent"
+                android:id = "@+id/benchmarkStopButton"
+                android:enabled = "false"
+                />
+    </LinearLayout>
+
+
+    <ProgressBar
+            style = "?android:attr/progressBarStyleHorizontal"
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            android:id = "@+id/benchmarkProgressBar"
+            app:layout_constraintTop_toBottomOf = "@+id/controlsLayout"
+            android:layout_marginTop = "20dp"
+            android:min = "0"
+            android:max = "100"/>
+
+    <ScrollView
+            android:layout_width = "match_parent"
+            android:layout_height = "0dp"
+            android:id = "@+id/benchmarkScrollView"
+            app:layout_constraintTop_toBottomOf = "@+id/benchmarkProgressBar"
+            android:layout_marginTop = "20dp"
+            app:layout_constraintBottom_toBottomOf = "parent">
+
+        <LinearLayout
+                android:layout_width = "match_parent"
+                android:layout_height = "match_parent"
+                android:orientation = "vertical">
+
+            <TextView
+                    android:layout_width = "match_parent"
+                    android:layout_height = "wrap_content"
+                    android:id = "@+id/benchmarkStatusLog"/>
+
+            <View
+                    android:layout_width = "match_parent"
+                    android:layout_height = "50dp"/>
+        </LinearLayout>
+    </ScrollView>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

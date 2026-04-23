@@ -20,5 +20,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "ComputerVisionForAndroidBoardGames"
-include(":app")
- 
+include(":bangapp")
+include(":cvlibg")
