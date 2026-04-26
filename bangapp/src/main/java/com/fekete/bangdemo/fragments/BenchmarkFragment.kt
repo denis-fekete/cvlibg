@@ -31,6 +31,7 @@ class BenchmarkFragment : BaseFragment<FragmentBenchmarkBinding>(
     private var currentBenchmark: DetectorBenchmark? = null
     private val benchmarkMap = mapOf<String, (context: Context) -> DetectorBenchmark>(
         "Performance benchmark" to { context -> PerformanceBenchmark(context) },
+        "Accuracy benchmark" to { context -> AccuracyBenchmark(context, "AccuracyBenchmark", 0.4f) },
     )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
