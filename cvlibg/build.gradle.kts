@@ -1,9 +1,14 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("maven-publish")
 }
 
 android {
+    publishing {
+        singleVariant("release")
+    }
+
     namespace = "com.fekete.cvlibg"
     compileSdk = 36
 

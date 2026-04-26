@@ -64,64 +64,49 @@ class MyApp : Application() {
     }
 
     fun registerModels() {
-//        DetectorRegistry.register("Yolo 26 ALPHA40", "Y26_ALPHA40.onnx")
-//        { path -> Yolo26OnnxDetector(path) }
-//
-//        DetectorRegistry.register("Yolo 26 ALPHA240", "Y26_ALPHA240.onnx")
-//        { path -> Yolo26OnnxDetector(path) }
-//
-//
-//        DetectorRegistry.register("Yolo 26 BETA40", "Y26_BETA40.onnx")
-//        { path -> Yolo26OnnxDetector(path) }
-//
-//        DetectorRegistry.register("Yolo 26 GAMMA40", "Y26_GAMMA40.onnx")
-//        { path -> Yolo26OnnxDetector(path) }
-
-        DetectorRegistry.register("Y8_N_ep50_b8_w3_bg_added_CPU", "Y8_N_ep50_b8_w3_bg_added_CPU.onnx")
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register(
-            "Y8_N_ep50_b8_w3_bg_added_CPU_OPTIMIZED",
-            "Y8_N_ep50_b8_w3_bg_added_CPU_OPTIMIZED.onnx"
-        )
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register(
-            "Y8_N_ep50_b8_w3_bg_added_GPU",
-            "Y8_N_ep50_b8_w3_bg_added_GPU.onnx"
-        )
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register(
-            "Y8_N_ep50_b8_w3_bg_added_NONSIMPLIFIED",
-            "Y8_N_ep50_b8_w3_bg_added_NONSIMPLIFIED.onnx"
-        )
-        { path -> YoloOnnxDetector(path) }
-
-
-        DetectorRegistry.register(
-            "Y26_sy_ep40_gamma_CPU",
-            "Y26_sy_ep40_gamma_CPU.onnx"
-        )
+        DetectorRegistry.register("Y26 CPU", "Y26_GAMMA_CPU.onnx")
         { path -> Yolo26OnnxDetector(path) }
 
-
-        DetectorRegistry.register(
-            "Y26_sy_ep40_gamma_CPU_OPTIMIZED",
-            "Y26_sy_ep40_gamma_CPU_OPTIMIZED.onnx"
-        )
+        DetectorRegistry.register("Y26 CPU Optimized", "Y26_GAMMA_CPU_OPTIMIZED.onnx")
         { path -> Yolo26OnnxDetector(path) }
 
-        DetectorRegistry.register(
-            "Y26_sy_ep40_gamma_GPU",
-            "Y26_sy_ep40_gamma_GPU.onnx"
-        )
+        DetectorRegistry.register("Y26 GPU", "Y26_GAMMA_GPU.onnx")
         { path -> Yolo26OnnxDetector(path) }
 
-        DetectorRegistry.register(
-            "Y26_sy_ep40_gamma_NONSIMPLIFIED",
-            "Y26_sy_ep40_gamma_NONSIMPLIFIED.onnx"
-        )
+        DetectorRegistry.register("Y26 NonSimplified", "Y26_GAMMA_NONSIMPLIFIED.onnx")
         { path -> Yolo26OnnxDetector(path) }
+//
+        DetectorRegistry.register("Y26 NPU", "Y26_GAMMA_NPU.onnx")
+        { path -> Yolo26OnnxDetector(path, useNNAPI = true) }
+        //
+        DetectorRegistry.register("Y8 CPU", "Y8_GAMMA_CPU.onnx")
+        { path -> YoloOnnxDetector(path) }
+
+        DetectorRegistry.register("Y8 CPU Optimized", "Y8_GAMMA_CPU_OPTIMIZED.onnx")
+        { path -> YoloOnnxDetector(path) }
+
+        DetectorRegistry.register("Y8 GPU", "Y8_GAMMA_GPU.onnx")
+        { path -> YoloOnnxDetector(path) }
+
+        DetectorRegistry.register("Y8 NonSimplified", "Y8_GAMMA_NONSIMPLIFIED.onnx")
+        { path -> YoloOnnxDetector(path) }
+//
+        DetectorRegistry.register("Y8 NPU", "Y8_GAMMA_NPU.onnx")
+        { path -> YoloOnnxDetector(path, useNNAPI = true) }
+        //
+        DetectorRegistry.register("Y11 CPU", "Y11_GAMMA_R_CPU.onnx")
+        { path -> YoloOnnxDetector(path) }
+
+        DetectorRegistry.register("Y11 CPU Optimized", "Y11_GAMMA_R_CPU_OPTIMIZED.onnx")
+        { path -> YoloOnnxDetector(path) }
+
+        DetectorRegistry.register("Y11 GPU", "Y11_GAMMA_R_GPU.onnx")
+        { path -> YoloOnnxDetector(path) }
+
+        DetectorRegistry.register("Y11 NonSimplified", "Y11_GAMMA_R_NONSIMPLIFIED.onnx")
+        { path -> YoloOnnxDetector(path) }
+
+        DetectorRegistry.register("Y11 NPU", "Y11_GAMMA_R_NPU.onnx")
+        { path -> YoloOnnxDetector(path, useNNAPI = true) }
     }
 }

@@ -1,6 +1,6 @@
-package cv.cbglib.benchmark
+package com.fekete.cvlibg.benchmark
 
-import cv.cbglib.detection.Detection
+import com.fekete.cvlibg.detection.Detection
 
 data class ValidationDetection(
     var truth: Detection,
