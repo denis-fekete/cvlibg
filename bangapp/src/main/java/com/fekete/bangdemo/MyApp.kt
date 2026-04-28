@@ -64,49 +64,19 @@ class MyApp : Application() {
     }
 
     fun registerModels() {
-        DetectorRegistry.register("Y26 CPU", "Y26_GAMMA_CPU.onnx")
+        DetectorRegistry.register("Yolo 8 Precision", "Y8_M_GAMMA_CPU.onnx")
+        { path -> YoloOnnxDetector(path) }
+
+        DetectorRegistry.register("Yolo 8 Realtime", "Y8_GAMMA_CPU.onnx")
+        { path -> YoloOnnxDetector(path) }
+
+        DetectorRegistry.register("Yolo 11 Realtime", "Y11_GAMMA_CPU.onnx")
+        { path -> YoloOnnxDetector(path) }
+
+        DetectorRegistry.register("Yolo 26 Realtime", "Y26_GAMMA_CPU.onnx")
         { path -> Yolo26OnnxDetector(path) }
 
-        DetectorRegistry.register("Y26 CPU Optimized", "Y26_GAMMA_CPU_OPTIMIZED.onnx")
-        { path -> Yolo26OnnxDetector(path) }
-
-        DetectorRegistry.register("Y26 GPU", "Y26_GAMMA_GPU.onnx")
-        { path -> Yolo26OnnxDetector(path) }
-
-        DetectorRegistry.register("Y26 NonSimplified", "Y26_GAMMA_NONSIMPLIFIED.onnx")
-        { path -> Yolo26OnnxDetector(path) }
-//
-        DetectorRegistry.register("Y26 NPU", "Y26_GAMMA_NPU.onnx")
+        DetectorRegistry.register("Yolo 26 Realtime NPU", "Y26_GAMMA_NPU.onnx")
         { path -> Yolo26OnnxDetector(path, useNNAPI = true) }
-        //
-        DetectorRegistry.register("Y8 CPU", "Y8_GAMMA_CPU.onnx")
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register("Y8 CPU Optimized", "Y8_GAMMA_CPU_OPTIMIZED.onnx")
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register("Y8 GPU", "Y8_GAMMA_GPU.onnx")
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register("Y8 NonSimplified", "Y8_GAMMA_NONSIMPLIFIED.onnx")
-        { path -> YoloOnnxDetector(path) }
-//
-        DetectorRegistry.register("Y8 NPU", "Y8_GAMMA_NPU.onnx")
-        { path -> YoloOnnxDetector(path, useNNAPI = true) }
-        //
-        DetectorRegistry.register("Y11 CPU", "Y11_GAMMA_R_CPU.onnx")
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register("Y11 CPU Optimized", "Y11_GAMMA_R_CPU_OPTIMIZED.onnx")
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register("Y11 GPU", "Y11_GAMMA_R_GPU.onnx")
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register("Y11 NonSimplified", "Y11_GAMMA_R_NONSIMPLIFIED.onnx")
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register("Y11 NPU", "Y11_GAMMA_R_NPU.onnx")
-        { path -> YoloOnnxDetector(path, useNNAPI = true) }
     }
 }

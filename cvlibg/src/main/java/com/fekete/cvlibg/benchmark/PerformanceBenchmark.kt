@@ -42,7 +42,8 @@ class PerformanceBenchmark(context: Context) : DetectorBenchmark(context) {
         detector?.setMetricsEnabled(true)
         detector?.setVerboseMetricsEnabled(true)
 
-        val bitmap = createBitmap(640, 640, Bitmap.Config.ARGB_8888)
+        val bitmap =
+            createBitmap(detector?.inputDataSize!!.width, detector?.inputDataSize!!.height, Bitmap.Config.ARGB_8888)
 
         totalList.clear()
         letterboxList.clear()

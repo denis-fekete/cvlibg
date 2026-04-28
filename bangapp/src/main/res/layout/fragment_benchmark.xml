@@ -159,8 +159,9 @@
                     android:id = "@+id/benchmarkStatusLog"/>
 
             <View
+                    android:id = "@+id/benchmark_spacer"
                     android:layout_width = "match_parent"
-                    android:layout_height = "50dp"/>
+                    android:layout_height = "96dp"/>
         </LinearLayout>
     </ScrollView>
 
