@@ -15,6 +15,8 @@ import android.widget.TextView
  * @param textUnit Initial unit type of [android.util.TypedValue], mostly used [android.util.TypedValue.COMPLEX_UNIT_SP] or
  * [android.util.TypedValue.COMPLEX_UNIT_PX].
  * @param textSize Initial size of text on element creation.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 class ResizableSpinnerAdapter(
     context: Context,
@@ -27,6 +29,9 @@ class ResizableSpinnerAdapter(
         setDropDownViewResource(resource)
     }
 
+    /**
+     * Changes the internal text/font size and invalidates data to apply change.
+     */
     fun setTextSize(unit: Int = TypedValue.COMPLEX_UNIT_SP, newSize: Float) {
         textSize = newSize
         textUnit = unit

@@ -5,7 +5,7 @@ import android.util.Size
 import com.fekete.cvlibg.detection.Detection
 import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector
 import com.fekete.cvlibg.detection.detectors.DetectorResult
-import com.fekete.cvlibg.services.AssetService
+import com.fekete.cvlibg.utils.AssetLoader
 import com.fekete.cvlibg.utils.Timer
 import org.opencv.android.Utils
 import org.opencv.core.CvType
@@ -27,6 +27,8 @@ import org.opencv.imgproc.Imgproc
  * @param applyNMS use or not use Non-Maximum Suppression
  * @param nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
  * @param inputDataSize expected size for model loaded from the [modelPath]
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 open class YoloOpenCVDetector(
     modelPath: String,
@@ -39,8 +41,8 @@ open class YoloOpenCVDetector(
     protected var results = Mat()
     protected lateinit var inferenceRuntime: Net
 
-    override fun runtimeSetup(assetService: AssetService) {
-        val modelBytes = assetService.getModel(modelPath)
+    override fun runtimeSetup(assetLoader: AssetLoader) {
+        val modelBytes = assetLoader.loadModel(modelPath)
         val modelMat = MatOfByte(*modelBytes)
 
         inferenceRuntime = Dnn.readNetFromONNX(modelMat)
@@ -102,7 +104,6 @@ open class YoloOpenCVDetector(
         return DetectorResult(
             nsmFilteredDetections,
             imageDetails,
-            showMetrics = showMetrics,
             performanceMetrics = performanceMetrics,
         )
     }

@@ -19,6 +19,8 @@ import kotlinx.coroutines.withContext
 
 /**
  * Subclass of the [Fragment] class hosting benchmark for YOLO models.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 class BenchmarkFragment : BaseFragment<FragmentBenchmarkBinding>(
     FragmentBenchmarkBinding::inflate
@@ -140,7 +142,7 @@ class BenchmarkFragment : BaseFragment<FragmentBenchmarkBinding>(
     }
 
     /**
-     * Updates font size of text using [com.fekete.cvlibg.services.SettingsService]
+     * Updates font size of text using [com.fekete.cvlibg.services.ConfigService]
      */
     private fun updateFontSize() {
         val elements = arrayOf(

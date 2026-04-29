@@ -9,7 +9,7 @@ import androidx.navigation.fragment.findNavController
 import com.fekete.bangdemo.MyApp
 import com.fekete.bangdemo.data.CardDetail
 import com.fekete.bangdemo.views.LinkView
-import com.fekete.cvlibg.services.AssetService
+import com.fekete.cvlibg.utils.AssetLoader
 import com.fekete.bangdemo.R
 import com.fekete.bangdemo.databinding.FragmentCardDetailsBinding
 import kotlin.collections.get
@@ -28,8 +28,8 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
 
     lateinit var thisCard: CardDetail
 
-    private val assetService by lazy {
-        return@lazy AssetService((requireContext().applicationContext as Application))
+    private val assetLoader by lazy {
+        return@lazy AssetLoader((requireContext().applicationContext as Application))
     }
 
     private val cardDetailsService by lazy {
@@ -51,8 +51,8 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
         // remove template view items
         binding.linksLayout.removeAllViews()
 
-        if (linkId != null && cardDetailsService.items[linkId] != null) {
-            thisCard = cardDetailsService.items[linkId]!!
+        if (linkId != null && cardDetailsService.data[linkId] != null) {
+            thisCard = cardDetailsService.data[linkId]!!
         } else {
             return
         }
@@ -63,7 +63,7 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
 
         if (thisCard.imagePath != null) {
             val bitmap =
-                assetService.getImageBitmap("${thisCard.imagePath}", "card_scans")
+                assetLoader.loadImage("${thisCard.imagePath}", "card_scans")
             if (bitmap != null) {
                 binding.imageView.setImageBitmap(bitmap)
             } else {
@@ -76,13 +76,13 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
         val navController = findNavController()
         if (thisCard.links.isNotEmpty()) {
             for (id in thisCard.links) {
-                val linkCard = cardDetailsService.items[id] ?: continue
+                val linkCard = cardDetailsService.data[id] ?: continue
 
                 var linkView: LinkView
                 val imgPath = linkCard.imagePath
 
                 if (imgPath != null) {
-                    val bitmap = assetService.getImageBitmap(imgPath, "")
+                    val bitmap = assetLoader.loadImage(imgPath, "")
                     linkView = LinkView(
                         context,
                         null,

@@ -20,6 +20,8 @@ import com.fekete.bangdemo.databinding.FragmentCameraBinding
 
 /**
  * Class setting up [CameraController] with [CameraFragment], [context], [LifecycleOwner].
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 class CameraFragment : BaseFragment<FragmentCameraBinding>(
     FragmentCameraBinding::inflate
@@ -66,7 +68,7 @@ class CameraFragment : BaseFragment<FragmentCameraBinding>(
         // attaching onDetectionClicked event
         binding.detectionOverlay.onDetectionClicked = { detection ->
             val bundle = bundleOf(
-                "id" to class2linkService.items[detection.classIndex]!!.linkId
+                "id" to class2linkService.data[detection.classIndex]!!.linkId
             )
 
             findNavController().navigate(R.id.cardDetailsFragment, bundle)

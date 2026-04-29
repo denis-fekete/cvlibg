@@ -6,7 +6,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import com.fekete.cvlibg.services.PermissionService
+import com.fekete.cvlibg.utils.CommonUtils
 
 class MainActivity : AppCompatActivity() {
     private lateinit var btnCamera: ImageButton
@@ -21,8 +21,7 @@ class MainActivity : AppCompatActivity() {
 
         setupNavigation()
 
-        PermissionService.checkCameraPermission(this, this)
-        PermissionService.checkStoragePermission(this, this)
+        CommonUtils.checkCameraPermission(this, this)
 
         val app = application as MyApp
         if (app.errorMessageCardDetail != null) {

@@ -18,3 +18,4 @@ build/
 .DS_Store
 Thumbs.db
 local.properties
+.idea/assetWizardSettings.xml

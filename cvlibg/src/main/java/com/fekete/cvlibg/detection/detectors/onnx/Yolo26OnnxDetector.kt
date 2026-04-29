@@ -18,6 +18,8 @@ import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector
  * @param nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
  * @param inputDataSize expected size for model loaded from the [modelPath]
  * @param useNNAPI whenever to use ONNX's NNAPI for accelerated inference
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 open class Yolo26OnnxDetector(
     modelPath: String,

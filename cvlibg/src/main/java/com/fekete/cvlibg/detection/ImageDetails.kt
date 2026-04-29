@@ -21,6 +21,8 @@ package com.fekete.cvlibg.detection
  * | Image |
  * | PadY  |
  * _________
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 data class ImageDetails(
     // used for scaling camera image into a model image size, used for reverse scaling to properly display detections

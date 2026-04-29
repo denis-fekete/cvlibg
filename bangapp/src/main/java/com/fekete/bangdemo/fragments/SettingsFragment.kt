@@ -10,6 +10,11 @@ import com.fekete.cvlibg.ui.ResizableSpinnerAdapter
 import com.fekete.cvlibg.detection.detectors.DetectorRegistry
 import com.fekete.bangdemo.databinding.FragmentSettingsBinding
 
+/**
+ * Fragment containing UI elements for interacting with [settingsService].
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
+ */
 class SettingsFragment : BaseFragment<FragmentSettingsBinding>(
     FragmentSettingsBinding::inflate
 ) {

@@ -5,10 +5,19 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Size
 import com.fekete.cvlibg.detection.Detection
-import com.fekete.cvlibg.services.AssetService
+import com.fekete.cvlibg.utils.AssetLoader
 
 /**
- * Abstract class for all classes that will detect objects. Should work as a common interface for all derived Detectors.
+ * Abstract class, that works as a base for class defining the object detection tasks. This class contains common
+ * variables and methods used by the [com.fekete.cvlibg.detection.ImageAnalyzer].
+ *
+ * @param modelPath path to the model in the assets' folder.
+ * @param confThreshold confidence threshold value for filtering detection.
+ * @param applyNMS whenever Non-Maximum Suppression should be applied.
+ * @param nmsThreshold Intersection over Union threshold for NMS filtering.
+ * @param inputDataSize expected input size for the loaded model.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 abstract class Detector(
     public val modelPath: String,
@@ -42,7 +51,7 @@ abstract class Detector(
      *
      * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
      */
-    protected abstract fun runtimeSetup(assetService: AssetService)
+    protected abstract fun runtimeSetup(assetLoader: AssetLoader)
 
     /**
      * Runs image detection analysis and returns [DetectorResult] containing detections, image information and
@@ -63,27 +72,27 @@ abstract class Detector(
     /**
      * Loads model and builds it. Throws an exception on error.
      *
-     * @param context Context used for loading [AssetService], from which a model will be loaded.
+     * @param context Context used for loading [AssetLoader], from which a model will be loaded.
      * @param showMetrics Boolean value whenever the metrics should be shown.
      * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
      */
     fun build(context: Context) {
         if (isBuilt) return
-        val assetService = AssetService(context.applicationContext as Application)
-        build(assetService)
+        val assetLoader = AssetLoader(context.applicationContext as Application)
+        build(assetLoader)
     }
 
 
     /**
      * Loads model and builds it. Throws an exception on error.
      *
-     * @param assetService Service used to load model bytes from assets.
+     * @param assetLoader Service used to load model bytes from assets.
      * @param showMetrics Boolean value whenever the metrics should be shown.
      * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
      */
-    fun build(assetService: AssetService) {
+    fun build(assetLoader: AssetLoader) {
         if (isBuilt) return
-        runtimeSetup(assetService)
+        runtimeSetup(assetLoader)
         isBuilt = true
     }
 

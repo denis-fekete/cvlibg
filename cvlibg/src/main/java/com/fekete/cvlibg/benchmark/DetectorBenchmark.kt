@@ -6,6 +6,11 @@ import com.fekete.cvlibg.detection.detectors.Detector
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+/**
+ * Abstract class containing common code for detector benchmarks.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
+ */
 abstract class DetectorBenchmark(protected val context: Context) {
     @Volatile
     protected var stopFlag = false

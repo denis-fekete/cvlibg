@@ -11,13 +11,10 @@ import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.concurrent.futures.await
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.fekete.cvlibg.detection.detectors.Detector
-import com.fekete.cvlibg.logging.MetricsOverlay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -25,13 +22,14 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * Class making camera control abstracted. Creates new thread on which a [ImageAnalyzer] is run.
+ * Class making camera control more abstracted. Creates new thread on which a [ImageAnalyzer] analysis is executed.
  *
  * @param context Should be a context of a [android.app.Fragment] or [android.app.Activity], in case either of these are
  * destroyed, new camera controller along with [java.util.concurrent.ExecutorService] will be created.
  * @param lifecycleOwner Owner of lifecycle, used by CameraX to correctly bind and exit on lifecycle change
  * @param cameraConfig
  *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 open class CameraController(
     private val context: Context,

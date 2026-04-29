@@ -3,6 +3,13 @@ package com.fekete.cvlibg.detection.detectors
 /**
  * A data class that registers/links [Detector] derived classes to the name of model. The name of model can be shown in
  * UI or a static 'code' for specific model. See [register] function for usage.
+ *
+ * @param name a key value used for searching the registry for a [Detector]
+ * @param modelPath path to the model
+ * @param factory a lambda function where the [modelPath] is provided for creating the [Detector], in this function an
+ * additional functions might be specified
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 data class DetectorRegistry(
     val name: String,

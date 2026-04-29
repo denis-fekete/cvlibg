@@ -7,18 +7,20 @@ import java.io.File
 import java.nio.charset.Charset
 
 /**
- * Template class for storing settings, preferences, and configurations that need to be private and not accessible.
+ * Template class for storing settings, preferences, and configurations that need to be private and not accessible by
+ * other applications. It uses androids private file system that can be only accessed by this application.
  *
- * @param app Reference to application for load and saving files
+ * @param app Reference to application for loading and saving of files.
  * @param filename Name file that will be loaded and saved, if the file does not exist a [defaultValue] lambda function
- * will be used to create an instance of [DataType].
- * @param serializer Serializer for the [DataType] `data class`. This request the class to use `@Serializable` property
- * in `data class`.
+ * will be used to create an instance of data class object of [DataType].
+ * @param serializer Serializer for the [DataType] `data class`. This requires the class to use `@Serializable` property.
  * @param charset Character set used for reading and storing of file.
  * @param defaultValue Lambda function to create an instance of [DataType]. A simple constructor `{ DataTypeClass() }`
  * can be used.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
-class SettingsService<DataType : Any>(
+class ConfigService<DataType : Any>(
     private val app: Application,
     private val filename: String,
     private val serializer: KSerializer<DataType>,

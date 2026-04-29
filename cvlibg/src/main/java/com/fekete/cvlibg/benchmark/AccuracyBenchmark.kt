@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import com.fekete.cvlibg.detection.Detection
-import com.fekete.cvlibg.services.AssetService
+import com.fekete.cvlibg.utils.AssetLoader
 import com.fekete.cvlibg.utils.Timer
 import java.io.File
 import java.time.LocalDateTime
@@ -14,7 +14,7 @@ import java.time.LocalDateTime
  */
 class AccuracyBenchmark(context: Context, private val validationDataPath: String, private val iouThreshold: Float) :
     DetectorBenchmark(context) {
-    private val assetService = AssetService(context.applicationContext as Application)
+    private val assetLoader = AssetLoader(context.applicationContext as Application)
     private var results = mutableMapOf<String, MutableList<AccuracyResult>>()
     private var benchmarkStartTime: LocalDateTime? = null
     private var bitmap: Bitmap? = null
@@ -235,7 +235,7 @@ class AccuracyBenchmark(context: Context, private val validationDataPath: String
     fun findValidationFiles(): List<Pair<String, String>> {
         val pairs = mutableListOf<Pair<String, String>>()
 
-        val filePaths = assetService.recursiveFilesSearch(validationDataPath)
+        val filePaths = assetLoader.recursiveFilesSearch(validationDataPath)
         val imagePaths = filePaths.filter { it.endsWith("png") || it.endsWith("jpg") }
 
         // find label file for each image file
@@ -266,8 +266,8 @@ class AccuracyBenchmark(context: Context, private val validationDataPath: String
      * @return list of loaded [ValidationDetection] objects.
      */
     private fun openValidationData(imagePath: String, labelPath: String): List<ValidationDetection>? {
-        bitmap = assetService.getImageBitmap(imagePath, validationDataPath) ?: return null
-        val labelText = assetService.getTextFile(labelPath, validationDataPath) ?: return null
+        bitmap = assetLoader.loadImage(imagePath, validationDataPath) ?: return null
+        val labelText = assetLoader.loadText(labelPath, validationDataPath) ?: return null
         val labelLines = labelText.split("\n")
 
         // create list of ValidationDetection objects

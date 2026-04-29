@@ -27,6 +27,8 @@ import kotlin.math.roundToInt
  * @param applyNMS use or not use Non-Maximum Suppression
  * @param nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
  * @param inputDataSize expected size for model loaded from the [modelPath]
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 abstract class AbstractYoloDetector(
     modelPath: String,

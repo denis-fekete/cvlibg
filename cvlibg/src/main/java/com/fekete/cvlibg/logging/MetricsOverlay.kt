@@ -15,6 +15,8 @@ import kotlin.math.max
 /**
  * View for drawing [com.fekete.cvlibg.detection.detectors.Detector] related metrics, such as performance, or detected objects.
  * Its main purpose is to provide developers with quick debug tool showing performance.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     private var tmpAverage: Long = 0
@@ -25,7 +27,7 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
     private var textList = mutableListOf<String>()
 
     private var performanceMetrics: MutableMap<String, TimerResult> = mutableMapOf()
-    private var otherMetrics: MutableMap<String, MetricsValue> = mutableMapOf()
+    private var otherMetrics: MutableList<MetricsValue> = mutableListOf()
     private var totalTime: TimerResult? = null
 
     private val textBackgroundPaint = Paint().apply {
@@ -42,12 +44,12 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
         alpha = 200
     }
 
-    fun updateLogData(performance: Map<String, TimerResult>, other: Map<String, MetricsValue>, total: TimerResult?) {
+    fun updateLogData(performance: Map<String, TimerResult>, other: List<MetricsValue>, total: TimerResult?) {
         performanceMetrics.clear()
         otherMetrics.clear()
 
         performanceMetrics.putAll(performance)
-        otherMetrics.putAll(other)
+        otherMetrics.addAll(other)
 
         totalTime = total
 
@@ -92,7 +94,7 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
         textList.add("") // spacer
 
         otherMetrics.forEach {
-            val text = "${it.value.prefix}: ${it.value.value}${it.value.suffix}\n"
+            val text = "${it.prefix}: ${it.value}${it.value}\n"
             textList.add(text)
 
             val textWidth = textPaint.measureText(text)

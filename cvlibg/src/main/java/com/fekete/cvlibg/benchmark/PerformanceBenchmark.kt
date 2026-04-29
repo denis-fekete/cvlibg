@@ -14,6 +14,13 @@ import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
+/**
+ * Class for benchmarking latency and inference speed of [com.fekete.cvlibg.detection.detectors.Detector] and its models.
+ *
+ * @param context context used for loading models from the assets
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
+ */
 class PerformanceBenchmark(context: Context) : DetectorBenchmark(context) {
     val totalList = mutableListOf<TimerResult>()
     val letterboxList = mutableListOf<TimerResult>()

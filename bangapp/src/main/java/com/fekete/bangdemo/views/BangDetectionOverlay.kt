@@ -86,8 +86,8 @@ class BangDetectionOverlay(context: Context, attrs: AttributeSet?) : DetectionOv
                 canvas.drawRect(scaledRect, boxPaint)
 
                 // get label from services
-                val linkId = class2linkService.items[det.classIndex]?.linkId
-                val className = cardDetailsService.items[linkId]?.title
+                val linkId = class2linkService.data[det.classIndex]?.linkId
+                val className = cardDetailsService.data[linkId]?.title
                 val label = "${className}: ${(det.confidence * 100).toInt()}%"
 
                 // determine text width and height

@@ -2,6 +2,18 @@ package com.fekete.bangdemo.data
 
 import kotlinx.serialization.Serializable
 
+/**
+ * Class used by the [com.fekete.bangdemo.MyApp.settingsService] to store user preferences.
+ *
+ * @param language used language
+ * @param fontSize font size values, used for scaling text of other fragments and activities
+ * @param realtimeModel key from the [com.fekete.cvlibg.detection.detectors.DetectorRegistry] for the realtime model
+ * @param precisionModel key from the [com.fekete.cvlibg.detection.detectors.DetectorRegistry] for the quality model
+ * @param showMetrics whenever metrics should be shown
+ * @param verboseMetrics whenever verbose, more detailed metrics should be shown
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
+ */
 @Serializable
 data class UserPreferences(
     var language: Language = Language.ENGLISH,
@@ -10,7 +22,6 @@ data class UserPreferences(
     var precisionModel: String = "",
     var showMetrics: Boolean = false,
     var verboseMetrics: Boolean = false,
-    var framesToSkip: Int = 5,
 )
 
 @Serializable

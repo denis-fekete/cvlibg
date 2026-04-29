@@ -9,7 +9,7 @@ import android.util.Size
 import com.fekete.cvlibg.detection.Detection
 import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector
 import com.fekete.cvlibg.detection.detectors.DetectorResult
-import com.fekete.cvlibg.services.AssetService
+import com.fekete.cvlibg.utils.AssetLoader
 import com.fekete.cvlibg.utils.Timer
 import org.opencv.android.Utils
 import org.opencv.core.Core
@@ -31,6 +31,8 @@ import java.nio.FloatBuffer
  * @param nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
  * @param inputDataSize expected size for model loaded from the [modelPath]
  * @param useNNAPI whenever to use ONNX's NNAPI for accelerated inference
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 open class YoloOnnxDetector(
     modelPath: String,
@@ -46,8 +48,8 @@ open class YoloOnnxDetector(
     protected lateinit var inputName: String
     protected val modelInputWidth = 640
 
-    override fun runtimeSetup(assetService: AssetService) {
-        val modelBytes = assetService.getModel(modelPath)
+    override fun runtimeSetup(assetLoader: AssetLoader) {
+        val modelBytes = assetLoader.loadModel(modelPath)
         var runtimeInitialized = false
         if (useNNAPI) {
             try {
@@ -116,7 +118,6 @@ open class YoloOnnxDetector(
         return DetectorResult(
             nsmFilteredDetections,
             imageDetails,
-            showMetrics = showMetrics,
             performanceMetrics = performanceMetrics,
         )
     }

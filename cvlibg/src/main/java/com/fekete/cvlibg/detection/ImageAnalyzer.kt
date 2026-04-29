@@ -9,6 +9,22 @@ import com.fekete.cvlibg.ui.DetectionOverlay
 import com.fekete.cvlibg.utils.Timer
 import com.fekete.cvlibg.utils.TimerResult
 
+/**
+ * Class implementing the [ImageAnalysis.Analyzer], responsible for providing [realtimeDetector] and [qualityDetector]
+ * with image data from the device's camera.
+ *
+ * Image analyzer has two modes, switching between the [realtimeDetector] and [qualityDetector]. When switched to
+ * quality mode an input bitmap will be printed to the [DetectionOverlay] and detections will be printed on top of it,
+ * effectively freezing camera.
+ *
+ * @param detectionOverlay reference to [DetectionOverlay] or derived class that will be updated with the results of the
+ * image analysis.
+ * @param metricsOverlay optional overlay for displaying metrics from the [Detector] classes.
+ * @param realtimeDetector reference to [Detector] object for realtime, continuous image analysis
+ * @param qualityDetector reference to [Detector] object, used for slower analysis with frozen background image
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
+ */
 class ImageAnalyzer(
     private val detectionOverlay: DetectionOverlay,
     private val metricsOverlay: MetricsOverlay? = null,
@@ -70,7 +86,7 @@ class ImageAnalyzer(
                 metricsOverlay.updateLogData(
                     detectorResult.performanceMetrics,
                     detectorResult.otherMetrics,
-                    if (detectorResult.showMetrics) TimerResult(totalTimeEnd - totalTimeStart) else null
+                    if (detectorResult.performanceMetrics.isNotEmpty()) TimerResult(totalTimeEnd - totalTimeStart) else null
                 )
             }
 

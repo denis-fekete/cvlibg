@@ -6,19 +6,26 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Data class representing bounding boxes or detections, its highest rated class and confidence score for given class.
- * Values stored are in a model dimension representation, meaning that if [Detection] should be used in Kotlin drawing
- * algorithms and functions [toRectF] should be called.
+ * Data class representing bounding boxes of detection, its class and confidence score.
  *
  * CVLiBG works and expects Detection objects to be center based, meaning the X,Y represent center of the detection.
+ *
+ * @param x center x coordinate of the bounding box
+ * @param y center y coordinate of the bounding box
+ * @param width width of bounding box
+ * @param height height of bounding box
+ * @param classIndex class with the highest confidence score for given bounding box (detection)
+ * @param confidence score of highest detection
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 data class Detection(
-    val x: Float, // center x coordinate of bounding box
-    val y: Float, // center y coordinate of bounding box
-    val width: Float, // width of detection
-    val height: Float, // height of detection
-    val classIndex: Int, // class with the highest confidence score for given bounding box (detection)
-    val confidence: Float // score of highest detection
+    val x: Float,
+    val y: Float,
+    val width: Float,
+    val height: Float,
+    val classIndex: Int,
+    val confidence: Float
 ) {
     /**
      * Returns Detection converted into a Kotlin's [RectF] object.

@@ -1,5 +1,11 @@
 package com.fekete.cvlibg.utils
 
+/**
+ * Value class for storing [Timer] results, with build it conversions for milliseconds, nanoseconds, etc. The [value] at
+ * construction of class must be in nanoseconds.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
+ */
 @JvmInline
 value class TimerResult(
     private val value: Long

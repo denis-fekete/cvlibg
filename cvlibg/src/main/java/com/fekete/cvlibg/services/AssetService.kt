@@ -1,166 +1,120 @@
 package com.fekete.cvlibg.services
 
 import android.app.Application
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.util.Log
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import java.nio.charset.Charset
 
 /**
- * A collection of static methods used for loading assets from the project. For frequent use it possible to create an
- * instance of this class that holds the [app] reference.
+ * Template class used for loading an JSON files from `assets` as a [Map] of [KeyType] keys and data class objects.
+ * Usage:
+ * Create a `@Serializable` data class that will contain data in JSON file, it is expected that the JSON file is
+ * a list of these objects. [keySelector] is a key of [DataType] for the map. [charset] a coding of file, make sure all
+ * files are saved with correct charset. [path] may be a single JSON file or a directory. For path to directory all
+ * files under the directory will be loaded and must be of same [charset] and [DataType].
+ *
+ * Declaration in class that subclassed [Application]:
+ * ```
+ * val DATA_CLASS_SERVICE: JsonAssetService<DATA_CLASS_NAME> by lazy {
+ *         JsonAssetService(
+ *             app = this,
+ *             path = "JSON_FILE_PATH_IN_ASSETS.json",
+ *             serializer = DATA_CLASS_NAME.serializer(),
+ *             keySelector = { it.DATA_CLASS_NAME.PROPERTY_OF_TYPE_INT },
+ *             charset = Charsets.UTF_16BE
+ *         )
+ *     }
+ * ```
+ * In declaration use lazy if assets are not used all the time, otherwise loading them at start of application might be
+ * better design.
+ *
+ * Use in any other activity, fragments, class, etc... (SUBCLASSED_APP is a class that subclassed
+ * [Application]:
+ * ```
+ *     private val DATA_CLASS_NAME by lazy {
+ *         (context.applicationContext as SUBCLASSED_APP).DATA_CLASS_SERVICE
+ *     }
+ * ```
+ *
+ * @author Denis Fekete <xfeket01@vutbr.cz>, <denis.fekete02@gmail.com>
  */
-class AssetService(private val app: Application) {
+class AssetService<DataType : Any, KeyType : Any>(
+    private val app: Application,
+    private val path: String,
+    private val serializer: KSerializer<DataType>,
+    private val keySelector: (DataType) -> KeyType,
+    private val charset: Charset,
+    private val onRepetitiveKeyError: (() -> Unit)? = null,
+) {
     /**
-     * Gets [ByteArray] of provided model.
+     * Items is a [Map] of with [KeyType] keys and [DataType] data class objects. [DataType] must be `@Serializable`.
+     */
+    val data: Map<KeyType, DataType> by lazy {
+        val result = mutableMapOf<KeyType, DataType>()
+
+        // returns empty list if file is not a directory
+        val listOfFiles = readFilesRecursive(path)
+
+        if (listOfFiles.isNotEmpty()) {
+            // path is directory, read all its files
+            for (file in listOfFiles) {
+                val elements = loadSingleFile(file)
+                if (result.keys.containsAll(elements.keys)) {
+                    Log.e("AssetService", "Duplicate keys found in $path. Application will continue.")
+                    onRepetitiveKeyError?.invoke()
+                }
+                result.putAll(elements)
+            }
+        } else {
+            // path is file, read it
+            result.putAll(loadSingleFile(path))
+        }
+
+        return@lazy result
+    }
+
+    /**
+     * Loads a single JSON file and all its objects of [DataType]. File must contain a list of these objects, cannot be
+     * just single JSON object
      *
-     * @param modelName Name of model with extension
-     * @param modelPath Root path of directory in which a model is stored under [assets]. Must end with `/`!
+     * @param filename path to the file in assets directory
+     * @return [Map] of [DataType] with [KeyType]
      */
-    fun getModel(modelName: String, modelPath: String = "models/"): ByteArray {
-        return getModel(modelName, modelPath, app)
+    private fun loadSingleFile(filename: String): Map<KeyType, DataType> {
+        val jsonText = app.assets.open(filename)
+            .bufferedReader(charset)
+            .use { it.readText() }
+            .removePrefix("\uFEFF") // removes ByteOrderMark from start of the file
+
+        val list = Json.decodeFromString(ListSerializer(serializer), jsonText)
+        return list.associateBy(keySelector)
     }
 
     /**
-     * Returns a [Bitmap] of image asset, image path does not have to be full, a recursive search will be applied until
-     * a file with [filename] will be found (extension must be matching).
-     */
-    fun getImageBitmap(filename: String, rootDir: String = ""): Bitmap? {
-        return getImageBitmap(filename, rootDir, app)
-    }
-
-    /**
-     * Returns a [Bitmap] of image asset, image path does not have to be full, a recursive search will be applied until
-     * a file with [filename] will be found (extension must be matching).
-     */
-    fun getTextFile(
-        filename: String,
-        rootDir: String = "",
-        charset: Charset = Charsets.UTF_8,
-    ): String? {
-        return getTextFile(filename, rootDir, charset, app)
-    }
-
-    /**
-     * Recursive search for [filename] under the [rootDir] in application's assets.
+     * Reads path with recursion and returns list of all files with its absolute paths (under assets).
      *
-     * @param filename string that will be searched for
-     * @param rootDir directory under which a recursive search will start
-     * @return full path to the file or `null` on not finding the file
-     */
-    fun recursiveFileSearch(filename: String, rootDir: String = ""): String? {
-        return recursiveFileSearch(filename, rootDir, app)
-    }
-
-    /**
-     * Recursive search for all files under the [path] in application's assets.
-     *
-     * @param path that will be searched under the assets directory
      * @return [List] of all absolute paths of files, meaning parent directory will be included in name of file.
      * If path is not directory but a file an empty list is returned.
      */
-    fun recursiveFilesSearch(path: String): List<String> {
-        return recursiveFilesSearch(path, app = app)
-    }
+    private fun readFilesRecursive(path: String): List<String> {
+        val children = app.assets.list(path) ?: return emptyList()
+        val result = mutableListOf<String>()
 
-    companion object {
-        /**
-         * Gets [ByteArray] of provided model.
-         *
-         * @param modelName Name of model with extension
-         * @param modelPath Root path of directory in which a model is stored under [assets]. Must end with `/`!
-         */
-        fun getModel(modelName: String, modelPath: String = "models/", app: Application): ByteArray {
-            val fullPath = "$modelPath$modelName"
-            return app.assets.open(fullPath).readBytes()
-        }
+        for (file in children) {
+            val fullPath = if (path.isEmpty()) file else "$path/$file"
 
-
-        /**
-         * Returns a [Bitmap] of image asset, image path does not have to be full, a recursive search will be applied until
-         * a file with [filename] will be found (extension must be matching).
-         */
-        fun getImageBitmap(filename: String, rootDir: String = "", app: Application): Bitmap? {
-            val foundFilePath = recursiveFileSearch(filename, rootDir, app) ?: return null
-
-            val stream = app.assets.open(foundFilePath)
-
-            val bitmap = BitmapFactory.decodeStream(stream)
-            stream.close()
-            return bitmap
-        }
-
-        /**
-         * Returns a [Bitmap] of image asset, image path does not have to be full, a recursive search will be applied until
-         * a file with [filename] will be found (extension must be matching).
-         */
-        fun getTextFile(
-            filename: String,
-            rootDir: String = "",
-            charset: Charset = Charsets.UTF_8,
-            app: Application,
-        ): String? {
-            val foundFilePath = recursiveFileSearch(filename, rootDir, app) ?: return null
-            val stream = app.assets.open(foundFilePath)
-            val text = stream.bufferedReader(charset).use { it.readText() }
-            stream.close()
-            return text
-        }
-
-        /**
-         * Recursive search for [filename] under the [rootDir] in application's assets.
-         *
-         * @param filename string that will be searched for
-         * @param app Application reference for reading from the assets
-         * @param rootDir directory under which a recursive search will start
-         * @return full path to the file or `null` on not finding the file
-         */
-        fun recursiveFileSearch(filename: String, rootDir: String = "", app: Application): String? {
-            val files = app.assets.list(rootDir) ?: return null
-
-            for (file in files) {
-                val fullPath = if (rootDir.isEmpty()) file else "$rootDir/$file"
-
-                if (file == filename) {
-                    return fullPath
-                }
-
-                val subFiles = app.assets.list(fullPath)
-                if (!subFiles.isNullOrEmpty()) {
-                    val result = recursiveFileSearch(filename, fullPath, app)
-                    if (result != null) {
-                        return result
-                    }
-                }
+            try {
+                // try to open file, failing means it is a directory
+                app.assets.open(fullPath).close()
+                result.add(fullPath)
+            } catch (e: Throwable) {
+                // path == directory, open it recursively
+                result.addAll(readFilesRecursive(fullPath))
             }
-
-            return null
         }
 
-        /**
-         * Recursive search for all files under the [path] in application's assets.
-         *
-         * @param path that will be searched under the assets directory
-         * @param app Application reference for reading from the assets
-         * @return [List] of all absolute paths of files, meaning parent directory will be included in name of file.
-         * If path is not directory but a file an empty list is returned.
-         */
-        fun recursiveFilesSearch(path: String, app: Application): List<String> {
-            val result = mutableListOf<String>()
-
-            app.assets.list(path)?.forEach { file ->
-                val fullPath = if (path.isEmpty()) file else "$path/$file"
-
-                try {
-                    // try to open file, failing means it is a directory
-                    app.assets.open(fullPath).close()
-                    result.add(fullPath)
-                } catch (e: Throwable) {
-                    // path == directory, open it recursively
-                    result.addAll(recursiveFilesSearch(fullPath, app))
-                }
-            }
-
-            return result
-        }
+        return result
     }
 }

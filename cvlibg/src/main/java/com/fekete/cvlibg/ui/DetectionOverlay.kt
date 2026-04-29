@@ -14,10 +14,17 @@ import com.fekete.cvlibg.detection.ImageDetails
 import kotlin.math.max
 
 /**
- * Abstract class used as a view for drawing detections, class does not contain a [drawDetections] implementation where
- * a specific implementation of how detections are represent on screen are coded.
+ * Open class used as a view for drawing detections. This view is transparent and draws the detected bounding boxes
+ * on top of whatever view is underneath in hierarchy of views. Recommended approach is to place this view on top of
+ * [androidx.camera.view.PreviewView].
+ *
+ * This class is ready to use, however, its [drawDetections] function is as simple as possible, it is strongly
+ * recommended to subclass [com.fekete.cvlibg.ui.DetectionOverlay] and rewrite this method to suit specific application
+ * style, information levels, etc.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
-abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(context, attrs) {
+open class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     /**
      * List containing current [com.fekete.cvlibg.detection.Detection] objects that are on screen.
      */
@@ -73,7 +80,7 @@ abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(c
      *
      * @return [RectF] object with correct resolution.
      */
-    protected fun scaleDetectionToScreenRect(det: Detection, detectionScaledToCamera: Boolean = true): RectF {
+    protected open fun scaleDetectionToScreenRect(det: Detection, detectionScaledToCamera: Boolean = true): RectF {
         tmpRect = det.toRectF()
 
         if (!detectionScaledToCamera) {
@@ -115,10 +122,10 @@ abstract class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(c
 
 
     /**
-     * Cleans internal detection list and adds new boxes into it.
+     * Cleans internal detection list and adds new [Detection] objects into it.
      *
      * @param newBoxes list of <Detection> objects that contain info about found detections in current image
-     * @param imageDetails info about current Detections and image, used for scaling of [onTouchEvent] events.
+     * @param imageDetails info about current detections and image, used for scaling detection to screen.
      */
     fun updateBoxes(newBoxes: List<Detection>, imageDetails: ImageDetails) {
         detections.clear()

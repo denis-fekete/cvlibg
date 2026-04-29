@@ -7,18 +7,27 @@ import com.fekete.bangdemo.data.UserPreferences
 import com.fekete.cvlibg.detection.detectors.DetectorRegistry
 import com.fekete.cvlibg.detection.detectors.onnx.Yolo26OnnxDetector
 import com.fekete.cvlibg.detection.detectors.onnx.YoloOnnxDetector
-import com.fekete.cvlibg.services.JSONAssetService
-import com.fekete.cvlibg.services.PermissionService.setupOpenCV
-import com.fekete.cvlibg.services.SettingsService
+import com.fekete.cvlibg.services.AssetService
+import com.fekete.cvlibg.utils.CommonUtils
+import com.fekete.cvlibg.services.ConfigService
 
+/**
+ * Class derived from the Android's [Application] class. Initializes the [cardDetailsService], [class2linkService], and
+ * [settingsService]. Furthermore, registers models and detectors into [DetectorRegistry].
+ *
+ * The public [errorMessageCardDetail] and [errorMessageClass2Link] are used by the [MainActivity] to display errors
+ * that occurred during initialization of services.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
+ */
 class MyApp : Application() {
-    lateinit var cardDetailsService: JSONAssetService<CardDetail, String>
-    lateinit var class2linkService: JSONAssetService<Class2Link, Int>
+    lateinit var cardDetailsService: AssetService<CardDetail, String>
+    lateinit var class2linkService: AssetService<Class2Link, Int>
     var errorMessageCardDetail: String? = null
     var errorMessageClass2Link: String? = null
 
-    val settingsService: SettingsService<UserPreferences> by lazy {
-        SettingsService(
+    val settingsService: ConfigService<UserPreferences> by lazy {
+        ConfigService(
             this,
             "settings.json",
             UserPreferences.serializer(),
@@ -29,11 +38,11 @@ class MyApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        setupOpenCV()
+        CommonUtils.setupOpenCV()
         registerModels()
 
         try {
-            cardDetailsService = JSONAssetService(
+            cardDetailsService = AssetService(
                 app = this,
                 path = "details",
                 serializer = CardDetail.serializer(),
@@ -41,13 +50,13 @@ class MyApp : Application() {
                 Charsets.UTF_16BE
             )
             // forcing load
-            cardDetailsService.items
+            cardDetailsService.data
         } catch (exc: Exception) {
             errorMessageCardDetail = "JsonAssetService failed for assets/details/: Error message: ${exc.message}"
         }
 
         try {
-            class2linkService = JSONAssetService(
+            class2linkService = AssetService(
                 this,
                 path = "Class2Link.json",
                 serializer = Class2Link.serializer(),
@@ -55,7 +64,7 @@ class MyApp : Application() {
                 Charsets.UTF_8
             )
             // forcing load
-            class2linkService.items
+            class2linkService.data
         } catch (exc: Exception) {
             errorMessageClass2Link = "JsonAssetService failed for Class2Link.json: Error message: ${exc.message}"
         }

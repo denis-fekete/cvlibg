@@ -13,8 +13,11 @@ import com.fekete.cvlibg.ui.DetectionOverlay
  * @param realtimeDetector Faster detector uses in realtime, if not provided a realtime analysis will not be used
  * @param qualityDetector Detailed detector used for running slower models with frozen background, if not provided it
  * will not be used
- * @param bindToLifecycle Whenever, should the [CameraController] be bound to the [lifecycleOwner], if set to true,
- * the clean memory cleanup will be automatically done. Otherwise, it is required call [stop] method.
+ * @param bindToLifecycle Whenever, should the [CameraController] be bound to the [CameraController.lifecycleOwner],
+ * if set to true, the clean memory cleanup will be automatically done. Otherwise, it is required call
+ * [CameraController.stop] method.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 data class CameraConfig(
     val detectionOverlay: DetectionOverlay,

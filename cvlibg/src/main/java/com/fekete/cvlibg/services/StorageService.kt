@@ -10,7 +10,7 @@ import java.nio.charset.Charset
 
 /**
  * Template class used for loading an JSON file from external storage located under:
- * `/storage/emulated/0/Android/data/CVLiBG/files/[filename]`.
+ * `/storage/emulated/0/Android/data/<package>/files/[filename]`.
  *
  * Loaded JSON file must be `data class` and provide [serializer] from `@Serializable` flag.
  *
@@ -23,9 +23,10 @@ import java.nio.charset.Charset
  * @param charset Character set used by the file
  * @param throwOnFail If set to `false` [filename] file does not have to exist, otherwise if the file does not exist,
  * an [FileNotFoundException] will be thrown.
+ *
+ *@author Denis Fekete <xfeket01@vutbr.cz>, <denis.fekete02@gmail.com>
  */
-
-class JSONStorageService<DataType : Any, KeyType : Any>(
+class StorageService<DataType : Any, KeyType : Any>(
     private val app: Application,
     private val filename: String,
     private val serializer: KSerializer<DataType>,
@@ -36,7 +37,7 @@ class JSONStorageService<DataType : Any, KeyType : Any>(
     /**
      * Items is a [Map] of with [KeyType] keys and [DataType] data class objects. [DataType] must be `@Serializable`.
      */
-    val items: MutableMap<KeyType, DataType> by lazy {
+    val data: MutableMap<KeyType, DataType> by lazy {
         val file = File(getRootDirectory(), filename)
 
         if (!file.exists()) {
@@ -57,19 +58,19 @@ class JSONStorageService<DataType : Any, KeyType : Any>(
     }
 
     /**
-     * Get the first item of the [items] map.
+     * Get the first item of the [data] map.
      */
-    val item: DataType? get() = items.values.firstOrNull()
+    val item: DataType? get() = data.values.firstOrNull()
 
     /**
-     * Saves the [items] of the [com.fekete.cvlibg.services.JSONStorageService] into the devices storage under the [filename].
+     * Saves the [data] of the [com.fekete.cvlibg.services.StorageService] into the devices storage under the [filename].
      */
     fun save() {
-        if (items.values.isEmpty()) {
+        if (data.values.isEmpty()) {
             return
         }
         val json = Json { encodeDefaults = true } // encode default values from the data class
-        val jsonString = json.encodeToString(ListSerializer(serializer), items.values.toList())
+        val jsonString = json.encodeToString(ListSerializer(serializer), data.values.toList())
 
         File(getRootDirectory(), filename)
             .bufferedWriter(charset)
