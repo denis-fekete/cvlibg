@@ -1,21 +1,20 @@
-package com.fekete.cvlibg.detection.detectors.onnx
+package com.fekete.cvlibg.detection.yolo.onnx
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtSession
 import android.util.Size
 import com.fekete.cvlibg.detection.Detection
-import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector
 
 /**
- * Class implementing abstract [com.fekete.cvlibg.detection.detectors.Detector] and [AbstractYoloDetector]. This class uses
+ * Class implementing abstract [com.fekete.cvlibg.detection.Detector] and [com.fekete.cvlibg.detection.AbstractYoloDetector]. This class uses
  * OpenCV's [org.opencv.dnn.Net] as an inference runtime/engine. This detector supports YOLO 26 version.
  *
- * This detector scales [Detection] objects to input image resolution.
+ * This detector scales [com.fekete.cvlibg.detection.Detection] objects to input image resolution.
  *
  * @param modelPath path to the ONNX model in assets
  * @param confThreshold threshold used for filtering detections
- * @param applyNMS use or not use Non-Maximum Suppression
- * @param nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
+ * @param com.fekete.cvlibg.detection.Detector.applyNMS use or not use Non-Maximum Suppression
+ * @param com.fekete.cvlibg.detection.Detector.nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
  * @param inputDataSize expected size for model loaded from the [modelPath]
  * @param useNNAPI whenever to use ONNX's NNAPI for accelerated inference
  *

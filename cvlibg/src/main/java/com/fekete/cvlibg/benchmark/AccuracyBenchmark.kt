@@ -10,7 +10,7 @@ import java.io.File
 import java.time.LocalDateTime
 
 /**
- * Benchmark for measuring accuracy of object detection models and [com.fekete.cvlibg.detection.detectors.Detector]s.
+ * Benchmark for measuring accuracy of object detection models and [com.fekete.cvlibg.detection.Detector]s.
  */
 class AccuracyBenchmark(context: Context, private val validationDataPath: String, private val iouThreshold: Float) :
     DetectorBenchmark(context) {

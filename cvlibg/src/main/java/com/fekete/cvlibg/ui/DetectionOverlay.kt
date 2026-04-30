@@ -69,7 +69,7 @@ open class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(conte
     }
 
     /**
-     * Scales [Detection] objects from [com.fekete.cvlibg.detection.detectors.Detector] resolution (same as resolution provided
+     * Scales [Detection] objects from [com.fekete.cvlibg.detection.Detector] resolution (same as resolution provided
      * as its input [Bitmap]) into a resolution used by the smartphones screen.
      *
      * This method uses [tmpRect] variable!s

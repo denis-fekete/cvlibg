@@ -2,4 +2,4 @@ jdk:
   - openjdk17
 
 install:
-  - ./gradlew clean :cvlibg:publishToMavenLocal
+  - ./gradlew clean :cvlibg:publishToMavenLocal :cvlibg-yolo-onnx:publishToMavenLocal

@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/bangapp" />
             <option value="$PROJECT_DIR$/cvlibg" />
+            <option value="$PROJECT_DIR$/cvlibg-yolo-onnx" />
           </set>
         </option>
       </GradleProjectSettings>

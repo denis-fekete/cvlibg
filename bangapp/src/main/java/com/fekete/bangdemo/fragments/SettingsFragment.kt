@@ -7,7 +7,7 @@ import com.fekete.bangdemo.MyApp
 import com.fekete.bangdemo.data.Language
 import com.fekete.bangdemo.data.uiLabel
 import com.fekete.cvlibg.ui.ResizableSpinnerAdapter
-import com.fekete.cvlibg.detection.detectors.DetectorRegistry
+import com.fekete.cvlibg.utils.DetectorRegistry
 import com.fekete.bangdemo.databinding.FragmentSettingsBinding
 
 /**

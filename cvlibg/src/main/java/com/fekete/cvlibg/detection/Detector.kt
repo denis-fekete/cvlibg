@@ -1,15 +1,14 @@
-package com.fekete.cvlibg.detection.detectors
+package com.fekete.cvlibg.detection
 
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Size
-import com.fekete.cvlibg.detection.Detection
 import com.fekete.cvlibg.utils.AssetLoader
 
 /**
  * Abstract class, that works as a base for class defining the object detection tasks. This class contains common
- * variables and methods used by the [com.fekete.cvlibg.detection.ImageAnalyzer].
+ * variables and methods used by the [com.fekete.cvlibg.ImageAnalyzer].
  *
  * @param modelPath path to the model in the assets' folder.
  * @param confThreshold confidence threshold value for filtering detection.

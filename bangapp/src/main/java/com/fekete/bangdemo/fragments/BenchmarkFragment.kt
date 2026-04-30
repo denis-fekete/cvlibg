@@ -11,7 +11,7 @@ import com.fekete.bangdemo.MyApp
 import com.fekete.cvlibg.benchmark.AccuracyBenchmark
 import com.fekete.cvlibg.benchmark.DetectorBenchmark
 import com.fekete.cvlibg.benchmark.PerformanceBenchmark
-import com.fekete.cvlibg.detection.detectors.DetectorRegistry
+import com.fekete.cvlibg.utils.DetectorRegistry
 import com.fekete.bangdemo.databinding.FragmentBenchmarkBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

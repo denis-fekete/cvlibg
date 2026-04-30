@@ -1,12 +1,12 @@
-package com.fekete.cvlibg.detection
+package com.fekete.cvlibg
 
 import androidx.camera.view.PreviewView
-import com.fekete.cvlibg.detection.detectors.Detector
+import com.fekete.cvlibg.detection.Detector
 import com.fekete.cvlibg.logging.MetricsOverlay
 import com.fekete.cvlibg.ui.DetectionOverlay
 
 /**
- * @param previewView [androidx.camera.view.PreviewView] that is in layout where this [CameraController] is situated,
+ * @param previewView [PreviewView] that is in layout where this [CameraController] is situated,
  * this preview shows unedited stream of images from camera (in another word video from camera).
  * @param detectionOverlay Class used for drawing, it is expected that the class will be subclassed.
  * @param metricsOverlay lass used for displaying the metrics.

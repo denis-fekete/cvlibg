@@ -4,9 +4,9 @@ import android.app.Application
 import com.fekete.bangdemo.data.CardDetail
 import com.fekete.bangdemo.data.Class2Link
 import com.fekete.bangdemo.data.UserPreferences
-import com.fekete.cvlibg.detection.detectors.DetectorRegistry
-import com.fekete.cvlibg.detection.detectors.onnx.Yolo26OnnxDetector
-import com.fekete.cvlibg.detection.detectors.onnx.YoloOnnxDetector
+import com.fekete.cvlibg.utils.DetectorRegistry
+import com.fekete.cvlibg.detection.yolo.onnx.Yolo26OnnxDetector
+import com.fekete.cvlibg.detection.yolo.onnx.YoloOnnxDetector
 import com.fekete.cvlibg.services.AssetService
 import com.fekete.cvlibg.utils.CommonUtils
 import com.fekete.cvlibg.services.ConfigService

@@ -13,7 +13,7 @@ import java.util.Locale.getDefault
 import kotlin.math.max
 
 /**
- * View for drawing [com.fekete.cvlibg.detection.detectors.Detector] related metrics, such as performance, or detected objects.
+ * View for drawing [com.fekete.cvlibg.detection.Detector] related metrics, such as performance, or detected objects.
  * Its main purpose is to provide developers with quick debug tool showing performance.
  *
  * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)

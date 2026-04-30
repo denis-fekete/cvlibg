@@ -1,4 +1,4 @@
-package com.fekete.cvlibg.detection
+package com.fekete.cvlibg
 
 import android.content.Context
 import android.util.Size
@@ -25,7 +25,7 @@ import java.util.concurrent.Executors
  * Class making camera control more abstracted. Creates new thread on which a [ImageAnalyzer] analysis is executed.
  *
  * @param context Should be a context of a [android.app.Fragment] or [android.app.Activity], in case either of these are
- * destroyed, new camera controller along with [java.util.concurrent.ExecutorService] will be created.
+ * destroyed, new camera controller along with [ExecutorService] will be created.
  * @param lifecycleOwner Owner of lifecycle, used by CameraX to correctly bind and exit on lifecycle change
  * @param cameraConfig
  *

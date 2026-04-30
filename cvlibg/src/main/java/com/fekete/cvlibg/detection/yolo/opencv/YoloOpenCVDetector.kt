@@ -1,10 +1,10 @@
-package com.fekete.cvlibg.detection.detectors.opencv
+package com.fekete.cvlibg.detection.yolo.opencv
 
 import android.graphics.Bitmap
 import android.util.Size
+import com.fekete.cvlibg.detection.AbstractYoloDetector
 import com.fekete.cvlibg.detection.Detection
-import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector
-import com.fekete.cvlibg.detection.detectors.DetectorResult
+import com.fekete.cvlibg.detection.DetectorResult
 import com.fekete.cvlibg.utils.AssetLoader
 import com.fekete.cvlibg.utils.Timer
 import org.opencv.android.Utils
@@ -17,8 +17,8 @@ import org.opencv.dnn.Net
 import org.opencv.imgproc.Imgproc
 
 /**
- * Class implementing abstract [com.fekete.cvlibg.detection.detectors.Detector] and [AbstractYoloDetector]. This class uses
- * OpenCV's [org.opencv.dnn.Net] as an inference runtime/engine.
+ * Class implementing abstract [com.fekete.cvlibg.detection.Detector] and [AbstractYoloDetector]. This class uses
+ * OpenCV's [Net] as an inference runtime/engine.
  *
  * This detector scales [Detection] objects to input image resolution.
  *
@@ -110,14 +110,14 @@ open class YoloOpenCVDetector(
 
 
     /**
-     * Extracts list of [com.fekete.cvlibg.detection.Detection] objects from OpenCV [Net] result. Value for thresholding is
+     * Extracts list of [Detection] objects from OpenCV [Net] result. Value for thresholding is
      * Results are in format `[batch, values, detections]` where the values are:
      * x, y, w, h, class0 confidence, class1 confidence, class2 confidence...
      *
-     * By default, the [threshold] value is determined by the [confThreshold] (see [com.fekete.cvlibg.detection.detectors.Detector]).
+     * By default, the [threshold] value is determined by the [confThreshold] (see [com.fekete.cvlibg.detection.Detector]).
      *
      * @param input [Mat] containing all detections from the runtime.
-     * @return List of [com.fekete.cvlibg.detection.Detection] that pass the [confThreshold] confidence score threshold
+     * @return List of [Detection] that pass the [confThreshold] confidence score threshold
      */
     protected open fun thresholdingFilter(
         input: Mat,

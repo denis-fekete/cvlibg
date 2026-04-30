@@ -1,4 +1,4 @@
-package com.fekete.cvlibg.detection.detectors.onnx
+package com.fekete.cvlibg.detection.yolo.onnx
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
@@ -6,9 +6,9 @@ import ai.onnxruntime.OrtSession
 import android.graphics.Bitmap
 import android.util.Log
 import android.util.Size
+import com.fekete.cvlibg.detection.AbstractYoloDetector
 import com.fekete.cvlibg.detection.Detection
-import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector
-import com.fekete.cvlibg.detection.detectors.DetectorResult
+import com.fekete.cvlibg.detection.DetectorResult
 import com.fekete.cvlibg.utils.AssetLoader
 import com.fekete.cvlibg.utils.Timer
 import org.opencv.android.Utils
@@ -20,10 +20,10 @@ import java.nio.FloatBuffer
 
 
 /**
- * Class implementing abstract [com.fekete.cvlibg.detection.detectors.Detector] and [AbstractYoloDetector]. This class uses
+ * Class implementing abstract [com.fekete.cvlibg.detection.Detector] and [com.fekete.cvlibg.detection.AbstractYoloDetector]. This class uses
  * ONNX's runtime as an inference runtime/engine. This detector supports YOLO version from 8 to 11.
  *
- * This detector scales [Detection] objects to input image resolution.
+ * This detector scales [com.fekete.cvlibg.detection.Detection] objects to input image resolution.
  *
  * @param modelPath path to the ONNX model in assets
  * @param confThreshold threshold used for filtering detections
@@ -127,7 +127,7 @@ open class YoloOnnxDetector(
      * Results are in format `[batch, values, detections]` where the values are:
      * x, y, w, h, class0 confidence, class1 confidence, class2 confidence...
      *
-     * By default, the [threshold] value is determined by the [confThreshold] (see [com.fekete.cvlibg.detection.detectors.Detector]).
+     * By default, the [threshold] value is determined by the [confThreshold] (see [com.fekete.cvlibg.detection.Detector]).
      *
      * @see <a href="https://onnxruntime.ai/docs/api/java/ai/onnxruntime/OnnxTensor.html">OnnxTensor Api Documentation
      *
@@ -159,8 +159,8 @@ open class YoloOnnxDetector(
      * Converts OpenCV Mat containing input image into an OnnxTensor that can be put into OnnxSession for object
      * detection. OpenCV uses HWC format, where the ONNX expects and CHW format, for that and image has to converted.
      *
-     * @param mat input OpenCV [Mat] that will transform into [OnnxTensor]
-     * @return [OnnxTensor] that can be put as an input to OnnxRuntime model
+     * @param mat input OpenCV [org.opencv.core.Mat] that will transform into [ai.onnxruntime.OnnxTensor]
+     * @return [ai.onnxruntime.OnnxTensor] that can be put as an input to OnnxRuntime model
      */
     protected open fun matToTensor(mat: Mat): OnnxTensor? {
         if (mat.empty())

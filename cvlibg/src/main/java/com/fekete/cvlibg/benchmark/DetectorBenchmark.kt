@@ -2,7 +2,7 @@ package com.fekete.cvlibg.benchmark
 
 import android.content.Context
 import android.util.Log
-import com.fekete.cvlibg.detection.detectors.Detector
+import com.fekete.cvlibg.detection.Detector
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 

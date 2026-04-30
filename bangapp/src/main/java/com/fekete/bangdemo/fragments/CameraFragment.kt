@@ -9,10 +9,10 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.fekete.bangdemo.MyApp
-import com.fekete.cvlibg.detection.CameraConfig
-import com.fekete.cvlibg.detection.CameraController
-import com.fekete.cvlibg.detection.detectors.Detector
-import com.fekete.cvlibg.detection.detectors.DetectorRegistry
+import com.fekete.cvlibg.CameraConfig
+import com.fekete.cvlibg.CameraController
+import com.fekete.cvlibg.detection.Detector
+import com.fekete.cvlibg.utils.DetectorRegistry
 import com.fekete.bangdemo.R
 import kotlinx.coroutines.launch
 import com.fekete.bangdemo.databinding.FragmentCameraBinding

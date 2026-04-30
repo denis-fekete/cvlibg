@@ -1,9 +1,9 @@
-package com.fekete.cvlibg.detection
+package com.fekete.cvlibg
 
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import com.fekete.cvlibg.detection.detectors.DetectorResult
-import com.fekete.cvlibg.detection.detectors.Detector
+import com.fekete.cvlibg.detection.DetectorResult
+import com.fekete.cvlibg.detection.Detector
 import com.fekete.cvlibg.logging.MetricsOverlay
 import com.fekete.cvlibg.ui.DetectionOverlay
 import com.fekete.cvlibg.utils.Timer

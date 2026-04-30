@@ -5,17 +5,17 @@ import android.graphics.Bitmap
 import android.graphics.Bitmap.createBitmap
 import com.fekete.cvlibg.utils.Timer
 import com.fekete.cvlibg.utils.TimerResult
-import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector.Companion.METRICS_NMS_KEY
-import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector.Companion.METRICS_EXTRACT_KEY
-import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector.Companion.METRICS_LETTERBOX_KEY
-import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector.Companion.METRICS_CONVERSION_KEY
-import com.fekete.cvlibg.detection.detectors.AbstractYoloDetector.Companion.METRICS_INTERFACE_KEY
+import com.fekete.cvlibg.detection.AbstractYoloDetector.Companion.METRICS_NMS_KEY
+import com.fekete.cvlibg.detection.AbstractYoloDetector.Companion.METRICS_EXTRACT_KEY
+import com.fekete.cvlibg.detection.AbstractYoloDetector.Companion.METRICS_LETTERBOX_KEY
+import com.fekete.cvlibg.detection.AbstractYoloDetector.Companion.METRICS_CONVERSION_KEY
+import com.fekete.cvlibg.detection.AbstractYoloDetector.Companion.METRICS_INTERFACE_KEY
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
 /**
- * Class for benchmarking latency and inference speed of [com.fekete.cvlibg.detection.detectors.Detector] and its models.
+ * Class for benchmarking latency and inference speed of [com.fekete.cvlibg.detection.Detector] and its models.
  *
  * @param context context used for loading models from the assets
  *

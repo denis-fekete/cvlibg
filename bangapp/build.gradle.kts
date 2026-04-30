@@ -42,6 +42,7 @@ android {
 
 dependencies {
     implementation(project(":cvlibg"))
+    implementation(project(":cvlibg-yolo-onnx"))
 
     // default
     implementation("androidx.core:core-ktx:1.17.0")

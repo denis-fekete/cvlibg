@@ -1,8 +1,6 @@
-package com.fekete.cvlibg.detection.detectors
+package com.fekete.cvlibg.detection
 
 import android.util.Size
-import com.fekete.cvlibg.detection.Detection
-import com.fekete.cvlibg.detection.ImageDetails
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfFloat
@@ -17,7 +15,7 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
- * Class implementing abstract [com.fekete.cvlibg.detection.detectors.Detector]. This class contains common methods and
+ * Class implementing abstract [Detector]. This class contains common methods and
  * variables for more specific implementation of YOLO detectors.
  *
  * This detector scales [Detection] objects to input image resolution.

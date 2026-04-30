@@ -1,7 +1,5 @@
-package com.fekete.cvlibg.detection.detectors
+package com.fekete.cvlibg.detection
 
-import com.fekete.cvlibg.detection.Detection
-import com.fekete.cvlibg.detection.ImageDetails
 import com.fekete.cvlibg.logging.MetricsValue
 import com.fekete.cvlibg.utils.TimerResult
 

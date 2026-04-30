@@ -1,4 +1,6 @@
-package com.fekete.cvlibg.detection.detectors
+package com.fekete.cvlibg.utils
+
+import com.fekete.cvlibg.detection.Detector
 
 /**
  * A data class that registers/links [Detector] derived classes to the name of model. The name of model can be shown in

@@ -7,8 +7,8 @@ import kotlinx.serialization.Serializable
  *
  * @param language used language
  * @param fontSize font size values, used for scaling text of other fragments and activities
- * @param realtimeModel key from the [com.fekete.cvlibg.detection.detectors.DetectorRegistry] for the realtime model
- * @param precisionModel key from the [com.fekete.cvlibg.detection.detectors.DetectorRegistry] for the quality model
+ * @param realtimeModel key from the [com.fekete.cvlibg.utils.DetectorRegistry] for the realtime model
+ * @param precisionModel key from the [com.fekete.cvlibg.utils.DetectorRegistry] for the quality model
  * @param showMetrics whenever metrics should be shown
  * @param verboseMetrics whenever verbose, more detailed metrics should be shown
  *
