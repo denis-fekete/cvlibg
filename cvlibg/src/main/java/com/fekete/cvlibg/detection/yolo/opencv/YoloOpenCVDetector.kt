@@ -105,6 +105,7 @@ open class YoloOpenCVDetector(
             nsmFilteredDetections,
             imageDetails,
             performanceMetrics = performanceMetrics,
+            showMetrics = showMetrics
         )
     }
 

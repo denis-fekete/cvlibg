@@ -86,7 +86,7 @@ class ImageAnalyzer(
                 metricsOverlay.updateLogData(
                     detectorResult.performanceMetrics,
                     detectorResult.otherMetrics,
-                    if (detectorResult.performanceMetrics.isNotEmpty()) TimerResult(totalTimeEnd - totalTimeStart) else null
+                    if (detectorResult.showMetrics) TimerResult(totalTimeEnd - totalTimeStart) else null
                 )
             }
 

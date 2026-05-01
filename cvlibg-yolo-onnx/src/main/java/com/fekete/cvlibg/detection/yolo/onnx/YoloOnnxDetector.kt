@@ -119,6 +119,7 @@ open class YoloOnnxDetector(
             nsmFilteredDetections,
             imageDetails,
             performanceMetrics = performanceMetrics,
+            showMetrics = showMetrics
         )
     }
 

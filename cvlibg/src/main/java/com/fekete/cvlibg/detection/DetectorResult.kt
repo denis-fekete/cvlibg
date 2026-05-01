@@ -17,7 +17,6 @@ data class DetectorResult(
     val detections: List<Detection>,
     val details: ImageDetails,
     val showMetrics: Boolean = false,
-
     val performanceMetrics: Map<String, TimerResult> = emptyMap(),
     val otherMetrics: List<MetricsValue> = emptyList(),
 )
