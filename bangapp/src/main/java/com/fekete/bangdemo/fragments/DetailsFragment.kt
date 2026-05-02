@@ -101,7 +101,8 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
                 }
 
                 linkView.setOnClickListener {
-                    navController.navigate(R.id.cardDetailsFragment, bundleOf("id" to id))
+                    val action = DetailsFragmentDirections.actionCardDetailsFragmentSelf(id = id)
+                    navController.navigate(action)
                 }
 
                 binding.linksLayout.addView(linkView)

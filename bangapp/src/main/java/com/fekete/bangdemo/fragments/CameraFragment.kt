@@ -67,11 +67,9 @@ class CameraFragment : BaseFragment<FragmentCameraBinding>(
 
         // attaching onDetectionClicked event
         binding.detectionOverlay.onDetectionClicked = { detection ->
-            val bundle = bundleOf(
-                "id" to class2linkService.data[detection.classIndex]!!.linkId
-            )
-
-            findNavController().navigate(R.id.cardDetailsFragment, bundle)
+            val action = CameraFragmentDirections
+                .actionCameraFragmentToCardDetailsFragment(id = class2linkService.data[detection.classIndex]!!.linkId)
+            findNavController().navigate(action)
         }
 
         binding.switchToFastDetectionButton.visibility = View.GONE
