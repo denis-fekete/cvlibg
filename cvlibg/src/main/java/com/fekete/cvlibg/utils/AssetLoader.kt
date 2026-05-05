@@ -18,24 +18,38 @@ class AssetLoader(private val app: Application) {
     /**
      * Gets [ByteArray] of provided model.
      *
-     * @param modelName Name of model with extension
-     * @param modelPath Root path of directory in which a model is stored under [assets]. Must end with `/`!
+     * @param modelPath full path to the model inside the assets' directory.
+     * @param app Application reference for reading from the assets
+     *
+     * @return Byte array of found model.
      */
-    fun loadModel(modelName: String, modelPath: String = "models/"): ByteArray {
-        return loadModel(modelName, modelPath, app)
+    fun loadModel(modelPath: String): ByteArray {
+        return loadModel(modelPath, app)
     }
 
     /**
-     * Returns a [android.graphics.Bitmap] of image asset, image path does not have to be full, a recursive search will be applied until
+     * Returns a [Bitmap] of image asset. A recursive search will be applied until
      * a file with [filename] will be found (extension must be matching).
+     *
+     * @param filename of the image file.
+     * @param rootDir root directory from which a recursive search will start.
+     * @param app Application reference for reading from the assets.
+     *
+     * @return [Bitmap] of found file, or `null` if not found.
      */
     fun loadImage(filename: String, rootDir: String = ""): Bitmap? {
         return loadImage(filename, rootDir, app)
     }
 
     /**
-     * Returns a [Bitmap] of image asset, image path does not have to be full, a recursive search will be applied until
-     * a file with [filename] will be found (extension must be matching).
+     * Returns a [String] of text asset. Recursive search will be applied until
+     * a file with [filename] will be found (extension from [filename] must be matching).
+     *
+     * @param filename of the text file.
+     * @param rootDir root directory from which a recursive search will start.
+     * @param charset character set used for loading.
+     *
+     * @return [String] text data of found file, or `null` if not found.
      */
     fun loadText(
         filename: String,
@@ -71,18 +85,25 @@ class AssetLoader(private val app: Application) {
         /**
          * Gets [ByteArray] of provided model.
          *
-         * @param modelName Name of model with extension
-         * @param modelPath Root path of directory in which a model is stored under [assets]. Must end with `/`!
+         * @param modelPath full path to the model inside the assets' directory.
+         * @param app Application reference for reading from the assets
+         *
+         * @return Byte array of found model.
          */
-        fun loadModel(modelName: String, modelPath: String = "models/", app: Application): ByteArray {
-            val fullPath = "$modelPath$modelName"
-            return app.assets.open(fullPath).readBytes()
+        fun loadModel(modelPath: String, app: Application): ByteArray {
+            return app.assets.open(modelPath).readBytes()
         }
 
 
         /**
-         * Returns a [Bitmap] of image asset, image path does not have to be full, a recursive search will be applied until
+         * Returns a [Bitmap] of image asset. A recursive search will be applied until
          * a file with [filename] will be found (extension must be matching).
+         *
+         * @param filename of the image file.
+         * @param rootDir root directory from which a recursive search will start.
+         * @param app Application reference for reading from the assets.
+         *
+         * @return [Bitmap] of found file, or `null` if not found.
          */
         fun loadImage(filename: String, rootDir: String = "", app: Application): Bitmap? {
             val foundFilePath = recursiveFileSearch(filename, rootDir, app) ?: return null
@@ -95,8 +116,15 @@ class AssetLoader(private val app: Application) {
         }
 
         /**
-         * Returns a [Bitmap] of image asset, image path does not have to be full, a recursive search will be applied until
-         * a file with [filename] will be found (extension must be matching).
+         * Returns a [String] of text asset. Recursive search will be applied until
+         * a file with [filename] will be found (extension from [filename] must be matching).
+         *
+         * @param filename of the text file.
+         * @param rootDir root directory from which a recursive search will start.
+         * @param charset character set used for loading.
+         * @param app Application reference for reading from the assets
+         *
+         * @return [String] text data of found file, or `null` if not found.
          */
         fun loadText(
             filename: String,
@@ -114,10 +142,10 @@ class AssetLoader(private val app: Application) {
         /**
          * Recursive search for [filename] under the [rootDir] in application's assets.
          *
-         * @param filename string that will be searched for
-         * @param app Application reference for reading from the assets
-         * @param rootDir directory under which a recursive search will start
-         * @return full path to the file or `null` on not finding the file
+         * @param filename string that will be searched for.
+         * @param rootDir directory under which a recursive search will start.
+         * @param app Application reference for reading from the assets.
+         * @return full path to the file or `null` on not finding the file.
          */
         fun recursiveFileSearch(filename: String, rootDir: String = "", app: Application): String? {
             val files = app.assets.list(rootDir) ?: return null
@@ -144,8 +172,8 @@ class AssetLoader(private val app: Application) {
         /**
          * Recursive search for all files under the [path] in application's assets.
          *
-         * @param path that will be searched under the assets directory
-         * @param app Application reference for reading from the assets
+         * @param path that will be searched under the assets directory.
+         * @param app Application reference for reading from the assets.
          * @return [List] of all absolute paths of files, meaning parent directory will be included in name of file.
          * If path is not directory but a file an empty list is returned.
          */

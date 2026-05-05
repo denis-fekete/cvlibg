@@ -25,7 +25,7 @@ import java.nio.FloatBuffer
  *
  * This detector scales [com.fekete.cvlibg.detection.Detection] objects to input image resolution.
  *
- * @param modelPath path to the ONNX model in assets
+ * @param modelPath full path to the ONNX YOLO model in the assets' folder.
  * @param confThreshold threshold used for filtering detections
  * @param applyNMS use or not use Non-Maximum Suppression
  * @param nmsThreshold Intersection over Union threshold for Non-Maximum Suppression

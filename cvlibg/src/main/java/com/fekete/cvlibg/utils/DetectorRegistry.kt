@@ -62,7 +62,7 @@ data class DetectorRegistry(
                 val key = registry.keys.toList().first()
                 return createDetector(key)
             } else {
-                throw IllegalArgumentException("No model were registered into DetectorRegistry")
+                throw IllegalStateException("No model were registered into DetectorRegistry")
             }
         }
     }

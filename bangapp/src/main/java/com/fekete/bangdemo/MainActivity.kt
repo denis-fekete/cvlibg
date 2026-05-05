@@ -1,11 +1,6 @@
 package com.fekete.bangdemo
 
-import android.content.Context
 import android.os.Bundle
-import android.util.AttributeSet
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -63,15 +58,30 @@ class MainActivity : AppCompatActivity() {
         btnBenchmark = binding.btnBenchmarks
 
         btnCamera.setOnClickListener {
-            navController.navigate(R.id.cameraFragment)
+            navigateTo(R.id.cameraFragment)
         }
 
         btnSettings.setOnClickListener {
-            navController.navigate(R.id.settingsFragment)
+            navigateTo(R.id.settingsFragment)
         }
 
         btnBenchmark.setOnClickListener {
-            navController.navigate(R.id.benchmarkFragment)
+            navigateTo(R.id.benchmarkFragment)
         }
+    }
+
+    /**
+     * Navigates to another fragment, disables navigating to same, and destroys back stack of previous destinations.
+     */
+    private fun navigateTo(destinationId: Int) {
+        val currentId = navController.currentDestination?.id
+
+        if (currentId == destinationId) return
+
+        if (currentId != null) {
+            navController.popBackStack(currentId, true)
+        }
+
+        navController.navigate(destinationId)
     }
 }

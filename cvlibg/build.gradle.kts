@@ -39,26 +39,26 @@ android {
 dependencies {
     // default
     implementation("androidx.core:core-ktx:1.17.0")
-    testImplementation("junit:junit:4.13.2")
     implementation("androidx.appcompat:appcompat:1.7.1")
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
 
-    api("org.opencv:opencv:4.12.0")
 
     // coroutines and concurrency
     implementation("androidx.concurrent:concurrent-futures-ktx:1.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
 
     // json
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
+    // camera
     implementation("androidx.camera:camera-core:1.5.1")
     implementation("androidx.camera:camera-camera2:1.5.1")
-    implementation("androidx.camera:camera-view:1.5.1")
     implementation("androidx.camera:camera-lifecycle:1.5.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
+    implementation("androidx.camera:camera-view:1.5.1")
+
+    // exposed modules
+    api("org.opencv:opencv:4.12.0")
 }
 
 afterEvaluate {
