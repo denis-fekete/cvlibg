@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.fekete.cvlibg.detection.Detection
@@ -136,11 +137,12 @@ open class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(conte
         detections.clear()
         detections.addAll(result.detections)
 
+        val cameraResolutionChanged = (imageDetails.inputWidth != result.imageDetails.inputWidth ||
+                imageDetails.inputHeight != result.imageDetails.inputHeight)
+
         // update only if input image resolution changed
-        if (imageDetails.inputWidth != result.imageDetails.inputWidth ||
-            imageDetails.inputHeight != result.imageDetails.inputHeight
-        ) {
-            imageDetails = result.imageDetails.copy() // copy object
+        if (cameraResolutionChanged) {
+            imageDetails = result.imageDetails.copy()
             updateCameraResolution()
         }
 
@@ -148,6 +150,19 @@ open class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(conte
 
         invalidate()
     }
+
+    /**
+     * Update [scale] used for scaling on size changing.
+     */
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+
+        if (w > 0 && h > 0) {
+            updateCameraResolution()
+            invalidate()
+        }
+    }
+
 
     /**
      * Draws background image underneath the detections. Mostly used "freezing" image for detailed detections, whose
