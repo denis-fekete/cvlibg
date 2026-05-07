@@ -1,21 +1,20 @@
 package com.fekete.bangdemo.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
+import androidx.camera.view.PreviewView
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.fekete.bangdemo.MyApp
-import com.fekete.cvlibg.CameraConfig
 import com.fekete.cvlibg.CameraController
-import com.fekete.cvlibg.detection.Detector
-import com.fekete.cvlibg.utils.DetectorRegistry
-import com.fekete.bangdemo.R
 import kotlinx.coroutines.launch
 import com.fekete.bangdemo.databinding.FragmentCameraBinding
+import com.fekete.cvlibg.ui.BaseCameraViewModel
 
 
 /**
@@ -34,37 +33,56 @@ class CameraFragment : BaseFragment<FragmentCameraBinding>(
         (requireContext().applicationContext as MyApp).settingsService
     }
 
-    private lateinit var cameraController: CameraController
+    private val viewModel: BaseCameraViewModel by viewModels()
 
-    var realtimeDetector: Detector? = null
-    var qualityDetector: Detector? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupDetectors()
-
-        cameraController = CameraController(
-            requireContext(),
-            this as LifecycleOwner,
-            CameraConfig(
-                binding.detectionOverlay,
-                binding.metricsOverlay,
-                realtimeDetector,
-                qualityDetector,
-                true,
-                binding.previewView,
-            )
+        viewModel.initialize(
+            settingsService.data.realtimeModel,
+            settingsService.data.precisionModel,
         )
 
-        lifecycleScope.launch {
-            try {
-                cameraController.start()
-            } catch (e: Exception) {
-                Log.e("CV", "Camera initialization failed: ${e.message}")
-            }
+        // scale view to use as much screen space, keep ration and crop excess
+        binding.previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
+
+        viewModel.cameraController.onError = { message ->
+            AlertDialog.Builder(requireContext())
+                .setTitle("Error building models:")
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show()
         }
 
+        viewModel.cameraController.start(viewLifecycleOwner, binding.previewView.surfaceProvider)
+
+        collectAnalyzerOutputs()
+        bindOnClickBehavior()
+    }
+
+    private fun collectAnalyzerOutputs() {
+        // this code will rerun on viewLifecycleOwner STARTED, this code will rerun when UI changes (rotation),
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                if (settingsService.data.showMetrics) { // show metrics only if enabled
+                    launch {
+                        viewModel.imageAnalyzer.metrics.collect { metrics ->
+                            binding.metricsOverlay.update(metrics)
+                        }
+                    }
+                }
+
+                launch {
+                    viewModel.imageAnalyzer.detectionResult.collect { detectionResult ->
+                        binding.detectionOverlay.update(detectionResult)
+                    }
+                }
+            }
+        } // viewLifecycleOwner.lifecycleScope.launch
+    }
+
+    private fun bindOnClickBehavior() {
         // attaching onDetectionClicked event
         binding.detectionOverlay.onDetectionClicked = { detection ->
             val action = CameraFragmentDirections
@@ -75,45 +93,15 @@ class CameraFragment : BaseFragment<FragmentCameraBinding>(
         binding.switchToFastDetectionButton.visibility = View.GONE
 
         binding.switchToFastDetectionButton.setOnClickListener {
-            cameraController.switchToFasterAnalysis()
+            viewModel.imageAnalyzer.switchToFasterAnalysis()
             binding.switchToFastDetectionButton.visibility = View.GONE
             binding.switchToDetailedDetectionButton.visibility = View.VISIBLE
         }
 
         binding.switchToDetailedDetectionButton.setOnClickListener {
-            cameraController.switchToDetailedAnalysis()
+            viewModel.imageAnalyzer.switchToDetailedAnalysis()
             binding.switchToDetailedDetectionButton.visibility = View.GONE
             binding.switchToFastDetectionButton.visibility = View.VISIBLE
-        }
-    }
-
-    fun setupDetectors() {
-        try {
-            realtimeDetector = DetectorRegistry.createDetector(settingsService.data.realtimeModel)
-            realtimeDetector?.setMetricsEnabled(settingsService.data.showMetrics)
-            realtimeDetector?.setVerboseMetricsEnabled(settingsService.data.verboseMetrics)
-        } catch (exc: Exception) {
-            AlertDialog.Builder(requireContext())
-                .setTitle("Error loading model for real time detector")
-                .setMessage("Model'${settingsService.data.realtimeModel}' could not be loaded. Please choose a different model in Settings.")
-                .setPositiveButton("OK", null)
-                .show()
-
-            realtimeDetector = null
-        }
-
-        try {
-            qualityDetector = DetectorRegistry.createDetector(settingsService.data.precisionModel)
-            qualityDetector?.setMetricsEnabled(settingsService.data.showMetrics)
-            qualityDetector?.setVerboseMetricsEnabled(settingsService.data.verboseMetrics)
-        } catch (exc: Exception) {
-            AlertDialog.Builder(requireContext())
-                .setTitle("Error loading model for real precision detector")
-                .setMessage("Model'${settingsService.data.precisionModel}' could not be loaded. Please choose a different model in Settings.")
-                .setPositiveButton("OK", null)
-                .show()
-
-            qualityDetector = null
         }
     }
 }

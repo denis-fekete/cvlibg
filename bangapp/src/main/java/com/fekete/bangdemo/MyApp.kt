@@ -7,6 +7,7 @@ import com.fekete.bangdemo.data.UserPreferences
 import com.fekete.cvlibg.utils.DetectorRegistry
 import com.fekete.cvlibg.detection.yolo.onnx.Yolo26OnnxDetector
 import com.fekete.cvlibg.detection.yolo.onnx.YoloOnnxDetector
+import com.fekete.cvlibg.detection.yolo.opencv.YoloOpenCVDetector
 import com.fekete.cvlibg.services.AssetService
 import com.fekete.cvlibg.utils.CommonUtils
 import com.fekete.cvlibg.services.ConfigService
@@ -68,24 +69,28 @@ class MyApp : Application() {
         } catch (exc: Exception) {
             errorMessageClass2Link = "JsonAssetService failed for Class2Link.json: Error message: ${exc.message}"
         }
-
-
     }
 
     fun registerModels() {
-        DetectorRegistry.register("Yolo 8 Precision", "Y8_M_GAMMA_CPU.onnx")
+        DetectorRegistry.register("Yolo 8 Realtime", "models/Y8_GAMMA_CPU.onnx")
         { path -> YoloOnnxDetector(path) }
 
-        DetectorRegistry.register("Yolo 8 Realtime", "Y8_GAMMA_CPU.onnx")
+        DetectorRegistry.register("Yolo 8 OpenCV Realtime", "models/Y8_GAMMA_CPU.onnx")
+        { path -> YoloOpenCVDetector(path) }
+
+        DetectorRegistry.register("Yolo 11 Realtime", "models/Y11_GAMMA_CPU.onnx")
         { path -> YoloOnnxDetector(path) }
 
-        DetectorRegistry.register("Yolo 11 Realtime", "Y11_GAMMA_CPU.onnx")
-        { path -> YoloOnnxDetector(path) }
-
-        DetectorRegistry.register("Yolo 26 Realtime", "Y26_GAMMA_CPU.onnx")
+        DetectorRegistry.register("Yolo 26 Realtime", "models/Y26_GAMMA_CPU.onnx")
         { path -> Yolo26OnnxDetector(path) }
 
-        DetectorRegistry.register("Yolo 26 Realtime NPU", "Y26_GAMMA_NPU.onnx")
+        DetectorRegistry.register("Yolo 26 Realtime", "models/Y26_GAMMA_CPU.onnx")
+        { path -> Yolo26OnnxDetector(path) }
+
+        DetectorRegistry.register("Yolo 26 Realtime NPU", "models/Y26_GAMMA_NPU.onnx")
         { path -> Yolo26OnnxDetector(path, useNNAPI = true) }
+
+        DetectorRegistry.register("Yolo 8 Precision", "models/Y8_M_GAMMA_CPU.onnx")
+        { path -> YoloOnnxDetector(path) }
     }
 }

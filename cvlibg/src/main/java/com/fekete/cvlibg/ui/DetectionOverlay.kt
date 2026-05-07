@@ -10,6 +10,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import com.fekete.cvlibg.detection.Detection
+import com.fekete.cvlibg.detection.DetectorResult
 import com.fekete.cvlibg.detection.ImageDetails
 import kotlin.math.max
 
@@ -29,16 +30,29 @@ open class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(conte
      * List containing current [com.fekete.cvlibg.detection.Detection] objects that are on screen.
      */
     protected val detections = mutableListOf<Detection>()
-    protected var imageDetails = ImageDetails(1f, 0, 0)
-    private var cameraWidth: Int = 0
-    private var cameraHeight: Int = 0
+    protected var imageDetails = ImageDetails(1f, 0, 0, 0, 0)
     private var scale: Float = 1f
     private var cropX: Float = 0f
     private var cropY: Float = 0f
+
+    /**
+     * Internal [RectF] object used for calculation and "cache", to prevent creating new object each iteration
+     */
     private var tmpRect: RectF = RectF()
+
+    /**
+     * Internal [RectF] object used for calculation and "cache", to prevent creating new object each iteration
+     */
     private var backgroundRect: RectF = RectF()
     protected var backgroundImage: Bitmap? = null
 
+    private val defaultPaint = Paint().apply {
+        color = Color.WHITE
+        style = Paint.Style.STROKE
+        strokeWidth = 5f
+        isAntiAlias = true
+        alpha = 200
+    }
 
     /**
      * Callback function invoked when [Detection] is clicked on screen. Contains a [Detection] that was clicked.
@@ -46,26 +60,23 @@ open class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(conte
     var onDetectionClicked: ((detection: Detection) -> Unit)? = null
 
     /**
-     * Sets camera resolution values and calculates scale and crop values for the [DetectionOverlay].
+     * Convert Scalable Pixels to pixel size for text drawn on detections
      */
-    fun setCameraResolution(cameraW: Int, cameraH: Int) {
-        cameraWidth = cameraW
-        cameraHeight = cameraH
-
-        scale = max(
-            this.width.toFloat() / cameraWidth.toFloat(),
-            this.height.toFloat() / cameraHeight.toFloat()
-        )
-
-        cropX = (cameraWidth * scale - this.width) / 2f
-        cropY = (cameraHeight * scale - this.height) / 2f
+    protected fun unitSpToPix(sp: Float): Float {
+        return sp * context.resources.displayMetrics.density
     }
 
     /**
-     * Simple check whenever camera dimensions have been set. Mostly to prevent division by zero errors.
+     * Sets camera resolution values and calculates scale and crop values for the [DetectionOverlay].
      */
-    protected fun cameraDimensionsCorrect(): Boolean {
-        return (cameraWidth > 0 && cameraHeight > 0)
+    protected open fun updateCameraResolution() {
+        scale = max(
+            this.width.toFloat() / imageDetails.inputWidth.toFloat(),
+            this.height.toFloat() / imageDetails.inputHeight.toFloat()
+        )
+
+        cropX = (imageDetails.inputWidth * scale - this.width) / 2f
+        cropY = (imageDetails.inputHeight * scale - this.height) / 2f
     }
 
     /**
@@ -99,13 +110,6 @@ open class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(conte
         return tmpRect
     }
 
-    private val defaultPaint = Paint().apply {
-        color = Color.WHITE
-        style = Paint.Style.STROKE
-        strokeWidth = 5f
-        isAntiAlias = true
-        alpha = 200
-    }
 
     /**
      * Function is called each [onDraw] called (every time this view is invalidated).
@@ -120,50 +124,36 @@ open class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(conte
         }
     }
 
-
     /**
      * Cleans internal detection list and adds new [Detection] objects into it.
      *
-     * @param newBoxes list of <Detection> objects that contain info about found detections in current image
+     * @param detections list of <Detection> objects that contain info about found detections in current image
      * @param imageDetails info about current detections and image, used for scaling detection to screen.
+     * @param backgroundImage if not `null`, this bitmap will be drawn by the [DetectionOverlay] as a background
+     * for [detections]
      */
-    fun updateBoxes(newBoxes: List<Detection>, imageDetails: ImageDetails) {
+    fun update(result: DetectorResult) {
         detections.clear()
-        detections.addAll(newBoxes)
-        this.imageDetails = imageDetails
+        detections.addAll(result.detections)
+
+        // update only if input image resolution changed
+        if (imageDetails.inputWidth != result.imageDetails.inputWidth ||
+            imageDetails.inputHeight != result.imageDetails.inputHeight
+        ) {
+            imageDetails = result.imageDetails.copy() // copy object
+            updateCameraResolution()
+        }
+
+        backgroundImage = result.inputImage
+
         invalidate()
     }
 
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        if (event?.action == MotionEvent.ACTION_DOWN) {
-            detections.firstOrNull { scaleDetectionToScreenRect(it).contains(event.x, event.y) }
-                ?.let { onDetectionClicked?.invoke(it) }
-        }
-
-        return true
-    }
-
     /**
-     * Convert Scalable Pixels to pixel size for text drawn on detections
+     * Draws background image underneath the detections. Mostly used "freezing" image for detailed detections, whose
+     * latency is too high for realtime, non-frozen, image analysis
      */
-    protected fun unitSpToPix(sp: Float): Float {
-        return sp * context.resources.displayMetrics.density
-    }
-
-    /**
-     * Sets background image of [DetectionOverlay]
-     */
-    fun setBackgroundBitmap(image: Bitmap?) {
-        backgroundImage = image
-    }
-
-    /**
-     * Function that gets once [com.fekete.cvlibg.detection.DetectionOverlay] is invalidated and redraw is request.
-     */
-    final override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-
-        // draw background if not null
+    open fun drawBackgroundImage(canvas: Canvas) {
         backgroundImage?.let { bitmap ->
             val viewWidth = width.toFloat()
             val viewHeight = height.toFloat()
@@ -189,7 +179,24 @@ open class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(conte
 
             canvas.drawBitmap(bitmap, null, backgroundRect, null)
         }
+    }
 
+    /**
+     * Function that gets once [DetectionOverlay] is invalidated and redraw is request.
+     */
+    final override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        drawBackgroundImage(canvas)
         drawDetections(canvas)
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event?.action == MotionEvent.ACTION_DOWN) {
+            detections.firstOrNull { scaleDetectionToScreenRect(it).contains(event.x, event.y) }
+                ?.let { onDetectionClicked?.invoke(it) }
+        }
+
+        return true
     }
 }

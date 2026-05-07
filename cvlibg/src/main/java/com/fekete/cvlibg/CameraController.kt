@@ -2,7 +2,6 @@ package com.fekete.cvlibg
 
 import android.content.Context
 import android.util.Size
-import androidx.appcompat.app.AlertDialog
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -11,150 +10,164 @@ import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.concurrent.futures.await
-import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * Class making camera control more abstracted. Creates new thread on which a [ImageAnalyzer] analysis is executed.
+ * Class initializing camera, connecting its use cases, and manages resource that can be reused after the view was
+ * destroyed. Each view recreation, such as screen rotation, requires binding new binding using [start] method.
+ * Consecutive call will use already initialized values and only preview and new lifecycle owner will be rebound. This
+ * class use [ExecutorService] which must be destroyed using [destroy] method.
+ *
+ * Camera controller will silently fail on errors, as it catches exceptions, to inform use it is required to define
+ * [onError] callback method.
  *
  * @param context Should be a context of a [android.app.Fragment] or [android.app.Activity], in case either of these are
  * destroyed, new camera controller along with [ExecutorService] will be created.
- * @param lifecycleOwner Owner of lifecycle, used by CameraX to correctly bind and exit on lifecycle change
- * @param cameraConfig
+ * @param imageAnalyzer analyses image data from camera, if `null` only camera preview will be displayed.
+ * @param manageAnalyzer if set to `true` (default), the camera controller will build and destroy provided [imageAnalyzer].
+ *
  *
  * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 open class CameraController(
     private val context: Context,
-    private val lifecycleOwner: LifecycleOwner,
-    private val cameraConfig: CameraConfig,
-) : DefaultLifecycleObserver {
+    private val imageAnalyzer: ImageAnalyzer?,
+    private val manageAnalyzer: Boolean = true,
+) {
     private var cameraExecutorInitialized: Boolean = false
-    private var isStarted: Boolean = false
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var cameraProvider: ProcessCameraProvider
-    private var imageAnalyzer: ImageAnalyzer? = null
     private lateinit var resolutionSelector: ResolutionSelector
+    private lateinit var preview: Preview
+    private lateinit var imageAnalysis: ImageAnalysis
+    var onError: ((String) -> Unit)? = null
 
-    init {
-        // if allowed, bind to lifecycle for automatic clean up
-        if (cameraConfig.bindToLifecycle) {
-            lifecycleOwner.lifecycle.addObserver(this)
-        }
-    }
+    @Volatile
+    private var isInitialized: Boolean = false
+
+    @Volatile
+    private var isBeingInitialized: Boolean = false
+    private val controllerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
 
     /**
-     * Initializes all camera and image analysis related options.
+     * Binds [CameraController] to provided lifecycle owner and sets a new surface provider.
+     *
+     * @param lifecycleOwner to which [CameraController] is bound.
+     * @param surfaceProvider surface, onto which a camera preview will be bound to.
      */
-    open suspend fun start() {
-        if (isStarted) return
-
-        // scale view to use as much screen space, keep ration and crop excess
-        cameraConfig.previewView.scaleType = cameraConfig.previewViewScale
-
-        // build detectors on another thread
-        lifecycleOwner.lifecycleScope.launch {
-            val realtime = async(Dispatchers.IO) {
-                cameraConfig.realtimeDetector?.build(context)
-            }
-
-            val quality = async(Dispatchers.IO) {
-                cameraConfig.qualityDetector?.build(context)
-            }
-
-            realtime.await()
-            quality.await()
-            imageAnalyzer?.unpauseAnalysis()
-
+    open fun start(
+        lifecycleOwner: LifecycleOwner,
+        surfaceProvider: Preview.SurfaceProvider,
+    ) {
+        if (!isInitialized) {
+            initialize(lifecycleOwner, surfaceProvider)
+        } else {
+            bind(lifecycleOwner, surfaceProvider)
         }
+    }
 
-        cameraProvider = ProcessCameraProvider.Companion.getInstance(context).await()
-
-
-        // setup detectors, must be called before the getResolutionSelector() as it uses detectors for choosing the resolution
-        resolutionSelector = getResolutionSelector()
-        imageAnalyzer = ImageAnalyzer(
-            cameraConfig.detectionOverlay,
-            cameraConfig.metricsOverlay,
-            cameraConfig.realtimeDetector,
-            cameraConfig.qualityDetector
-        )
-        imageAnalyzer?.pauseAnalysis()
-
-        cameraExecutor = Executors.newSingleThreadExecutor()
-        cameraExecutorInitialized = true
-
-        // keep only latest, if image analyzer is not keeping up (calculations take too much time), then keep only the
-        // most recent image instead of buffering them
-        val imageAnalysis = ImageAnalysis.Builder()
-            .setOutputImageRotationEnabled(true)
-            .setResolutionSelector(resolutionSelector)
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-        imageAnalysis.setAnalyzer(cameraExecutor, imageAnalyzer!!)
-
-        val preview = Preview.Builder()
-            .setResolutionSelector(resolutionSelector)
-            .build()
-        preview.surfaceProvider = cameraConfig.previewView.surfaceProvider
-
-
+    /**
+     * Bind camera controller to the current [lifecycleOwner]
+     *
+     * @param lifecycleOwner to which [CameraController] is bound.
+     * @param surfaceProvider surface, onto which a camera preview will be bound to.
+     */
+    protected fun bind(
+        lifecycleOwner: LifecycleOwner,
+        surfaceProvider: Preview.SurfaceProvider,
+    ) {
+        preview.surfaceProvider = surfaceProvider
 
         try {
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA,
-                preview,
-                imageAnalysis
-            )
-        } catch (exc: Exception) {
-            AlertDialog.Builder(context)
-                .setTitle("Error")
-                .setMessage("Exception during camera initialization: ${exc.message}")
-                .setPositiveButton("OK", null)
-                .show()
-        } finally {
-            isStarted = true
+            if (::imageAnalysis.isInitialized) {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    imageAnalysis
+                )
+            } else {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                )
+            }
+        } catch (e: Exception) {
+            onError?.invoke(e.message ?: "CameraController.start(): cameraProvider.bindToLifecycle error.")
+            stop() // on error stop camera
         }
     }
 
     /**
-     * Starts realtime/faster detection method
+     * Initializes [CameraController] and calls [bind] after it finishes.
+     *
+     * @param lifecycleOwner to which [CameraController] is bound.
+     * @param surfaceProvider surface, onto which a camera preview will be bound to.
      */
-    fun switchToFasterAnalysis() {
-        imageAnalyzer?.switchToFasterAnalysis()
-    }
+    protected open fun initialize(
+        lifecycleOwner: LifecycleOwner,
+        surfaceProvider: Preview.SurfaceProvider
+    ) {
+        if (isBeingInitialized || isInitialized) return
+        isBeingInitialized = true
 
-    /**
-     * Starts precises/slower detection method
-     */
-    fun switchToDetailedAnalysis() {
-        imageAnalyzer?.switchToDetailedAnalysis()
-    }
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(context.applicationContext)
 
-    override fun onDestroy(owner: LifecycleOwner) {
-        stop()
-    }
+        if (manageAnalyzer) {
+            controllerScope.launch(Dispatchers.IO) {
+                try {
+                    imageAnalyzer?.buildDetectors(context)
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main.immediate) {
+                        onError?.invoke(e.message ?: "Error loading models.")
+                    }
+                }
+            }
+        }
 
-    /**
-     * Destroys [cameraExecutor] that is running on different thread, to prevent memory leaks, this must be called!
-     */
-    open fun stop() {
-        if (cameraExecutorInitialized)
-            cameraExecutor.shutdown()
+        cameraProviderFuture.addListener({
+            cameraProvider = cameraProviderFuture.get()
+            resolutionSelector = getResolutionSelector()
 
-        cameraProvider.unbindAll()
-        imageAnalyzer?.destroy()
-        imageAnalyzer = null
+            cameraExecutor = Executors.newSingleThreadExecutor()
+            cameraExecutorInitialized = true
+
+            // keep only latest, if image analyzer is not keeping up (calculations take too much time), then keep only the
+            // most recent image instead of buffering them
+            // provide ImageAnalyzer with RGBA and autorotate
+            if (imageAnalyzer != null) {
+                imageAnalysis = ImageAnalysis.Builder()
+                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+                    .setOutputImageRotationEnabled(true)
+                    .setResolutionSelector(resolutionSelector)
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+
+                imageAnalysis.setAnalyzer(cameraExecutor, imageAnalyzer)
+            }
+
+            preview = Preview.Builder()
+                .setResolutionSelector(resolutionSelector)
+                .build()
+
+            isBeingInitialized = false
+            isInitialized = true
+
+            bind(lifecycleOwner, surfaceProvider)
+        }, ContextCompat.getMainExecutor(context))
     }
 
     /**
@@ -162,25 +175,31 @@ open class CameraController(
      * will not have to upscale the image.
      */
     protected open fun getResolutionSelector(): ResolutionSelector {
-        val qualityDetectorSize: Size = cameraConfig.qualityDetector?.inputDataSize ?: Size(0, 0)
-        val realtimeDetectorSize: Size = cameraConfig.realtimeDetector?.inputDataSize ?: Size(0, 0)
+        val qualityDetectorSize: Size? = imageAnalyzer?.getRealtimeDetectorInputSize()
+        val realtimeDetectorSize: Size? = imageAnalyzer?.getDetailedDetectorInputSize()
 
-        val rtDetectorPixelCount = realtimeDetectorSize.width * realtimeDetectorSize.height
-        val qDetectorPixelCount = qualityDetectorSize.width * qualityDetectorSize.height
+        val rtDetectorPixelCount =
+            if (realtimeDetectorSize != null) (realtimeDetectorSize.width * realtimeDetectorSize.height)
+            else 0
+
+        val qDetectorPixelCount =
+            if (qualityDetectorSize != null) (qualityDetectorSize.width * qualityDetectorSize.height)
+            else 0
 
         // choose bigger resolution based on pixel count of detections
-        val resultSize = if (qDetectorPixelCount > rtDetectorPixelCount && cameraConfig.qualityDetector != null) {
-            cameraConfig.qualityDetector.inputDataSize
-        } else {
-            cameraConfig.realtimeDetector?.inputDataSize ?: Size(640, 480)
-        }
+        val resultSize =
+            if (qDetectorPixelCount > rtDetectorPixelCount) {
+                qualityDetectorSize
+            } else {
+                realtimeDetectorSize
+            }
 
         // try to get the resolution of based on the detector with higher pixel count
         // minimal size with ration 16:9, fewer pixels, less accurate but, more performance
         return ResolutionSelector.Builder()
             .setResolutionStrategy(
                 ResolutionStrategy(
-                    resultSize,
+                    resultSize ?: Size(640, 480),
                     ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
                 )
             )
@@ -191,6 +210,15 @@ open class CameraController(
                 )
             )
             .build()
+    }
+
+    /**
+     * Stop the [CameraController] by unbinding camera provider and its use-cases.
+     */
+    open fun stop() {
+        if (::cameraProvider.isInitialized) {
+            cameraProvider.unbindAll()
+        }
     }
 
     /**
@@ -205,5 +233,23 @@ open class CameraController(
      */
     fun setVerboseMetricsEnabled(value: Boolean) {
         imageAnalyzer?.setVerboseMetricsEnabled(value)
+    }
+
+    /**
+     * Clean up launched executor, coroutine scopes and resets internal state of [CameraController]. This must be called.
+     */
+    open fun destroy() {
+        stop()
+
+        if (cameraExecutorInitialized) {
+            cameraExecutor.shutdown()
+            cameraExecutorInitialized = false
+        }
+        controllerScope.cancel()
+        isInitialized = false
+        isBeingInitialized = false
+
+        if (manageAnalyzer)
+            imageAnalyzer?.destroy()
     }
 }

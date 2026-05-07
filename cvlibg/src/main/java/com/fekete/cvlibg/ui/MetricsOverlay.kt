@@ -1,4 +1,4 @@
-package com.fekete.cvlibg.logging
+package com.fekete.cvlibg.ui
 
 import android.content.Context
 import android.graphics.Canvas
@@ -8,8 +8,10 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.View
+import com.fekete.cvlibg.metrics.AnalyzerMetrics
+import com.fekete.cvlibg.metrics.MetricsValue
 import com.fekete.cvlibg.utils.TimerResult
-import java.util.Locale.getDefault
+import java.util.Locale
 import kotlin.math.max
 
 /**
@@ -26,7 +28,7 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
     private var bgRect: RectF = RectF()
     private var textList = mutableListOf<String>()
 
-    private var performanceMetrics: MutableMap<String, TimerResult> = mutableMapOf()
+    private var timeMetrics: MutableMap<String, TimerResult> = mutableMapOf()
     private var otherMetrics: MutableList<MetricsValue> = mutableListOf()
     private var totalTime: TimerResult? = null
 
@@ -44,14 +46,19 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
         alpha = 200
     }
 
-    fun updateLogData(performance: Map<String, TimerResult>, other: List<MetricsValue>, total: TimerResult?) {
-        performanceMetrics.clear()
-        otherMetrics.clear()
+    /**
+     * Updates values the values to be displayed and invalidates [MetricsOverlay], essentially updating UI
+     */
+    fun update(metrics: AnalyzerMetrics?) {
+        if (metrics != null) {
+            timeMetrics.clear()
+            otherMetrics.clear()
 
-        performanceMetrics.putAll(performance)
-        otherMetrics.addAll(other)
+            timeMetrics.putAll(metrics.detectorPerformanceMetrics)
+            otherMetrics.addAll(metrics.detectorMetrics)
 
-        totalTime = total
+            totalTime = metrics.totalTime
+        }
 
         invalidate()
     }
@@ -59,7 +66,7 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        if (performanceMetrics.isEmpty() && otherMetrics.isEmpty() && totalTime == null) return
+        if (timeMetrics.isEmpty() && otherMetrics.isEmpty() && totalTime == null) return
 
         val baseOffset = textPaint.fontMetrics.run { bottom - top }
         val startX = width * 0.02f
@@ -81,8 +88,8 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
         // measure all text widths and add it to the textList variable
         textList.clear()
 
-        performanceMetrics.forEach {
-            val text = "${it.key.uppercase(getDefault())}: ${it.value.millis}ms\n"
+        timeMetrics.forEach {
+            val text = "${it.key.uppercase(Locale.getDefault())}: ${it.value.millis}ms\n"
             textList.add(text)
 
             val textWidth = textPaint.measureText(text)
@@ -91,7 +98,8 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
             }
         }
 
-        textList.add("") // spacer
+        if (timeMetrics.isNotEmpty())
+            textList.add("") // spacer
 
         otherMetrics.forEach {
             val text = "${it.prefix}: ${it.value}${it.value}\n"
@@ -103,6 +111,8 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
             }
         }
 
+        if (otherMetrics.isNotEmpty())
+            textList.add("") // spacer
 
         if (totalTime != null) {
             textList.add("Total : ${totalTime!!.millis}ms")

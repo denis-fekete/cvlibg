@@ -75,36 +75,32 @@ class BangDetectionOverlay(context: Context, attrs: AttributeSet?) : DetectionOv
     }
 
     override fun drawDetections(canvas: Canvas) {
-        if (!cameraDimensionsCorrect()) {
-            writeErrorOnScreen(canvas, "Camera dimensions were not initialized yet!")
-        } else {
-            detections.forEach { det ->
-                // scale detection into correct size, because detection from model might not have same width and height
-                // as camera images, or screen that this overlay is drawing onto
-                scaledRect = scaleDetectionToScreenRect(det)
+        detections.forEach { det ->
+            // scale detection into correct size, because detection from model might not have same width and height
+            // as camera images, or screen that this overlay is drawing onto
+            scaledRect = scaleDetectionToScreenRect(det)
 
-                canvas.drawRect(scaledRect, boxPaint)
+            canvas.drawRect(scaledRect, boxPaint)
 
-                // get label from services
-                val linkId = class2linkService.data[det.classIndex]?.linkId
-                val className = cardDetailsService.data[linkId]?.title
-                val label = "${className}: ${(det.confidence * 100).toInt()}%"
+            // get label from services
+            val linkId = class2linkService.data[det.classIndex]?.linkId
+            val className = cardDetailsService.data[linkId]?.title
+            val label = "${className}: ${(det.confidence * 100).toInt()}%"
 
-                // determine text width and height
-                val textWidth = textPaint.measureText(label)
-                val textHeight = textPaint.fontMetrics.run { bottom - top }
+            // determine text width and height
+            val textWidth = textPaint.measureText(label)
+            val textHeight = textPaint.fontMetrics.run { bottom - top }
 
-                val padding = 8
-                // filled rectangle for text
-                bgRect.left = max(scaledRect.left, 0f)
-                bgRect.top = max(scaledRect.top - textHeight - padding, 0f)
-                bgRect.right = bgRect.left + textWidth + 2 * padding
-                bgRect.bottom = bgRect.top + textHeight + padding
+            val padding = 8
+            // filled rectangle for text
+            bgRect.left = max(scaledRect.left, 0f)
+            bgRect.top = max(scaledRect.top - textHeight - padding, 0f)
+            bgRect.right = bgRect.left + textWidth + 2 * padding
+            bgRect.bottom = bgRect.top + textHeight + padding
 
-                canvas.drawRect(bgRect, textBackgroundPaint)
+            canvas.drawRect(bgRect, textBackgroundPaint)
 
-                canvas.drawText(label, bgRect.left + padding, bgRect.bottom - padding, textPaint)
-            }
+            canvas.drawText(label, bgRect.left + padding, bgRect.bottom - padding, textPaint)
         }
     }
 }

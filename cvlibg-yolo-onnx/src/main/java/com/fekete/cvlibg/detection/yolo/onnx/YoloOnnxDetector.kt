@@ -3,6 +3,8 @@ package com.fekete.cvlibg.detection.yolo.onnx
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
+import android.app.Application
+import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import android.util.Size
@@ -48,7 +50,8 @@ open class YoloOnnxDetector(
     protected lateinit var inputName: String
     protected val modelInputWidth = 640
 
-    override fun runtimeSetup(assetLoader: AssetLoader) {
+    override fun runtimeSetup(context: Context) {
+        val assetLoader = AssetLoader(context.applicationContext as Application)
         val modelBytes = assetLoader.loadModel(modelPath)
         var runtimeInitialized = false
         if (useNNAPI) {
@@ -73,13 +76,15 @@ open class YoloOnnxDetector(
     }
 
     override fun detect(image: Bitmap): DetectorResult {
-        // convert Bitmap => OpenCV.Mat
-        Utils.bitmapToMat(
-            image,
-            bitmapMat
-        )
+
         // resize image into expected size for model, apply letterboxing if needed
         val (letterBoxMat, letterboxingTime) = Timer.measure(showMetrics) {
+            // convert Bitmap => OpenCV.Mat
+            Utils.bitmapToMat(
+                image,
+                bitmapMat
+            )
+
             resizeAndLetterBox(bitmapMat, modelInputWidth)
         }
 
@@ -87,7 +92,7 @@ open class YoloOnnxDetector(
         val (tensor, tensorConversion) = Timer.measure(showMetrics) { matToTensor(letterBoxMat) }
 
         if (tensor == null) {
-            return DetectorResult(emptyList(), imageDetails, false)
+            return DetectorResult(emptyList(), imageDetails)
         }
 
         // run model on tensor, and get result
@@ -97,29 +102,25 @@ open class YoloOnnxDetector(
         val (detections, extractionTime) = Timer.measure(showMetrics) { thresholdingFilter(results) }
 
         // apply NMS onto results
-        val (nsmFilteredDetections, nmsTime) = Timer.measure(showMetrics) { ilibgNmsFilterByClass(detections) }
+        val (nsmFilteredDetections, nmsTime) = Timer.measure(showMetrics) { cvlibgNmsFilterByClass(detections) }
 
         results.close()
         tensor.close()
 
-
-        val performanceMetrics = if (showMetrics && verboseMetrics) {
-            mapOf(
-                METRICS_LETTERBOX_KEY to letterboxingTime,
-                METRICS_CONVERSION_KEY to tensorConversion,
-                METRICS_INTERFACE_KEY to inferenceTime,
-                METRICS_EXTRACT_KEY to extractionTime,
-                METRICS_NMS_KEY to nmsTime,
-            )
-        } else {
-            emptyMap()
-        }
-
         return DetectorResult(
             nsmFilteredDetections,
             imageDetails,
-            performanceMetrics = performanceMetrics,
-            showMetrics = showMetrics
+            timeMetrics = if (showMetrics && verboseMetrics) {
+                mapOf(
+                    METRICS_LETTERBOX_KEY to letterboxingTime,
+                    METRICS_CONVERSION_KEY to tensorConversion,
+                    METRICS_INTERFACE_KEY to inferenceTime,
+                    METRICS_EXTRACT_KEY to extractionTime,
+                    METRICS_NMS_KEY to nmsTime,
+                )
+            } else {
+                emptyMap()
+            }
         )
     }
 

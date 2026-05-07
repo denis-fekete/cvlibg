@@ -5,24 +5,19 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Size
 import com.fekete.cvlibg.utils.AssetLoader
+import java.io.FileNotFoundException
 
 /**
  * Abstract class, that works as a base for class defining the object detection tasks. This class contains common
  * variables and methods used by the [com.fekete.cvlibg.ImageAnalyzer].
  *
- * @param modelPath path to the model in the assets' folder.
- * @param confThreshold confidence threshold value for filtering detection.
- * @param applyNMS whenever Non-Maximum Suppression should be applied.
- * @param nmsThreshold Intersection over Union threshold for NMS filtering.
+ * @param modelPath full path to the model in the assets' folder.
  * @param inputDataSize expected input size for the loaded model.
  *
  * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 abstract class Detector(
     public val modelPath: String,
-    protected val confThreshold: Float = 0.6f,
-    protected val applyNMS: Boolean = true,
-    protected val nmsThreshold: Float = 0.5f,
     val inputDataSize: Size = Size(640, 640)
 ) {
     private var isBuilt: Boolean = false
@@ -50,7 +45,7 @@ abstract class Detector(
      *
      * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
      */
-    protected abstract fun runtimeSetup(assetLoader: AssetLoader)
+    protected abstract fun runtimeSetup(context: Context)
 
     /**
      * Runs image detection analysis and returns [DetectorResult] containing detections, image information and
@@ -71,27 +66,15 @@ abstract class Detector(
     /**
      * Loads model and builds it. Throws an exception on error.
      *
-     * @param context Context used for loading [AssetLoader], from which a model will be loaded.
+     * @param context Context used for loading models from the project's assets.
      * @param showMetrics Boolean value whenever the metrics should be shown.
      * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
+     *
+     * @throws FileNotFoundException if [modelPath] does not exist
      */
     fun build(context: Context) {
         if (isBuilt) return
-        val assetLoader = AssetLoader(context.applicationContext as Application)
-        build(assetLoader)
-    }
-
-
-    /**
-     * Loads model and builds it. Throws an exception on error.
-     *
-     * @param assetLoader Service used to load model bytes from assets.
-     * @param showMetrics Boolean value whenever the metrics should be shown.
-     * @param verboseMetrics Boolean value whenever verbose metrics should be shown, [showMetrics] must be true.
-     */
-    fun build(assetLoader: AssetLoader) {
-        if (isBuilt) return
-        runtimeSetup(assetLoader)
+        runtimeSetup(context)
         isBuilt = true
     }
 
@@ -112,9 +95,6 @@ abstract class Detector(
     override fun toString(): String {
         return "$detectorName(" +
                 "modelPath=$modelPath, " +
-                "confThreshold=$confThreshold, " +
-                "nmsThreshold=$nmsThreshold, " +
-                "applyNMS=$applyNMS, )" +
                 "inputDataSize=(${inputDataSize.width},${inputDataSize.height}))"
     }
 
@@ -124,9 +104,6 @@ abstract class Detector(
     open fun toCsvString(): String {
         return "$detectorName," +
                 "$modelPath, " +
-                "(confThreshold=$confThreshold;" +
-                "nmsThreshold=$nmsThreshold;" +
-                "applyNMS=$applyNMS;" +
                 "inputDataSize=(${inputDataSize.width},${inputDataSize.height}))"
     }
 }

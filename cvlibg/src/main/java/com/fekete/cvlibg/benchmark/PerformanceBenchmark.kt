@@ -3,6 +3,8 @@ package com.fekete.cvlibg.benchmark
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Bitmap.createBitmap
+import android.media.Image
+import com.fekete.cvlibg.ImageAnalyzer
 import com.fekete.cvlibg.utils.Timer
 import com.fekete.cvlibg.utils.TimerResult
 import com.fekete.cvlibg.detection.AbstractYoloDetector.Companion.METRICS_NMS_KEY
@@ -15,7 +17,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
 /**
- * Class for benchmarking latency and inference speed of [com.fekete.cvlibg.detection.Detector] and its models.
+ * Class for benchmarking latency and inference speed of [com.fekete.cvlibg.detection.AbstractYoloDetector] derived
+ * detectors and its models.
  *
  * @param context context used for loading models from the assets
  *
@@ -68,19 +71,19 @@ class PerformanceBenchmark(context: Context) : DetectorBenchmark(context) {
 
             val (results, runTime) = Timer.measure { detector?.run(bitmap) }
 
-            results?.showMetrics?.let {
-                if (!it) {
+            results?.let {
+                if (it.timeMetrics.isEmpty()) {
                     onStatusUpdate?.invoke("Detector did not provide metrics. Ending the benchmark.")
                     onFinished?.invoke()
                     return
                 }
             }
 
-            letterboxList.add(results?.performanceMetrics[METRICS_LETTERBOX_KEY] ?: TimerResult(0))
-            conversionList.add(results?.performanceMetrics[METRICS_CONVERSION_KEY] ?: TimerResult(0))
-            inferenceList.add(results?.performanceMetrics[METRICS_INTERFACE_KEY] ?: TimerResult(0))
-            extractList.add(results?.performanceMetrics[METRICS_EXTRACT_KEY] ?: TimerResult(0))
-            nmsList.add(results?.performanceMetrics[METRICS_NMS_KEY] ?: TimerResult(0))
+            letterboxList.add(results?.timeMetrics[METRICS_LETTERBOX_KEY] ?: TimerResult(0))
+            conversionList.add(results?.timeMetrics[METRICS_CONVERSION_KEY] ?: TimerResult(0))
+            inferenceList.add(results?.timeMetrics[METRICS_INTERFACE_KEY] ?: TimerResult(0))
+            extractList.add(results?.timeMetrics[METRICS_EXTRACT_KEY] ?: TimerResult(0))
+            nmsList.add(results?.timeMetrics[METRICS_NMS_KEY] ?: TimerResult(0))
             totalList.add(runTime)
 
             total += runTime.nanos

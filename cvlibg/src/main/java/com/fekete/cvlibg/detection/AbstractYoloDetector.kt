@@ -30,16 +30,13 @@ import kotlin.math.roundToInt
  */
 abstract class AbstractYoloDetector(
     modelPath: String,
-    confThreshold: Float = 0.6f,
-    applyNMS: Boolean = true,
-    nmsThreshold: Float = 0.5f,
+    protected val confThreshold: Float = 0.6f,
+    protected val applyNMS: Boolean = true,
+    protected val nmsThreshold: Float = 0.5f,
     inputDataSize: Size = Size(640, 640)
 
 ) : Detector(
     modelPath,
-    confThreshold,
-    applyNMS,
-    nmsThreshold,
     inputDataSize
 ) {
     // "cache" variables to prevent initializing new object each new frame
@@ -54,9 +51,9 @@ abstract class AbstractYoloDetector(
      * Resized [src] Mat into a size that model can use. If source Mat is not in 1:1 aspect ratio a letterbox is
      * applied to make it into desired size in 1:1 ratio. [newSize] is desired size and [padValue] is color value
      * that will be used for padding.
-     * @param src source Mat containing image
-     * @param newSize new size of pixels, since 1:1 is expected only one dimension is needed
-     * @param padValue color used for padding
+     * @param src source Mat containing image.
+     * @param newSize new size of pixels, since 1:1 is expected only one dimension is needed.
+     * @param padValue color used for padding.
      *
      * @return [Mat] containing scaled and letterboxed image
      */
@@ -93,7 +90,7 @@ abstract class AbstractYoloDetector(
         )
 
         // update image details
-        imageDetails = ImageDetails(scale, padX, padY)
+        imageDetails = ImageDetails(scale, padX, padY, srcW, srcH)
 
         return letterBoxMat
     }
@@ -238,7 +235,7 @@ abstract class AbstractYoloDetector(
      * @param threshold NMS/IoU threshold, if two [Detection] objects exceed this value one of them (the one with lower
      * confidence score) will be deleted.
      */
-    protected open fun ilibgNmsFilterByClass(
+    protected open fun cvlibgNmsFilterByClass(
         detections: MutableList<Detection>,
         threshold: Float = nmsThreshold
     ): List<Detection> {
@@ -252,7 +249,7 @@ abstract class AbstractYoloDetector(
         val detectionsByClass = detections.groupBy { it.classIndex }
 
         for (cls in detectionsByClass) {
-            val kept = ilibgNmsFilterOptimized(cls.value.toMutableList(), nmsThreshold)
+            val kept = cvlibgNmsFilterOptimized(cls.value.toMutableList(), nmsThreshold)
             keptDetections.addAll(kept)
         }
         return keptDetections
@@ -265,7 +262,7 @@ abstract class AbstractYoloDetector(
      * @param threshold NMS/IoU threshold, if two [Detection] objects exceed this value one of them (the one with lower
      * confidence score) will be deleted.
      */
-    protected fun ilibgNmsFilterOptimized(detections: MutableList<Detection>, threshold: Float): List<Detection> {
+    protected fun cvlibgNmsFilterOptimized(detections: MutableList<Detection>, threshold: Float): List<Detection> {
         if (detections.isEmpty()) return emptyList()
 
         val keptDetections = mutableListOf<Detection>()
@@ -301,44 +298,6 @@ abstract class AbstractYoloDetector(
         return keptDetections
     }
 
-    /**
-     * Removes overlapping [Detection]s by using Non-Maximum suppression.
-     *
-     * @param detections List of [Detection] objects, must be mutable
-     * @param threshold NMS/IoU threshold, if two [Detection] objects exceed this value one of them (the one with lower
-     * confidence score) will be deleted.
-     *
-     * @see <a href="https://www.baeldung.com/kotlin/list-remove-elements-while-iterating"> Remove Elements From a
-     * List While Iterating in Kotlin
-     */
-    protected fun ilibgNmsFilter(detections: MutableList<Detection>, threshold: Float): List<Detection> {
-        if (detections.isEmpty()) return emptyList()
-
-        val keptDetections = mutableListOf<Detection>()
-
-        // important !! sort by score
-        detections.sortByDescending { it.confidence }
-
-        while (detections.isNotEmpty()) {
-            // add the best detection to keptDetections list
-            val best = detections.first()
-            keptDetections.add(best)
-            detections.remove(best)
-
-            // remove that have high area of intersection with the best detection with
-            val iterator = detections.iterator()
-            while (iterator.hasNext()) {
-                val detection = iterator.next()
-                val iou = Detection.computeIoU(best, detection)
-
-                if (iou > threshold) {
-                    iterator.remove()
-                }
-            }
-        }
-        return keptDetections
-    }
-
 
     /**
      * Clean up variables that are used as "cache" (not actual cache but frequently used where reallocation each frame
@@ -350,6 +309,27 @@ abstract class AbstractYoloDetector(
         letterBoxMat.release()
         rgbMat.release()
         floatMat.release()
+    }
+
+    override fun toString(): String {
+        return "$detectorName(" +
+                "modelPath=$modelPath, " +
+                "confThreshold=$confThreshold, " +
+                "nmsThreshold=$nmsThreshold, " +
+                "applyNMS=$applyNMS, )" +
+                "inputDataSize=(${inputDataSize.width},${inputDataSize.height}))"
+    }
+
+    /**
+     * To string function for CSV export
+     */
+    override fun toCsvString(): String {
+        return "$detectorName," +
+                "$modelPath, " +
+                "(confThreshold=$confThreshold;" +
+                "nmsThreshold=$nmsThreshold;" +
+                "applyNMS=$applyNMS;" +
+                "inputDataSize=(${inputDataSize.width},${inputDataSize.height}))"
     }
 
     companion object {

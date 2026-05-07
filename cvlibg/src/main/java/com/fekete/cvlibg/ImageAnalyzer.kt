@@ -1,40 +1,44 @@
 package com.fekete.cvlibg
 
+import android.content.Context
+import android.util.Log
+import android.util.Size
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.fekete.cvlibg.detection.DetectorResult
 import com.fekete.cvlibg.detection.Detector
-import com.fekete.cvlibg.logging.MetricsOverlay
+import com.fekete.cvlibg.metrics.AnalyzerMetrics
 import com.fekete.cvlibg.ui.DetectionOverlay
 import com.fekete.cvlibg.utils.Timer
 import com.fekete.cvlibg.utils.TimerResult
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import java.io.FileNotFoundException
 
 /**
- * Class implementing the [ImageAnalysis.Analyzer], responsible for providing [realtimeDetector] and [qualityDetector]
+ * Class implementing the [ImageAnalysis.Analyzer], responsible for providing [realtimeDetector] and [detailedDetector]
  * with image data from the device's camera.
  *
- * Image analyzer has two modes, switching between the [realtimeDetector] and [qualityDetector]. When switched to
+ * Image analyzer has two modes, switching between the [realtimeDetector] and [detailedDetector]. When switched to
  * quality mode an input bitmap will be printed to the [DetectionOverlay] and detections will be printed on top of it,
  * effectively freezing camera.
  *
- * @param detectionOverlay reference to [DetectionOverlay] or derived class that will be updated with the results of the
- * image analysis.
- * @param metricsOverlay optional overlay for displaying metrics from the [Detector] classes.
+ * This class provides "collectable" data which user can "subscribe" to. Provided data are:
+ *  - [detectionResult]: latest [DetectorResult] from current detector.
+ *  - [inputImage]: input image of the last image analysis, when [detailedDetector] was used.
+ *  - [metrics]: last [AnalyzerMetrics] values recorded in analyzer
+ *
  * @param realtimeDetector reference to [Detector] object for realtime, continuous image analysis
- * @param qualityDetector reference to [Detector] object, used for slower analysis with frozen background image
+ * @param detailedDetector reference to [Detector] object, used for slower analysis with frozen background image
  *
  * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 class ImageAnalyzer(
-    private val detectionOverlay: DetectionOverlay,
-    private val metricsOverlay: MetricsOverlay? = null,
     private val realtimeDetector: Detector?,
-    private val qualityDetector: Detector?,
+    private val detailedDetector: Detector?,
 ) : ImageAnalysis.Analyzer {
-    private var resolutionInitialized = false
-
     @Volatile
-    private var detectorRunning = false
+    private var analysisRunning = false
 
     @Volatile
     private var useRealtimeDetector = true
@@ -42,64 +46,78 @@ class ImageAnalyzer(
     @Volatile
     private var pauseAnalysis = false
 
+    @Volatile
+    private var detectorsAreBuilt = false
+
+    private val _detectionResult = MutableStateFlow(DetectorResult())
+    val detectionResult = _detectionResult.asStateFlow()
+
+    private val _metrics = MutableStateFlow<AnalyzerMetrics?>(null)
+    val metrics = _metrics.asStateFlow()
+
     /**
      * Function that gets called by CameraProvider to analyze the current image. The [imageProxy] is output of a camera
      * and is an in buffers, these should be freed as fast as possible.
      */
     override fun analyze(imageProxy: ImageProxy) {
-        // used for scaling camera resolution to screen resolution
-        // this can be before checking whenever analysis should run
-        if (!resolutionInitialized) {
-            detectionOverlay.setCameraResolution(imageProxy.width, imageProxy.height)
-            resolutionInitialized = true
-        }
-
-        if (detectorRunning || pauseAnalysis) {
+        // if new image was produced by the camera while detector are running, or analysis is paused, skip the frame
+        if (analysisRunning || pauseAnalysis) {
             imageProxy.close()
             return
         }
-
-        val bitmap = imageProxy.toBitmap()
-        imageProxy.close()
-
-        detectorRunning = true
-
-        val detectorResult: DetectorResult?
+        analysisRunning = true
 
         val totalTimeStart = Timer.getTime()
-        if (realtimeDetector != null && useRealtimeDetector) {
-            detectorResult = realtimeDetector.run(bitmap)
-            detectorRunning = false
-        } else if (qualityDetector != null) {
-            detectorResult = qualityDetector.run(bitmap)
-            detectorRunning = false
 
-            detectionOverlay.setBackgroundBitmap(bitmap)
+        val bitmap = imageProxy.toBitmap() // don't force detectors to use and manage ImageProxy, convert it here
+        imageProxy.close()
+
+        val detectorResult: DetectorResult?
+        val tempUseRealtimeDetector = useRealtimeDetector
+        if (realtimeDetector != null && tempUseRealtimeDetector) {
+            detectorResult = realtimeDetector.run(bitmap)
+
+        } else if (detailedDetector != null) {
+            val tmp = detailedDetector.run(bitmap)
+            detectorResult = tmp.copyFrom(inputImage = bitmap)
             pauseAnalysis = true
         } else {
             detectorResult = null
         }
+
         val totalTimeEnd = Timer.getTime()
+        _metrics.tryEmit(
+            AnalyzerMetrics(
+                TimerResult(totalTimeEnd - totalTimeStart),
+                detectorResult?.timeMetrics ?: emptyMap(),
+                detectorResult?.metrics ?: emptyList(),
+            )
+        )
 
         if (detectorResult != null) {
-            metricsOverlay?.post {
-                metricsOverlay.updateLogData(
-                    detectorResult.performanceMetrics,
-                    detectorResult.otherMetrics,
-                    if (detectorResult.showMetrics) TimerResult(totalTimeEnd - totalTimeStart) else null
-                )
-            }
+            _detectionResult.tryEmit(detectorResult)
+        }
+        analysisRunning = false
+    }
 
-            // add new [Detection] boxes to draw and invalidate View that is drawing them
-            detectionOverlay.post {
-                detectionOverlay.updateBoxes(detectorResult.detections, detectorResult.details)
-            }
+    /**
+     * Builds detectors using provided [context].
+     *
+     * @throws FileNotFoundException if model paths provided to [realtimeDetector] or [detailedDetector] do not exist.
+     */
+    fun buildDetectors(context: Context) {
+        if (!detectorsAreBuilt) {
+            detectorsAreBuilt = true
+            pauseAnalysis()
+            realtimeDetector?.build(context)
+            detailedDetector?.build(context)
+            unpauseAnalysis()
         }
     }
 
     /**
      * Sets Analyzer internal state to use precise detector and freeze next image analysis. Finalized image analysis
-     * will be shown on [detectionOverlay]. To unfreeze and continue with realtime detection call [switchToFasterAnalysis].
+     * will be emitted using [detectionResult]. To unfreeze and continue with realtime detection call [switchToFasterAnalysis].
      */
     fun switchToDetailedAnalysis() {
         useRealtimeDetector = false
@@ -111,11 +129,6 @@ class ImageAnalyzer(
     fun switchToFasterAnalysis() {
         useRealtimeDetector = true
         pauseAnalysis = false
-
-        // delete background image
-        detectionOverlay.post {
-            detectionOverlay.setBackgroundBitmap(null)
-        }
     }
 
     /**
@@ -123,7 +136,7 @@ class ImageAnalyzer(
      */
     fun setMetricsEnabled(value: Boolean) {
         realtimeDetector?.setMetricsEnabled(value)
-        qualityDetector?.setMetricsEnabled(value)
+        detailedDetector?.setMetricsEnabled(value)
     }
 
     /**
@@ -131,7 +144,15 @@ class ImageAnalyzer(
      */
     fun setVerboseMetricsEnabled(value: Boolean) {
         realtimeDetector?.setVerboseMetricsEnabled(value)
-        qualityDetector?.setVerboseMetricsEnabled(value)
+        detailedDetector?.setVerboseMetricsEnabled(value)
+    }
+
+    fun getRealtimeDetectorInputSize(): Size? {
+        return realtimeDetector?.inputDataSize
+    }
+
+    fun getDetailedDetectorInputSize(): Size? {
+        return detailedDetector?.inputDataSize
     }
 
     fun pauseAnalysis() {
@@ -143,7 +164,8 @@ class ImageAnalyzer(
     }
 
     fun destroy() {
+        detectorsAreBuilt = false
         realtimeDetector?.destroy()
-        qualityDetector?.destroy()
+        detailedDetector?.destroy()
     }
 }

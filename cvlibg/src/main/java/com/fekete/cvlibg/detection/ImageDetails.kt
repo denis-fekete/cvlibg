@@ -22,13 +22,17 @@ package com.fekete.cvlibg.detection
  * | PadY  |
  * _________
  *
+ * @param scale value used to convert input image, into dimensions required by the object detection model
+ * @param padX padding applied in X axis to keep image in correct aspect ratio
+ * @param padY padding applied in Y axis to keep image in correct aspect ratio
+ * @param inputWidth original width of input image
+ * @param inputHeight original height of input image
  * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 data class ImageDetails(
-    // used for scaling camera image into a model image size, used for reverse scaling to properly display detections
-    val scale: Float,
-    // padding applied to in X axis
-    val padX: Int,
-    // padding applied to in Y axis, meaning camera image height<camera and Y axis was filled with default value
-    val padY: Int
+    val scale: Float = 0f,
+    val padX: Int = 0,
+    val padY: Int = 0,
+    val inputWidth: Int = 0,
+    val inputHeight: Int = 0,
 )

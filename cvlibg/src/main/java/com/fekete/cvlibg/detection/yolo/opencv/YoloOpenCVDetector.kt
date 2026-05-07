@@ -1,5 +1,7 @@
 package com.fekete.cvlibg.detection.yolo.opencv
 
+import android.app.Application
+import android.content.Context
 import android.graphics.Bitmap
 import android.util.Size
 import com.fekete.cvlibg.detection.AbstractYoloDetector
@@ -41,7 +43,8 @@ open class YoloOpenCVDetector(
     protected var results = Mat()
     protected lateinit var inferenceRuntime: Net
 
-    override fun runtimeSetup(assetLoader: AssetLoader) {
+    override fun runtimeSetup(context: Context) {
+        val assetLoader = AssetLoader(context.applicationContext as Application)
         val modelBytes = assetLoader.loadModel(modelPath)
         val modelMat = MatOfByte(*modelBytes)
 
@@ -52,13 +55,13 @@ open class YoloOpenCVDetector(
 
 
     override fun detect(image: Bitmap): DetectorResult {
-        // convert Bitmap => OpenCV.Mat
-        Utils.bitmapToMat(
-            image,
-            bitmapMat
-        )
         // resize image into expected size for model, apply letterboxing if needed
         val (letterBoxMat, letterboxingTime) = Timer.measure(showMetrics) {
+            // convert Bitmap => OpenCV.Mat
+            Utils.bitmapToMat(
+                image,
+                bitmapMat
+            )
             resizeAndLetterBox(bitmapMat, inputDataSize.width)
         }
 
@@ -89,23 +92,20 @@ open class YoloOpenCVDetector(
         // apply NMS onto results
         val (nsmFilteredDetections, nmsTime) = Timer.measure(showMetrics) { opencvNmsFilterByClass(detections) }
 
-        val performanceMetrics = if (showMetrics && verboseMetrics) {
-            mapOf(
-                METRICS_LETTERBOX_KEY to letterboxingTime,
-                METRICS_CONVERSION_KEY to blobConversion,
-                METRICS_INTERFACE_KEY to inferenceTime,
-                METRICS_EXTRACT_KEY to extractionTime,
-                METRICS_NMS_KEY to nmsTime,
-            )
-        } else {
-            emptyMap()
-        }
-
         return DetectorResult(
             nsmFilteredDetections,
             imageDetails,
-            performanceMetrics = performanceMetrics,
-            showMetrics = showMetrics
+            timeMetrics = if (showMetrics && verboseMetrics) {
+                mapOf(
+                    METRICS_LETTERBOX_KEY to letterboxingTime,
+                    METRICS_CONVERSION_KEY to blobConversion,
+                    METRICS_INTERFACE_KEY to inferenceTime,
+                    METRICS_EXTRACT_KEY to extractionTime,
+                    METRICS_NMS_KEY to nmsTime,
+                )
+            } else {
+                emptyMap()
+            }
         )
     }
 
@@ -124,8 +124,8 @@ open class YoloOpenCVDetector(
         input: Mat,
         threshold: Float = confThreshold
     ): List<Detection> {
-        val numOfAttributes = input.size(1) // x,y,w,h, class_conf1, class_conf2, ...
-        val numOfDetections = input.size(2) // detections
+        val numOfAttributes = input.size(2) // x,y,w,h, class_conf1, class_conf2, ...
+        val numOfDetections = input.size(1) // detections
 
         // remove batch dimension
         val flattened = input.reshape(1, intArrayOf(numOfAttributes, numOfDetections))
@@ -143,7 +143,6 @@ open class YoloOpenCVDetector(
 
     override fun destroy() {
         super.destroy()
-
         results.release()
     }
 }
