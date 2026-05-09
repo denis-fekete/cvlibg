@@ -3,12 +3,15 @@ package com.fekete.bangdemo.fragments
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
+import androidx.navigation.fragment.findNavController
 import com.fekete.bangdemo.MyApp
+import com.fekete.bangdemo.R
 import com.fekete.bangdemo.data.Language
 import com.fekete.bangdemo.data.uiLabel
 import com.fekete.cvlibg.ui.ResizableSpinnerAdapter
 import com.fekete.cvlibg.utils.DetectorRegistry
 import com.fekete.bangdemo.databinding.FragmentSettingsBinding
+import com.fekete.bangdemo.utils.navigateDestination
 
 /**
  * Fragment containing UI elements for interacting with [settingsService].
@@ -25,6 +28,12 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val detectorRegistryModels = DetectorRegistry.getModelNames()
+
+        sharedViewModel.overlaysVisible(inventory = false, other = false) // overlays are not desired on this fragment
+
+        binding.btnNavBenchmark.setOnClickListener {
+            findNavController().navigateDestination(R.id.benchmarkFragment)
+        }
 
         binding.realtimeModelSpinner.setup(
             detectorRegistryModels,

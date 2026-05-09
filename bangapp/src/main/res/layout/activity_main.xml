@@ -25,7 +25,7 @@
     <LinearLayout
             android:id = "@+id/navigationPanel"
             android:layout_width = "match_parent"
-            android:layout_height = "wrap_content"
+            android:layout_height = "48dp"
             app:layout_constraintBottom_toBottomOf = "parent"
             app:layout_constraintStart_toStartOf = "parent"
             app:layout_constraintEnd_toEndOf = "parent"
@@ -34,15 +34,14 @@
 
 
         <ImageButton
-                android:id = "@+id/btnBenchmarks"
+                android:id = "@+id/btnNavSearch"
                 android:layout_width = "0dp"
                 android:layout_height = "match_parent"
                 android:layout_weight = "1"
                 android:background = "@null"
-                android:src = "@drawable/benchmark"
+                android:src = "@drawable/search"
                 android:contentDescription = "Benchmark Icon"
                 app:tint = "@color/navigation_icon_tint"/>
-
 
         <ImageButton
                 android:id = "@+id/btnNavCamera"
@@ -55,15 +54,48 @@
                 app:tint = "@color/navigation_icon_tint"/>
 
         <ImageButton
-                android:id = "@+id/btnNavSettings"
+                android:id = "@+id/btnNavGameStats"
                 android:layout_width = "0dp"
                 android:layout_height = "match_parent"
                 android:layout_weight = "1"
                 android:background = "@null"
-                android:src = "@drawable/settings"
-                android:contentDescription = "Settings Icon"
+                android:src = "@drawable/inventory"
+                android:contentDescription = "Game stats Icon"
                 app:tint = "@color/navigation_icon_tint"/>
-
-
     </LinearLayout>
+
+
+    <androidx.fragment.app.FragmentContainerView
+            android:id = "@+id/inventoryContainer"
+            android:name = "com.fekete.bangdemo.fragments.InventoryFragment"
+            android:layout_width = "match_parent"
+            android:layout_height = "100dp"
+            app:layout_constraintBottom_toTopOf = "@id/navigationPanel"
+            app:layout_constraintStart_toStartOf = "parent"
+            app:layout_constraintEnd_toEndOf = "parent"
+            android:layout_marginBottom = "100dp"/>
+
+    <androidx.fragment.app.FragmentContainerView
+            android:id = "@+id/characterAndRoleContainer"
+            android:name = "com.fekete.bangdemo.fragments.CharacterAndRoleFragment"
+            android:layout_width = "200dp"
+            android:layout_height = "100dp"
+            app:layout_constraintEnd_toEndOf = "parent"
+            app:layout_constraintTop_toTopOf = "parent"
+            android:layout_marginTop = "8dp"
+            android:layout_marginEnd = "8dp"/>
+
+    <ImageButton
+            android:id = "@+id/btnNavSettings"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:background = "@null"
+            android:src = "@drawable/settings"
+            android:contentDescription = "Settings Icon"
+            app:tint = "@color/navigation_icon_tint"
+            app:layout_constraintStart_toStartOf = "parent"
+            app:layout_constraintTop_toTopOf = "parent"
+            android:layout_marginTop = "16dp"
+            android:layout_marginStart = "16dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

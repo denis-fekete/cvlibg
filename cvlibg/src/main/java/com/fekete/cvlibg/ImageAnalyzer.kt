@@ -55,6 +55,9 @@ class ImageAnalyzer(
     private val _metrics = MutableStateFlow<AnalyzerMetrics?>(null)
     val metrics = _metrics.asStateFlow()
 
+    val usesRealtimeDetector: Boolean get() = useRealtimeDetector
+    val usesDetailedDetector: Boolean get() = !useRealtimeDetector
+
     /**
      * Function that gets called by CameraProvider to analyze the current image. The [imageProxy] is output of a camera
      * and is an in buffers, these should be freed as fast as possible.

@@ -5,7 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.viewbinding.ViewBinding
+import com.fekete.bangdemo.viewmodels.SharedCardsViewModel
+import kotlin.getValue
 
 /**
  * Base class setting up [ViewBinding].
@@ -16,6 +19,10 @@ abstract class BaseFragment<VB : ViewBinding>(
     private val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> VB
 ) : Fragment() {
 
+    /**
+     * Activity level ViewModel with shared data.
+     */
+    protected val sharedViewModel: SharedCardsViewModel by activityViewModels()
     private var _binding: VB? = null
     protected val binding get() = _binding!!
 

@@ -1,6 +1,7 @@
 package com.fekete.cvlibg.ui
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import com.fekete.cvlibg.CameraController
@@ -42,24 +43,32 @@ import com.fekete.cvlibg.utils.DetectorRegistry
  *
  * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
-open class BaseCameraViewModel(app: Application) : AndroidViewModel(app) {
+open class BaseCameraViewModel(private val app: Application) : AndroidViewModel(app) {
     private var detailedDetector: Detector? = null
     private var realtimeDetector: Detector? = null
     private var initializeCalled = false
 
-    val imageAnalyzer by lazy {
-        if (!initializeCalled) {
-            throw IllegalStateException("Cannot access imageAnalyzer before calling initialize()")
-        }
-        ImageAnalyzer(
-            realtimeDetector,
-            detailedDetector
-        )
-    }
+    private var _imageAnalyzer: ImageAnalyzer? = null
+    private var _cameraController: CameraController? = null
 
-    val cameraController by lazy {
-        CameraController(app.applicationContext, imageAnalyzer, manageAnalyzer = true)
-    }
+    val cameraController: CameraController
+        get() {
+            if (_cameraController == null) {
+                _cameraController = CameraController(app.applicationContext, imageAnalyzer, manageAnalyzer = true)
+            }
+            return _cameraController!!
+        }
+
+    val imageAnalyzer: ImageAnalyzer
+        get() {
+            if (_imageAnalyzer == null) {
+                _imageAnalyzer = ImageAnalyzer(
+                    realtimeDetector,
+                    detailedDetector
+                )
+            }
+            return _imageAnalyzer!!
+        }
 
     /**
      * Initializes [Detector] classes for the [imageAnalyzer]. This method must be called before accessing
@@ -107,7 +116,8 @@ open class BaseCameraViewModel(app: Application) : AndroidViewModel(app) {
      * Called on view model being destroyed
      */
     override fun onCleared() {
-        cameraController.destroy()
+        _cameraController?.destroy()
+        //_imageAnalyzer?.destroy() // not needed because controllers `manageAnalyzer` is set to true
 
         super.onCleared()
     }

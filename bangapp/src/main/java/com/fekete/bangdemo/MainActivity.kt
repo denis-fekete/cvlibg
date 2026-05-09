@@ -1,20 +1,26 @@
 package com.fekete.bangdemo
 
 import android.os.Bundle
-import android.widget.ImageButton
+import android.view.View.INVISIBLE
+import android.view.View.VISIBLE
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.fekete.cvlibg.utils.CommonUtils
 import com.fekete.bangdemo.databinding.ActivityMainBinding
+import com.fekete.bangdemo.utils.navigateMain
+import com.fekete.bangdemo.viewmodels.SharedCardsViewModel
+import kotlin.getValue
 
+/**
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
+ */
 class MainActivity : AppCompatActivity() {
-    private lateinit var btnCamera: ImageButton
-    private lateinit var btnSettings: ImageButton
-    private lateinit var btnBenchmark: ImageButton
     private lateinit var navController: NavController
 
+    private val sharedViewModel: SharedCardsViewModel by viewModels()
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,7 +48,10 @@ class MainActivity : AppCompatActivity() {
                 .setPositiveButton("OK", null)
                 .show()
         }
+
+
     }
+
 
     /**
      * Set up navigation using navigation host container to swap between fragments
@@ -53,20 +62,19 @@ class MainActivity : AppCompatActivity() {
 
         navController = navHostFragment.navController
 
-        btnCamera = binding.btnNavCamera
-        btnSettings = binding.btnNavSettings
-        btnBenchmark = binding.btnBenchmarks
-
-        btnCamera.setOnClickListener {
-            navigateTo(R.id.cameraFragment)
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            // make camera button invisible when in camera fragment
+            binding.btnNavCamera.visibility = if (destination.id == R.id.cameraFragment) INVISIBLE else VISIBLE
+            // disable settings btn in settings
+            binding.btnNavSettings.visibility = if (destination.id == R.id.settingsFragment) INVISIBLE else VISIBLE
         }
 
-        btnSettings.setOnClickListener {
-            navigateTo(R.id.settingsFragment)
+        binding.btnNavCamera.setOnClickListener {
+            navController.navigateMain(R.id.cameraFragment)
         }
 
-        btnBenchmark.setOnClickListener {
-            navigateTo(R.id.benchmarkFragment)
+        binding.btnNavSettings.setOnClickListener {
+            navController.navigateMain(R.id.settingsFragment)
         }
     }
 
@@ -81,7 +89,5 @@ class MainActivity : AppCompatActivity() {
         if (currentId != null) {
             navController.popBackStack(currentId, true)
         }
-
-        navController.navigate(destinationId)
     }
 }

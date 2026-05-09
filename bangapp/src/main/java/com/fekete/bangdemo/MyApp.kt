@@ -53,7 +53,7 @@ class MyApp : Application() {
             // forcing load
             cardDetailsService.data
         } catch (exc: Exception) {
-            errorMessageCardDetail = "JsonAssetService failed for assets/details/: Error message: ${exc.message}"
+            errorMessageCardDetail = "AssetService failed for assets/details/: Error message: ${exc.message}"
         }
 
         try {

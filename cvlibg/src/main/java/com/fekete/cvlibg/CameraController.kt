@@ -1,6 +1,7 @@
 package com.fekete.cvlibg
 
 import android.content.Context
+import android.util.Log
 import android.util.Size
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
@@ -11,6 +12,7 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +59,11 @@ open class CameraController(
     @Volatile
     private var isBeingInitialized: Boolean = false
     private val controllerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    @Volatile
+    private var _status: CameraStatus = CameraStatus.NOT_INITIALIZED
+
+    val status: CameraStatus get() = _status
 
 
     /**
@@ -105,6 +112,8 @@ open class CameraController(
                     preview,
                 )
             }
+
+            _status = CameraStatus.RUNNING
         } catch (e: Exception) {
             onError?.invoke(e.message ?: "CameraController.start(): cameraProvider.bindToLifecycle error.")
             stop() // on error stop camera
@@ -166,6 +175,8 @@ open class CameraController(
             isBeingInitialized = false
             isInitialized = true
 
+            _status = CameraStatus.STOPPED
+
             bind(lifecycleOwner, surfaceProvider)
         }, ContextCompat.getMainExecutor(context))
     }
@@ -219,6 +230,8 @@ open class CameraController(
         if (::cameraProvider.isInitialized) {
             cameraProvider.unbindAll()
         }
+
+        _status = CameraStatus.STOPPED
     }
 
     /**
@@ -248,8 +261,15 @@ open class CameraController(
         controllerScope.cancel()
         isInitialized = false
         isBeingInitialized = false
+        _status = CameraStatus.NOT_INITIALIZED
 
         if (manageAnalyzer)
             imageAnalyzer?.destroy()
     }
+}
+
+enum class CameraStatus {
+    STOPPED,
+    RUNNING,
+    NOT_INITIALIZED,
 }
