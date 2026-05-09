@@ -10,8 +10,15 @@ import androidx.core.content.ContextCompat
 import com.fekete.bangdemo.MyApp
 import com.fekete.cvlibg.ui.DetectionOverlay
 import com.fekete.bangdemo.R
+import com.fekete.cvlibg.utils.CommonUtils
 import kotlin.math.max
 
+/**
+ * Implementation of [DetectionOverlay] for a Bang! card game. Uses [cardDetailsService] and [class2linkService]
+ * services to convert [com.fekete.cvlibg.detection.Detection] class index into a readable text.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
+ */
 class BangDetectionOverlay(context: Context, attrs: AttributeSet?) : DetectionOverlay(context, attrs) {
     // helper variable to prevent creating a new object on each redraw
     private var scaledRect: RectF = RectF()
@@ -22,7 +29,7 @@ class BangDetectionOverlay(context: Context, attrs: AttributeSet?) : DetectionOv
     /**
      * Service used for looking up details about [com.fekete.cvlibg.detection.Detection] objects.
      *
-     * @see [CardDetail] for other values that can be read
+     * @see [com.fekete.bangdemo.data.CardDetail] for other values that can be read
      */
     private val cardDetailsService by lazy {
         (context.applicationContext as MyApp).cardDetailsService
@@ -46,7 +53,7 @@ class BangDetectionOverlay(context: Context, attrs: AttributeSet?) : DetectionOv
     private val boxPaint = Paint().apply {
         color = ContextCompat.getColor(context, R.color.detection_box)
         style = Paint.Style.STROKE
-        strokeWidth = 5f
+        strokeWidth = CommonUtils.spToPix(context, 2f)
         isAntiAlias = true
         alpha = 200
     }
@@ -59,19 +66,9 @@ class BangDetectionOverlay(context: Context, attrs: AttributeSet?) : DetectionOv
 
     private val textPaint = Paint().apply {
         color = ContextCompat.getColor(context, R.color.detection_text)
-        textSize = unitSpToPix(settingsService.data.fontSize.toFloat())
+        textSize = CommonUtils.spToPix(context, settingsService.data.fontSize.toFloat())
         typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
         isAntiAlias = true
-    }
-    private val errorTextPaint = Paint().apply {
-        color = ContextCompat.getColor(context, R.color.detection_text)
-        textSize = unitSpToPix(settingsService.data.fontSize.toFloat())
-        typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-        isAntiAlias = true
-    }
-
-    fun writeErrorOnScreen(canvas: Canvas, text: String) {
-        canvas.drawText(text, 0f, height / 2f, errorTextPaint)
     }
 
     override fun drawDetections(canvas: Canvas) {
@@ -85,7 +82,7 @@ class BangDetectionOverlay(context: Context, attrs: AttributeSet?) : DetectionOv
             // get label from services
             val linkId = class2linkService.data[det.classIndex]?.linkId
             val className = cardDetailsService.data[linkId]?.title
-            val label = "${className}: ${(det.confidence * 100).toInt()}%"
+            val label = "$className"
 
             // determine text width and height
             val textWidth = textPaint.measureText(label)

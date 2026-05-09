@@ -69,7 +69,7 @@
             android:id = "@+id/inventoryContainer"
             android:name = "com.fekete.bangdemo.fragments.InventoryFragment"
             android:layout_width = "match_parent"
-            android:layout_height = "100dp"
+            android:layout_height = "160dp"
             app:layout_constraintBottom_toTopOf = "@id/navigationPanel"
             app:layout_constraintStart_toStartOf = "parent"
             app:layout_constraintEnd_toEndOf = "parent"

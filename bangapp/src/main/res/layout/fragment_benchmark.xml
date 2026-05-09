@@ -5,9 +5,10 @@
         xmlns:tools = "http://schemas.android.com/tools"
         android:layout_width = "match_parent"
         android:layout_height = "match_parent"
-        android:layout_marginHorizontal = "16dp"
-        android:layout_marginVertical = "16dp"
-        tools:context = ".fragments.BenchmarkFragment">
+        tools:context = ".fragments.BenchmarkFragment"
+        android:background = "@color/background"
+        android:padding = "20dp"
+        >
 
     <TextView
             android:layout_width = "match_parent"
@@ -15,6 +16,7 @@
             android:text = "Benchmark"
             android:id = "@+id/benchmarkTitle"
             android:textAlignment = "center"
+            android:textColor = "@color/title"
             android:textSize = "32sp"
             app:layout_constraintTop_toTopOf = "parent"
             app:layout_constraintEnd_toEndOf = "parent"
@@ -26,6 +28,7 @@
             android:layout_width = "wrap_content"
             android:layout_height = "wrap_content"
             android:id = "@+id/textChooseBenchmark"
+            android:textColor = "@color/text"
             app:layout_constraintTop_toBottomOf = "@+id/benchmarkTitle"
             app:layout_constraintEnd_toEndOf = "parent"
             app:layout_constraintStart_toStartOf = "parent"
@@ -36,6 +39,7 @@
             android:layout_width = "match_parent"
             android:layout_height = "wrap_content"
             android:id = "@+id/benchmarkSpinner"
+            android:textColor = "@color/text"
             app:layout_constraintTop_toBottomOf = "@+id/textChooseBenchmark"
             app:layout_constraintStart_toStartOf = "parent"
             />
@@ -44,6 +48,7 @@
             android:layout_width = "match_parent"
             android:layout_height = "wrap_content"
             android:weightSum = "2"
+
             android:id = "@+id/chooseBenchmarkLayout"
             android:orientation = "horizontal"
             android:layout_marginTop = "20dp"
@@ -56,6 +61,7 @@
                 android:layout_width = "0dp"
                 android:layout_height = "wrap_content"
                 android:id = "@+id/textChooseBenchmarkModel"
+                android:textColor = "@color/text"
                 android:layout_weight = "1"
                 />
 
@@ -64,6 +70,7 @@
                 android:layout_height = "wrap_content"
                 android:id = "@+id/benchmarkAllCheckbox"
                 android:text = "Benchmark all"
+                android:textColor = "@color/text"
                 android:layout_weight = "1"/>
 
     </LinearLayout>
@@ -82,6 +89,7 @@
             android:layout_width = "wrap_content"
             android:layout_height = "wrap_content"
             android:id = "@+id/textNumberOfRuns"
+            android:textColor = "@color/text"
             app:layout_constraintTop_toBottomOf = "@+id/benchmarkModelSpinner"
             app:layout_constraintStart_toStartOf = "parent"
             android:layout_marginTop = "20dp"
@@ -97,6 +105,7 @@
             app:layout_constraintTop_toBottomOf = "@+id/textNumberOfRuns"
             android:layout_marginTop = "20dp"
             android:text = "1"
+            android:textColor = "@color/text"
             />
 
     <LinearLayout
@@ -110,22 +119,32 @@
             android:id = "@+id/controlsLayout"
             android:layout_marginTop = "20dp">
 
-        <Button
-                android:text = "Start"
-                android:layout_width = "0dp"
-                android:layout_height = "match_parent"
-                android:layout_weight = "1"
+        <androidx.appcompat.widget.AppCompatButton
                 android:id = "@+id/benchmarkStartButton"
-                tools:layout_editor_absoluteX = "51dp"
+                android:layout_width = "0dp"
+                android:layout_weight = "1"
+                android:layout_height = "wrap_content"
+                android:text = "@string/start_benchmark"
+                android:textColor = "@color/buttonText"
+                android:background = "@drawable/confirm_button"
+                android:backgroundTint = "@null"
+                app:backgroundTint = "@null"
+                android:elevation = "6dp"
+                android:textAllCaps = "false"
                 />
 
-        <Button
-                android:text = "Stop"
-                android:layout_width = "0dp"
-                android:layout_weight = "1"
-                android:layout_height = "match_parent"
+        <androidx.appcompat.widget.AppCompatButton
                 android:id = "@+id/benchmarkStopButton"
-                android:enabled = "false"
+                android:layout_width = "0dp"
+                android:layout_height = "wrap_content"
+                android:layout_weight = "1"
+                android:text = "@string/stop_benchmark"
+                android:textColor = "@color/delete"
+                android:background = "@drawable/delete_button"
+                android:backgroundTint = "@null"
+                app:backgroundTint = "@null"
+                android:elevation = "6dp"
+                android:textAllCaps = "false"
                 />
     </LinearLayout>
 

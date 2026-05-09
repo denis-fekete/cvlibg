@@ -45,6 +45,8 @@ class CameraFragment : BaseFragment<FragmentCameraBinding>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        sharedViewModel.overlaysVisible(inventory = false, other = true)
+
         viewModel.initialize(
             settingsService.data.realtimeModel,
             settingsService.data.precisionModel,

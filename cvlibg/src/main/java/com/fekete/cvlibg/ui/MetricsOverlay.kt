@@ -70,7 +70,7 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
 
         val baseOffset = textPaint.fontMetrics.run { bottom - top }
         val startX = width * 0.02f
-        val startY = height * 0.05f
+        val startY = height * 0.11f
         var offsetY = startY
         var maxWidth = 0f
 

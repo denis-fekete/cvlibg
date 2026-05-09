@@ -60,7 +60,15 @@ class AssetService<DataType : Any, KeyType : Any>(
         if (listOfFiles.isNotEmpty()) {
             // path is directory, read all its files
             for (file in listOfFiles) {
-                val elements = loadSingleFile(file)
+                val elements: Map<KeyType, DataType>
+                try {
+                    elements = loadSingleFile(file)
+                } catch (e: Exception) {
+                    throw Exception(
+                        "Loaded file: $file\n${e.message}",
+                        e
+                    )
+                }
                 if (result.keys.containsAll(elements.keys)) {
                     Log.e("AssetService", "Duplicate keys found in $path. Application will continue.")
                     onRepetitiveKeyError?.invoke()

@@ -37,6 +37,10 @@ class BenchmarkFragment : BaseFragment<FragmentBenchmarkBinding>(
     )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        sharedViewModel.overlaysVisible(inventory = false, other = false) // overlays are not desired on this fragment
+
         binding.benchmarkSpinner.setup(
             benchmarkMap.keys,
             null,
@@ -146,7 +150,6 @@ class BenchmarkFragment : BaseFragment<FragmentBenchmarkBinding>(
      */
     private fun updateFontSize() {
         val elements = arrayOf(
-            binding.benchmarkTitle,
             binding.textChooseBenchmark,
             binding.textChooseBenchmarkModel
         )

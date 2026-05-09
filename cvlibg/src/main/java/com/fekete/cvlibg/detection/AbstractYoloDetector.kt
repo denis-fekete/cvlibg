@@ -151,7 +151,6 @@ abstract class AbstractYoloDetector(
             if (bestScore < threshold)
                 continue
 
-            imageDetails.scale
             val x = data[0 * numOfDetections + col]
             val y = data[1 * numOfDetections + col]
             val w = data[2 * numOfDetections + col]

@@ -61,13 +61,6 @@ open class DetectionOverlay(context: Context, attrs: AttributeSet?) : View(conte
     var onDetectionClicked: ((detection: Detection) -> Unit)? = null
 
     /**
-     * Convert Scalable Pixels to pixel size for text drawn on detections
-     */
-    protected fun unitSpToPix(sp: Float): Float {
-        return sp * context.resources.displayMetrics.density
-    }
-
-    /**
      * Sets camera resolution values and calculates scale and crop values for the [DetectionOverlay].
      */
     protected open fun updateCameraResolution() {

@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android = "http://schemas.android.com/apk/res/android"
-             xmlns:tools = "http://schemas.android.com/tools"
-             android:layout_width = "wrap_content"
-             android:layout_height = "wrap_content"
-             tools:context = ".views.LinkView"
+<LinearLayout xmlns:android = "http://schemas.android.com/apk/res/android"
+              xmlns:tools = "http://schemas.android.com/tools"
+              xmlns:app = "http://schemas.android.com/apk/res-auto"
+              android:layout_width = "wrap_content"
+              android:layout_height = "match_parent"
+              android:orientation = "horizontal"
+              android:gravity = "center"
+              tools:context = ".views.LinkView"
+              android:paddingHorizontal = "16dp"
+              android:paddingVertical = "8dp"
+              
+              android:foreground = "?attr/selectableItemBackground"
         >
 
     <FrameLayout
-            android:id = "@+id/textContainer"
+            android:id = "@+id/linkViewTextContainer"
             android:layout_width = "wrap_content"
-            android:layout_height = "match_parent"
+            android:layout_height = "wrap_content"
             android:paddingHorizontal = "15dp"
             android:paddingVertical = "5dp"
             android:background = "@drawable/rounded"
@@ -17,19 +24,22 @@
             >
 
         <TextView
-                android:id = "@+id/textView"
+                android:id = "@+id/linkViewTextView"
                 android:layout_width = "match_parent"
-                android:layout_height = "match_parent"
+                android:layout_height = "wrap_content"
                 android:text = "Hello"
                 android:layout_gravity = "center"
                 android:textColor = "@color/link_text"/>
     </FrameLayout>
 
-
-    <ImageView
-            android:id = "@+id/imageView"
-            android:layout_width = "match_parent"
+    <com.google.android.material.imageview.ShapeableImageView
+            android:id = "@+id/linkViewImageView"
+            android:layout_width = "wrap_content"
             android:layout_height = "match_parent"
-            android:layout_gravity = "center"
-            />
-</FrameLayout>
+            android:src = "@drawable/error"
+            android:scaleType = "fitCenter"
+            android:adjustViewBounds = "true"
+            app:shapeAppearanceOverlay = "@style/linkRoundedImage"
+            app:strokeColor = "@color/inventory_item_background"
+            app:strokeWidth = "4dp"/>
+</LinearLayout>

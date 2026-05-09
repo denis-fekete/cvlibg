@@ -3,6 +3,7 @@ package com.fekete.bangdemo
 import android.app.Application
 import com.fekete.bangdemo.data.CardDetail
 import com.fekete.bangdemo.data.Class2Link
+import com.fekete.bangdemo.data.GameState
 import com.fekete.bangdemo.data.UserPreferences
 import com.fekete.cvlibg.utils.DetectorRegistry
 import com.fekete.cvlibg.detection.yolo.onnx.Yolo26OnnxDetector
@@ -11,6 +12,8 @@ import com.fekete.cvlibg.detection.yolo.opencv.YoloOpenCVDetector
 import com.fekete.cvlibg.services.AssetService
 import com.fekete.cvlibg.utils.CommonUtils
 import com.fekete.cvlibg.services.ConfigService
+import com.fekete.cvlibg.services.StorageService
+import kotlinx.serialization.builtins.serializer
 
 /**
  * Class derived from the Android's [Application] class. Initializes the [cardDetailsService], [class2linkService], and
@@ -24,6 +27,8 @@ import com.fekete.cvlibg.services.ConfigService
 class MyApp : Application() {
     lateinit var cardDetailsService: AssetService<CardDetail, String>
     lateinit var class2linkService: AssetService<Class2Link, Int>
+
+    lateinit var gameStateService: StorageService<GameState, Int>
     var errorMessageCardDetail: String? = null
     var errorMessageClass2Link: String? = null
 
@@ -67,7 +72,20 @@ class MyApp : Application() {
             // forcing load
             class2linkService.data
         } catch (exc: Exception) {
-            errorMessageClass2Link = "JsonAssetService failed for Class2Link.json: Error message: ${exc.message}"
+            errorMessageClass2Link = "AssetService failed for Class2Link.json: Error message: ${exc.message}"
+        }
+
+        try {
+            gameStateService = StorageService(
+                this,
+                filename = "GameState.json",
+                serializer = GameState.serializer(),
+                keySelector = { it.id },
+                charset = Charsets.UTF_8
+            )
+            gameStateService.data
+        } catch (exc: Exception) {
+            errorMessageClass2Link = "StorageService failed for GameState.json: Error message: ${exc.message}"
         }
     }
 

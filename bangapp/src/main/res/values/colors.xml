@@ -3,11 +3,20 @@
     <color name = "black">#FF000000</color>
     <color name = "white">#FFFFFFFF</color>
 
-    <color name = "background">#39393A</color>
+    <color name = "background">#2B2B2C</color>
+    <color name = "list_background">#242425</color>
+    <color name = "button_background">#242425</color>
+    <color name = "button_background_transparent">#662B2B2C</color>
+    <color name = "inventory_item_background">#662B2B2C</color>
+
     <color name = "text">#FFFFFFFF</color>
     <color name = "title">#F4E9FA</color>
     <color name = "link_background">#E6C5F9</color>
     <color name = "link_text">#39393A</color>
+    <color name = "buttonText">#DAD5A4</color>
+
+    <color name = "delete">#EB1010</color>
+
 
     <color name = "navigation_icon_selected">#00FF00</color>
     <color name = "navigation_icon_default">#AAAAAA</color>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name = "titleRoundedImage">
+        <item name = "cornerFamily">rounded</item>
+        <item name = "cornerSize">16dp</item>
+    </style>
+
+    <style name = "inventoryItemRoundedImage">
+        <item name = "cornerFamily">rounded</item>
+        <item name = "cornerSize">8dp</item>
+    </style>
+
+    <style name = "linkRoundedImage">
+        <item name = "cornerFamily">rounded</item>
+        <item name = "cornerSize">8dp</item>
+    </style>
+
+    <style name = "roundedImageCharacterPreview">
+        <item name = "cornerFamily">rounded</item>
+        <item name = "cornerSize">32dp</item>
+    </style>
+</resources>

@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import android.util.TypedValue
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.opencv.android.OpenCVLoader
@@ -47,5 +48,27 @@ object CommonUtils {
         } else {
             Log.e("OpenCV", "Failed to load OpenCV")
         }
+    }
+
+    /**
+     * Convert Scalable Pixels to pixel size for text drawn on detections.
+     */
+    fun spToPix(context: Context, sp: Float): Float {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP,
+            sp,
+            context.resources.displayMetrics
+        )
+    }
+
+    /**
+     * Convert Device independent Pixels to pixel value.
+     */
+    fun dpToPix(context: Context, dp: Float): Float {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp,
+            context.resources.displayMetrics
+        )
     }
 }

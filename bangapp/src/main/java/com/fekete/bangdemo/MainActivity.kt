@@ -8,6 +8,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import com.fekete.bangdemo.data.CardDetail
+import com.fekete.bangdemo.data.GameState
 import com.fekete.cvlibg.utils.CommonUtils
 import com.fekete.bangdemo.databinding.ActivityMainBinding
 import com.fekete.bangdemo.utils.navigateMain
@@ -22,6 +24,14 @@ class MainActivity : AppCompatActivity() {
 
     private val sharedViewModel: SharedCardsViewModel by viewModels()
     private lateinit var binding: ActivityMainBinding
+
+    private val gameStateService by lazy {
+        (applicationContext as MyApp).gameStateService
+    }
+
+    private val cardDetailsService by lazy {
+        (applicationContext as MyApp).cardDetailsService
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +59,7 @@ class MainActivity : AppCompatActivity() {
                 .show()
         }
 
-
+        loadLastGameState()
     }
 
 
@@ -76,18 +86,70 @@ class MainActivity : AppCompatActivity() {
         binding.btnNavSettings.setOnClickListener {
             navController.navigateMain(R.id.settingsFragment)
         }
+
+        binding.btnNavSearch.setOnClickListener {
+            navController.navigateMain(R.id.cardSearchFragment)
+        }
+
+        binding.btnNavGameStats.setOnClickListener {
+            navController.navigateMain(R.id.gameStatsFragment)
+        }
     }
 
     /**
-     * Navigates to another fragment, disables navigating to same, and destroys back stack of previous destinations.
+     * Load last saved [GameState] using the [com.fekete.cvlibg.services.StorageService] and update [sharedViewModel]
+     * with its values.
      */
-    private fun navigateTo(destinationId: Int) {
-        val currentId = navController.currentDestination?.id
+    private fun loadLastGameState() {
+        val lastSave = gameStateService.item ?: return
 
-        if (currentId == destinationId) return
-
-        if (currentId != null) {
-            navController.popBackStack(currentId, true)
+        if (lastSave.role != null) {
+            val card = cardDetailsService.data[lastSave.role] ?: CardDetail()
+            sharedViewModel.setRole(card)
         }
+
+        if (lastSave.character != null) {
+            val card = cardDetailsService.data[lastSave.character] ?: CardDetail()
+            sharedViewModel.setCharacter(card)
+        }
+
+        for (link in lastSave.inventory) {
+            val card = cardDetailsService.data[link] ?: continue
+            sharedViewModel.addToInventory(card)
+        }
+    }
+
+    /**
+     * Save the current [GameState] using the [com.fekete.cvlibg.services.StorageService].
+     */
+    private fun saveGameState() {
+        val roleLink = sharedViewModel.role.value.id
+        val charLink = sharedViewModel.character.value.id
+
+        val inventoryLinks = mutableListOf<String>()
+        sharedViewModel.inventory.value.forEach {
+            inventoryLinks.add(it.id)
+        }
+
+        val gameState = GameState(
+            0,
+            roleLink,
+            charLink,
+            inventoryLinks
+        )
+
+        // only the first game state will be used
+        gameStateService.data[0] = gameState
+        gameStateService.save()
+    }
+
+
+    /**
+     * Save [com.fekete.bangdemo.data.GameState] on activity being stopped (minimizing).
+     */
+    override fun onStop() {
+        super.onStop()
+
+        saveGameState()
     }
 }
