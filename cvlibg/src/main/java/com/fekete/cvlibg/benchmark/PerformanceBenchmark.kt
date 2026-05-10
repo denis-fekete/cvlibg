@@ -3,8 +3,6 @@ package com.fekete.cvlibg.benchmark
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Bitmap.createBitmap
-import android.media.Image
-import com.fekete.cvlibg.ImageAnalyzer
 import com.fekete.cvlibg.utils.Timer
 import com.fekete.cvlibg.utils.TimerResult
 import com.fekete.cvlibg.detection.AbstractYoloDetector.Companion.METRICS_NMS_KEY

@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.viewbinding.ViewBinding
-import com.fekete.bangdemo.viewmodels.SharedCardsViewModel
+import com.fekete.bangdemo.viewmodels.GameStateSharedViewModel
 import kotlin.getValue
 
 /**
@@ -22,7 +22,7 @@ abstract class BaseFragment<VB : ViewBinding>(
     /**
      * Activity level ViewModel with shared data.
      */
-    protected val sharedViewModel: SharedCardsViewModel by activityViewModels()
+    protected val sharedViewModel: GameStateSharedViewModel by activityViewModels()
     private var _binding: VB? = null
     protected val binding get() = _binding!!
 

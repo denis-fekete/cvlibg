@@ -15,15 +15,18 @@ import com.fekete.bangdemo.data.CardType
 import com.fekete.bangdemo.views.LinkView
 import com.fekete.cvlibg.utils.AssetLoader
 import com.fekete.bangdemo.databinding.FragmentCardDetailsBinding
-import com.fekete.bangdemo.utils.navigateAction
 import kotlin.collections.get
 
 private const val ARG_DETECTION_ID = "id" // must match with argument name in nav_graph.xml
 
 /**
- * Fragment to used for Card details display,
- * Use the [DetailsFragment.newInstance] factory method to
- * create an instance of this fragment.
+ * Fragment hosting information about the provided [CardDetail] card, this data is loaded using [cardDetailsService].
+ * The argument accepted on creation of this fragment must match [CardDetail.id] of loaded cards from the service,
+ * otherwise a generic with no information will be loaded.
+ *
+ * All links from the [CardDetail.links] are turned into clickable links to another [DetailsFragment].
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
     FragmentCardDetailsBinding::inflate

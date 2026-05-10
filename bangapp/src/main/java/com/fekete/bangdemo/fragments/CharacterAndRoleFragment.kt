@@ -6,9 +6,7 @@ import android.view.View
 import android.view.View.GONE
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
-import android.widget.Toast
 import androidx.core.os.bundleOf
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -22,9 +20,11 @@ import com.fekete.cvlibg.utils.AssetLoader
 import kotlinx.coroutines.launch
 
 /**
- * A simple [Fragment] subclass.
- * Use the [CharacterAndRoleFragment.newInstance] factory method to
- * create an instance of this fragment.
+ * Fragment hosting role and character image buttons. Role is always visible, when the
+ * [com.fekete.bangdemo.viewmodels.GameStateSharedViewModel.otherOverlaysVisible] is set to true, character is only
+ * visible when a valid image to show was provided.
+ *
+ * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 class CharacterAndRoleFragment : BaseFragment<FragmentCharacterAndRoleBinding>(
     FragmentCharacterAndRoleBinding::inflate

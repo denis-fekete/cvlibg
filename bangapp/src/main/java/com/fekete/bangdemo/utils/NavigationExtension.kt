@@ -6,9 +6,8 @@ import androidx.navigation.NavDirections
 import androidx.navigation.navOptions
 
 /**
- * Navigates to another fragment using its layout ID.
- *
- * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
+ * Navigates to another fragment using its layout ID. If [destinationId] already exists, everything on the back stack
+ * will be popped, returning to the [destinationId], this way, no duplicate fragments and their views will be created.
  */
 fun NavController.navigateMain(destinationId: Int) {
     if (currentDestination?.id == destinationId) return
@@ -25,6 +24,11 @@ fun NavController.navigateMain(destinationId: Int) {
     }
 }
 
+
+/**
+ * Navigates to [destinationId] using its [args]. If the current destination is already at [destinationId], navigation
+ * is skipped.
+ */
 fun NavController.navigateDestination(destinationId: Int, args: Bundle? = null) {
     if (currentDestination?.id == destinationId) return
 
@@ -33,7 +37,9 @@ fun NavController.navigateDestination(destinationId: Int, args: Bundle? = null) 
     })
 }
 
-
+/**
+ * Navigates using save args to [directions]. Prevents duplicate destination at the top of the stack.
+ */
 fun NavController.navigateAction(directions: NavDirections) {
     navigate(directions, navOptions {
         launchSingleTop = true

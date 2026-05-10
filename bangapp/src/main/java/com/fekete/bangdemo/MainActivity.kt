@@ -13,16 +13,19 @@ import com.fekete.bangdemo.data.GameState
 import com.fekete.cvlibg.utils.CommonUtils
 import com.fekete.bangdemo.databinding.ActivityMainBinding
 import com.fekete.bangdemo.utils.navigateMain
-import com.fekete.bangdemo.viewmodels.SharedCardsViewModel
+import com.fekete.bangdemo.viewmodels.GameStateSharedViewModel
 import kotlin.getValue
 
 /**
+ * Main activity, uses and host different fragments with shared navigation buttons belonging to the activity. Its
+ * purpose is to load, and save [GameState] data, holding data game data from previous sessions.
+ *
  * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
 
-    private val sharedViewModel: SharedCardsViewModel by viewModels()
+    private val sharedViewModel: GameStateSharedViewModel by viewModels()
     private lateinit var binding: ActivityMainBinding
 
     private val gameStateService by lazy {

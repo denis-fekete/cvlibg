@@ -3,12 +3,10 @@ package com.fekete.bangdemo.fragments
 import android.content.Context
 import android.os.Bundle
 import android.util.TypedValue
-import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.ScrollView
 import androidx.lifecycle.lifecycleScope
 import com.fekete.bangdemo.MyApp
-import com.fekete.cvlibg.benchmark.AccuracyBenchmark
 import com.fekete.cvlibg.benchmark.DetectorBenchmark
 import com.fekete.cvlibg.benchmark.PerformanceBenchmark
 import com.fekete.cvlibg.utils.DetectorRegistry
@@ -18,7 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Subclass of the [Fragment] class hosting benchmark for YOLO models.
+ * Class hosting UI for the [PerformanceBenchmark] for YOLO models.
  *
  * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
@@ -33,7 +31,6 @@ class BenchmarkFragment : BaseFragment<FragmentBenchmarkBinding>(
     private var currentBenchmark: DetectorBenchmark? = null
     private val benchmarkMap = mapOf<String, (context: Context) -> DetectorBenchmark>(
         "Performance benchmark" to { context -> PerformanceBenchmark(context) },
-        "Accuracy benchmark" to { context -> AccuracyBenchmark(context, "AccuracyBenchmark", 0.4f) },
     )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
