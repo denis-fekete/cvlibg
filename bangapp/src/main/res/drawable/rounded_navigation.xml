@@ -5,7 +5,7 @@
     <solid android:color = "@color/button_background_transparent"/>
 
     <stroke
-            android:color = "@color/buttonText"
+            android:color = "@color/confirmButton"
             android:width = "2dp"/>
 
     <corners android:radius = "8dp"/>

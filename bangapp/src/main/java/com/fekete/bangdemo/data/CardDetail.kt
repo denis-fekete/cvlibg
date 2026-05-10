@@ -43,6 +43,9 @@ enum class CardType {
     @SerialName("role")
     Role,
 
+    @SerialName("weapon")
+    Weapon,
+
     @SerialName("symbol")
     Symbol,
 

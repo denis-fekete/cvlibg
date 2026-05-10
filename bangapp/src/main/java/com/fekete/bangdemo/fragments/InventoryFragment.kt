@@ -1,7 +1,6 @@
 package com.fekete.bangdemo.fragments
 
 import android.app.Application
-import android.content.res.Resources
 import android.os.Bundle
 import android.view.View
 import android.view.View.GONE
@@ -23,7 +22,7 @@ import kotlinx.coroutines.launch
 
 /**
  * Long living fragment, meant to be placed on top of other fragments. Contains representation of inventory and reacts
- * to changes in it from the [sharedViewModel].
+ * to changes in it from the [gameStateSharedViewModel].
  *
  * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
@@ -61,13 +60,13 @@ class InventoryFragment : BaseFragment<FragmentInventoryBinding>(
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    sharedViewModel.inventory.collect { cardsList ->
+                    gameStateSharedViewModel.inventory.collect { cardsList ->
                         refreshCardList(cardsList)
                     }
                 }
 
                 launch {
-                    sharedViewModel.inventoryVisible.collect { value ->
+                    gameStateSharedViewModel.inventoryVisible.collect { value ->
                         binding.root.visibility = if (value) VISIBLE else GONE
                     }
                 }
@@ -97,7 +96,7 @@ class InventoryFragment : BaseFragment<FragmentInventoryBinding>(
             }
 
             item.onDeleteClicked = {
-                sharedViewModel.removeFromInventory(card)
+                gameStateSharedViewModel.removeFromInventory(card)
             }
 
             binding.inventoryListView.addView(item)

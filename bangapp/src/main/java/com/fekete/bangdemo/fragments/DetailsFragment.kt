@@ -56,7 +56,10 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        sharedViewModel.overlaysVisible(inventory = false, other = false) // overlays are not desired on this fragment
+        gameStateSharedViewModel.overlaysVisible(
+            inventory = false,
+            other = false
+        ) // overlays are not desired on this fragment
 
         // remove temporary view items, used for "seeing" how the preview from IDE looks like
         binding.linksLayout.removeAllViews()
@@ -112,12 +115,12 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
         binding.btnRemoveCharacter.visibility = GONE
 
         when (thisCard.type) {
-            CardType.Effect, CardType.Action -> {
+            CardType.Effect, CardType.Action, CardType.Weapon -> {
                 selectedAddButton = binding.btnAddToInventory
 
                 binding.btnAddToInventory.setOnClickListener {
                     val card = cardDetailsService.data[currentId] ?: return@setOnClickListener
-                    sharedViewModel.addToInventory(card)
+                    gameStateSharedViewModel.addToInventory(card)
 
                     Toast.makeText(
                         requireContext(),
@@ -131,7 +134,7 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
                 selectedAddButton = binding.btnSetRole
                 binding.btnSetRole.setOnClickListener {
                     val card = cardDetailsService.data[currentId] ?: return@setOnClickListener
-                    sharedViewModel.setRole(card)
+                    gameStateSharedViewModel.setRole(card)
 
                     Toast.makeText(
                         requireContext(),
@@ -140,10 +143,10 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
                     ).show()
                 }
 
-                if (sharedViewModel.role.value.id == thisCard.id) {
+                if (gameStateSharedViewModel.role.value.id == thisCard.id) {
                     selectedRemoveButton = binding.btnRemoveRole
                     binding.btnRemoveRole.setOnClickListener {
-                        sharedViewModel.setRole(CardDetail()) // setting card with default id will count as deleting it
+                        gameStateSharedViewModel.setRole(CardDetail()) // setting card with default id will count as deleting it
 
                         Toast.makeText(
                             requireContext(),
@@ -158,7 +161,7 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
                 selectedAddButton = binding.btnSetCharacter
                 binding.btnSetCharacter.setOnClickListener {
                     val card = cardDetailsService.data[currentId] ?: return@setOnClickListener
-                    sharedViewModel.setCharacter(card)
+                    gameStateSharedViewModel.setCharacter(card)
 
                     Toast.makeText(
                         requireContext(),
@@ -167,10 +170,10 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
                     ).show()
                 }
 
-                if (sharedViewModel.character.value.id == thisCard.id) {
+                if (gameStateSharedViewModel.character.value.id == thisCard.id) {
                     selectedRemoveButton = binding.btnRemoveCharacter
                     binding.btnRemoveCharacter.setOnClickListener {
-                        sharedViewModel.setCharacter(CardDetail()) // setting card with default id will count as deleting it
+                        gameStateSharedViewModel.setCharacter(CardDetail()) // setting card with default id will count as deleting it
 
                         Toast.makeText(
                             requireContext(),

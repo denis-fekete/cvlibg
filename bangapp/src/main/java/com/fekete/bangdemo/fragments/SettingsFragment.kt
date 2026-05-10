@@ -29,7 +29,10 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(
         super.onViewCreated(view, savedInstanceState)
         val detectorRegistryModels = DetectorRegistry.getModelNames()
 
-        sharedViewModel.overlaysVisible(inventory = false, other = false) // overlays are not desired on this fragment
+        gameStateSharedViewModel.overlaysVisible(
+            inventory = false,
+            other = false
+        ) // overlays are not desired on this fragment
 
         binding.btnNavBenchmark.setOnClickListener {
             findNavController().navigateDestination(R.id.benchmarkFragment)

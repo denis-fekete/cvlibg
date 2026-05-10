@@ -13,8 +13,9 @@
     <color name = "title">#F4E9FA</color>
     <color name = "link_background">#E6C5F9</color>
     <color name = "link_text">#39393A</color>
-    <color name = "buttonText">#DAD5A4</color>
 
+    <color name = "confirmButton">#DAD5A4</color>
+    <color name = "button">#66ABF4</color>
     <color name = "delete">#EB1010</color>
 
 

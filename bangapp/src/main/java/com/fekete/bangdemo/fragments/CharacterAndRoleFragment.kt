@@ -46,18 +46,18 @@ class CharacterAndRoleFragment : BaseFragment<FragmentCharacterAndRoleBinding>(
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    sharedViewModel.character.collect { card ->
+                    gameStateSharedViewModel.character.collect { card ->
                         updateCharacterPreview(card)
                     }
                 }
                 launch {
-                    sharedViewModel.role.collect { card ->
+                    gameStateSharedViewModel.role.collect { card ->
                         updateRole(card)
                     }
                 }
 
                 launch {
-                    sharedViewModel.otherOverlaysVisible.collect { value ->
+                    gameStateSharedViewModel.otherOverlaysVisible.collect { value ->
                         binding.root.visibility = if (value) VISIBLE else GONE
                     }
                 }

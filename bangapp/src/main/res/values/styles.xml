@@ -20,4 +20,9 @@
         <item name = "cornerFamily">rounded</item>
         <item name = "cornerSize">32dp</item>
     </style>
+
+    <style name = "searchItem">
+        <item name = "cornerFamily">rounded</item>
+        <item name = "cornerSize">16dp</item>
+    </style>
 </resources>

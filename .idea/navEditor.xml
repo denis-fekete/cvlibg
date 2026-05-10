@@ -54,25 +54,13 @@
             <LayoutPositions>
               <option name="myPositions">
                 <map>
-                  <entry key="GameStatsFragment">
-                    <value>
-                      <LayoutPositions>
-                        <option name="myPosition">
-                          <Point>
-                            <option name="x" value="12" />
-                            <option name="y" value="12" />
-                          </Point>
-                        </option>
-                      </LayoutPositions>
-                    </value>
-                  </entry>
                   <entry key="benchmarkFragment">
                     <value>
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="-158" />
-                            <option name="y" value="109" />
+                            <option name="x" value="-198" />
+                            <option name="y" value="114" />
                           </Point>
                         </option>
                       </LayoutPositions>
@@ -137,6 +125,18 @@
                               </value>
                             </entry>
                           </map>
+                        </option>
+                      </LayoutPositions>
+                    </value>
+                  </entry>
+                  <entry key="gameStatsFragment">
+                    <value>
+                      <LayoutPositions>
+                        <option name="myPosition">
+                          <Point>
+                            <option name="x" value="173" />
+                            <option name="y" value="-250" />
+                          </Point>
                         </option>
                       </LayoutPositions>
                     </value>

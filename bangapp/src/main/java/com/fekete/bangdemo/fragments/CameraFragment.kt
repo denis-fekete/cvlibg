@@ -45,7 +45,7 @@ class CameraFragment : BaseFragment<FragmentCameraBinding>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        sharedViewModel.overlaysVisible(inventory = false, other = true)
+        gameStateSharedViewModel.overlaysVisible(inventory = false, other = true)
 
         viewModel.initialize(
             settingsService.data.realtimeModel,
@@ -134,7 +134,7 @@ class CameraFragment : BaseFragment<FragmentCameraBinding>(
             cameraStopRequested = false
         }
         viewModel.imageAnalyzer.switchToFasterAnalysis()
-        sharedViewModel.overlaysVisible(inventory = false, other = true)
+        gameStateSharedViewModel.overlaysVisible(inventory = false, other = true)
 
         binding.switchToFastDetectionButton.visibility = View.GONE
         binding.switchToDetailedDetectionButton.visibility = View.VISIBLE
@@ -153,7 +153,7 @@ class CameraFragment : BaseFragment<FragmentCameraBinding>(
         // camera stop was request, await first detailed result (contains input image)
         if (cameraStopRequested) {
             viewModel.cameraController.stop()
-            sharedViewModel.overlaysVisible(inventory = true, other = true)
+            gameStateSharedViewModel.overlaysVisible(inventory = true, other = true)
         }
     }
 }

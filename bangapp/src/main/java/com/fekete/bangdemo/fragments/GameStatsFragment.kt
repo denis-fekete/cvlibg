@@ -14,6 +14,6 @@ class GameStatsFragment : BaseFragment<FragmentGameStatsBinding>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        sharedViewModel.overlaysVisible(inventory = true, other = true)
+        gameStateSharedViewModel.overlaysVisible(inventory = true, other = true)
     }
 }

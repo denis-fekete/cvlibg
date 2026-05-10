@@ -36,7 +36,10 @@ class BenchmarkFragment : BaseFragment<FragmentBenchmarkBinding>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        sharedViewModel.overlaysVisible(inventory = false, other = false) // overlays are not desired on this fragment
+        gameStateSharedViewModel.overlaysVisible(
+            inventory = false,
+            other = false
+        ) // overlays are not desired on this fragment
 
         binding.benchmarkSpinner.setup(
             benchmarkMap.keys,

@@ -51,6 +51,6 @@
             android:focusable = "true"
             android:foreground = "?attr/selectableItemBackground"
             app:shapeAppearanceOverlay = "@style/inventoryItemRoundedImage"
-            app:strokeColor = "@color/buttonText"
+            app:strokeColor = "@color/confirmButton"
             app:strokeWidth = "4dp"/>
 </LinearLayout>

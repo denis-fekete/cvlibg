@@ -22,7 +22,7 @@ abstract class BaseFragment<VB : ViewBinding>(
     /**
      * Activity level ViewModel with shared data.
      */
-    protected val sharedViewModel: GameStateSharedViewModel by activityViewModels()
+    protected val gameStateSharedViewModel: GameStateSharedViewModel by activityViewModels()
     private var _binding: VB? = null
     protected val binding get() = _binding!!
 
