@@ -38,30 +38,42 @@
                 android:layout_width = "0dp"
                 android:layout_height = "match_parent"
                 android:layout_weight = "1"
-                android:background = "@null"
                 android:src = "@drawable/search"
                 android:contentDescription = "Benchmark Icon"
-                app:tint = "@color/navigation_icon_tint"/>
+                app:tint = "@color/navigation_icon_tint"
+                android:background = "@null"
+                android:clickable = "true"
+                android:focusable = "true"
+                android:foreground = "?attr/selectableItemBackground"
+                />
 
         <ImageButton
                 android:id = "@+id/btnNavCamera"
                 android:layout_width = "0dp"
                 android:layout_height = "match_parent"
                 android:layout_weight = "1"
-                android:background = "@null"
                 android:src = "@drawable/camera"
                 android:contentDescription = "Camera Icon"
-                app:tint = "@color/navigation_icon_tint"/>
+                app:tint = "@color/navigation_icon_tint"
+                android:background = "@null"
+                android:clickable = "true"
+                android:focusable = "true"
+                android:foreground = "?attr/selectableItemBackground"
+                />
 
         <ImageButton
-                android:id = "@+id/btnNavGameStats"
+                android:id = "@+id/btnNavSettings"
                 android:layout_width = "0dp"
                 android:layout_height = "match_parent"
+                android:src = "@drawable/settings"
+                android:contentDescription = "Settings Icon"
+                app:tint = "@color/navigation_icon_tint"
                 android:layout_weight = "1"
                 android:background = "@null"
-                android:src = "@drawable/inventory"
-                android:contentDescription = "Game stats Icon"
-                app:tint = "@color/navigation_icon_tint"/>
+                android:clickable = "true"
+                android:focusable = "true"
+                android:foreground = "?attr/selectableItemBackground"
+                />
     </LinearLayout>
 
 
@@ -85,17 +97,5 @@
             android:layout_marginTop = "8dp"
             android:layout_marginEnd = "8dp"/>
 
-    <ImageButton
-            android:id = "@+id/btnNavSettings"
-            android:layout_width = "wrap_content"
-            android:layout_height = "wrap_content"
-            android:background = "@null"
-            android:src = "@drawable/settings"
-            android:contentDescription = "Settings Icon"
-            app:tint = "@color/navigation_icon_tint"
-            app:layout_constraintStart_toStartOf = "parent"
-            app:layout_constraintTop_toTopOf = "parent"
-            android:layout_marginTop = "16dp"
-            android:layout_marginStart = "16dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

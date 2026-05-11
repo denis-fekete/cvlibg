@@ -235,20 +235,6 @@ open class CameraController(
     }
 
     /**
-     * Sets the logging of metrics to [value].
-     */
-    fun setMetricsEnabled(value: Boolean) {
-        imageAnalyzer?.setMetricsEnabled(value)
-    }
-
-    /**
-     * Sets the logging of verbose metrics to [value].
-     */
-    fun setVerboseMetricsEnabled(value: Boolean) {
-        imageAnalyzer?.setVerboseMetricsEnabled(value)
-    }
-
-    /**
      * Clean up launched executor, coroutine scopes and resets internal state of [CameraController]. This must be called.
      */
     open fun destroy() {

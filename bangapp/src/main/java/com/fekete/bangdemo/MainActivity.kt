@@ -6,10 +6,13 @@ import android.view.View.VISIBLE
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.fekete.bangdemo.data.CardDetail
 import com.fekete.bangdemo.data.GameState
+import com.fekete.bangdemo.data.Language
 import com.fekete.cvlibg.utils.CommonUtils
 import com.fekete.bangdemo.databinding.ActivityMainBinding
 import com.fekete.bangdemo.utils.navigateMain
@@ -31,6 +34,11 @@ class MainActivity : AppCompatActivity() {
     private val gameStateService by lazy {
         (applicationContext as MyApp).gameStateService
     }
+
+    private val settingsService by lazy {
+        (applicationContext as MyApp).settingsService
+    }
+
 
     private val cardDetailsService by lazy {
         (applicationContext as MyApp).cardDetailsService
@@ -62,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                 .show()
         }
 
+        loadLanguages()
         loadLastGameState()
     }
 
@@ -78,8 +87,6 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             // make camera button invisible when in camera fragment
             binding.btnNavCamera.visibility = if (destination.id == R.id.cameraFragment) INVISIBLE else VISIBLE
-            // disable settings btn in settings
-            binding.btnNavSettings.visibility = if (destination.id == R.id.settingsFragment) INVISIBLE else VISIBLE
         }
 
         binding.btnNavCamera.setOnClickListener {
@@ -93,10 +100,25 @@ class MainActivity : AppCompatActivity() {
         binding.btnNavSearch.setOnClickListener {
             navController.navigateMain(R.id.cardSearchFragment)
         }
+    }
 
-        binding.btnNavGameStats.setOnClickListener {
-            navController.navigateMain(R.id.gameStatsFragment)
+    private fun loadLanguages() {
+        val locales: LocaleListCompat
+        when (settingsService.data.language) {
+            Language.ENGLISH -> {
+                locales = LocaleListCompat.forLanguageTags("en")
+            }
+
+            Language.CZECH -> {
+                locales = LocaleListCompat.forLanguageTags("cs")
+            }
+
+            Language.SLOVAK -> {
+                locales = LocaleListCompat.forLanguageTags("sk")
+            }
         }
+
+        AppCompatDelegate.setApplicationLocales(locales)
     }
 
     /**

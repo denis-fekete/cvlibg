@@ -35,26 +35,34 @@
             android:id = "@+id/switchToDetailedDetectionButton"
             android:layout_width = "wrap_content"
             android:layout_height = "wrap_content"
-            android:background = "@null"
             android:src = "@drawable/detect"
             android:contentDescription = "Detect"
             app:tint = "@color/navigation_icon_tint"
             app:layout_constraintBottom_toBottomOf = "parent"
             app:layout_constraintEnd_toEndOf = "parent"
             app:layout_constraintStart_toStartOf = "parent"
-            android:layout_marginBottom = "32dp"/>
+            android:layout_marginBottom = "32dp"
+            android:background = "@null"
+            android:clickable = "true"
+            android:focusable = "true"
+            android:foreground = "?attr/selectableItemBackground"
+            />
 
     <ImageButton
             android:id = "@+id/switchToFastDetectionButton"
             android:layout_width = "wrap_content"
             android:layout_height = "wrap_content"
-            android:background = "@null"
             android:src = "@drawable/close"
             android:contentDescription = "Close"
             app:tint = "@color/navigation_icon_tint"
             app:layout_constraintBottom_toBottomOf = "parent"
             app:layout_constraintEnd_toEndOf = "parent"
             app:layout_constraintStart_toStartOf = "parent"
-            android:layout_marginBottom = "32dp"/>
+            android:layout_marginBottom = "32dp"
+            android:background = "@null"
+            android:clickable = "true"
+            android:focusable = "true"
+            android:foreground = "?attr/selectableItemBackground"
+            />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

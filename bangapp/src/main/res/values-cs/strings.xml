@@ -1,0 +1,48 @@
+<resources>
+    <string name = "app_name">Bang! CVLiBG Demo</string>
+    <string name = "title_activity_main2">MainActivity2</string>
+    <string name = "title_activity_navigation">Navigace</string>
+    <string name = "title_home">Domů</string>
+    <string name = "title_dashboard">Přehled</string>
+    <string name = "title_notifications">Oznámení</string>
+
+    <!-- Placeholder for fragments -->
+    <string name = "placeholder_text">Zástupný text s o něco více slovy, než je potřeba</string>
+    <string name = "placeholder_title">Zástupný NADPIS</string>
+
+    <!-- Card details layout text-->
+    <string name = "card_details_image_content_description">Obrázek zobrazující kartu, na kterou bylo kliknuto</string>
+    <string name = "card_details_description">Lorem Ipsum Dolor Sit Amet, Consetetur Sadipscing Elitr, Sed Diam Nonumy Eirmod Tempor Invidunt Ut Labore Et Dolore Magna Aliquyam Erat, Sed Diam Voluptua. At Vero Eos Et Accusam Et Justo Duo Dolores Et Ea Rebum. Stet Clita Kasd Gubergren, No Sea Takimata</string>
+
+    <!-- Settings layout text-->
+    <string name = "settings_choose_realtime_model">Výběr detektoru běžícího v reálném čase:</string>
+    <string name = "settings_choose_singleshot_model">Výběr detektoru běžícího v detailním režimu:</string>
+    <string name = "settings_choose_language">Jazyk:</string>
+    <string name = "settings_font_size">Velikost písma:</string>
+    <string name = "settings_show_performance">Zobrazovat metriky:</string>
+    <string name = "settings_verbose_performance">Zobrazovat podrobné metriky:</string>
+
+    <string name = "settingsPageTitle">Nastavení:</string>
+    <string name = "settingsMetrics">Metriky:</string>
+
+    <string name = "add_to_inventory">Přidat do\ninventáře</string>
+    <string name = "added_to_inventory_popup">Karta byla přidána do inventáře</string>
+
+    <string name = "set_role">Nastavit \njako roli</string>
+    <string name = "role_updated_popup">Role byla změněna!</string>
+    <string name = "role_clear_popup">Role byla vymazána!</string>
+    <string name = "remove_role">Vymazat roli</string>
+
+    <string name = "set_character">Nastavit \njako postavu</string>
+    <string name = "character_updated_popup">Postava byla změněna!</string>
+    <string name = "character_clear_popup">Postava byla vymazána!</string>
+    <string name = "remove_character">Vymazat postavu</string>
+
+    <string name = "detailsLinks">Relevantní karty a poznámky:</string>
+    <string name = "stop_benchmark">Stop</string>
+    <string name = "start_benchmark">Start</string>
+
+    <string name = "game_state_cleared">Herní stav byl vymazán!</string>
+    <string name = "delete_game_state">Vymazat herní stav</string>
+    <string name = "confirm_delete_game_state">Potvrdit vymazání</string>
+</resources>

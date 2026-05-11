@@ -3,11 +3,8 @@ package com.fekete.bangdemo.views
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.TypedValue
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import com.fekete.bangdemo.R
 import com.google.android.material.imageview.ShapeableImageView

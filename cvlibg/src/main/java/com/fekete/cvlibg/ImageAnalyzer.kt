@@ -1,7 +1,6 @@
 package com.fekete.cvlibg
 
 import android.content.Context
-import android.util.Log
 import android.util.Size
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
@@ -25,7 +24,6 @@ import java.io.FileNotFoundException
  *
  * This class provides "collectable" data which user can "subscribe" to. Provided data are:
  *  - [detectionResult]: latest [DetectorResult] from current detector.
- *  - [inputImage]: input image of the last image analysis, when [detailedDetector] was used.
  *  - [metrics]: last [AnalyzerMetrics] values recorded in analyzer
  *
  * @param realtimeDetector reference to [Detector] object for realtime, continuous image analysis

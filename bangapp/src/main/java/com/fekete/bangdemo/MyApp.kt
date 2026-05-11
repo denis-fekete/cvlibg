@@ -13,7 +13,6 @@ import com.fekete.cvlibg.services.AssetService
 import com.fekete.cvlibg.utils.CommonUtils
 import com.fekete.cvlibg.services.ConfigService
 import com.fekete.cvlibg.services.StorageService
-import kotlinx.serialization.builtins.serializer
 
 /**
  * Class derived from the Android's [Application] class. Initializes the [cardDetailsService], [class2linkService], and

@@ -45,10 +45,4 @@
                 android:id = "@+id/action_cardSearchFragment_to_cardDetailsFragment"
                 app:destination = "@id/cardDetailsFragment"/>
     </fragment>
-    <fragment
-            android:id = "@+id/gameStatsFragment"
-            android:name = "com.fekete.bangdemo.fragments.GameStatsFragment"
-            android:label = "fragment_game_stats"
-            tools:layout = "@layout/fragment_game_stats">
-    </fragment>
 </navigation>

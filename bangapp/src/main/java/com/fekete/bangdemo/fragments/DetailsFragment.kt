@@ -12,6 +12,7 @@ import com.fekete.bangdemo.MyApp
 import com.fekete.bangdemo.R
 import com.fekete.bangdemo.data.CardDetail
 import com.fekete.bangdemo.data.CardType
+import com.fekete.bangdemo.data.Language
 import com.fekete.bangdemo.views.LinkView
 import com.fekete.cvlibg.utils.AssetLoader
 import com.fekete.bangdemo.databinding.FragmentCardDetailsBinding
@@ -71,7 +72,19 @@ class DetailsFragment : BaseFragment<FragmentCardDetailsBinding>(
         }
 
         binding.titleText.text = thisCard.title
-        binding.descriptionText.text = thisCard.descriptionEN
+        when (settingsService.data.language) {
+            Language.ENGLISH -> {
+                binding.descriptionText.text = thisCard.descriptionEN
+            }
+
+            Language.CZECH -> {
+                binding.descriptionText.text = thisCard.descriptionCS
+            }
+
+            Language.SLOVAK -> {
+                binding.descriptionText.text = thisCard.descriptionSK
+            }
+        }
 
         binding.descriptionText.setTextSize(TypedValue.COMPLEX_UNIT_SP, settingsService.data.fontSize.toFloat())
         binding.relatedLinksTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, settingsService.data.fontSize.toFloat())

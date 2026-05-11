@@ -3,6 +3,11 @@ package com.fekete.bangdemo.fragments
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.navigation.fragment.findNavController
 import com.fekete.bangdemo.MyApp
 import com.fekete.bangdemo.R
@@ -65,10 +70,26 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(
         ) { selected: Int ->
             settingsService.data.language = languages[selected]
             settingsService.save()
+            changeLanguage(languages[selected])
+        }
+
+        binding.deleteGameState.setOnClickListener {
+            binding.confirmDeleteGameState.visibility = VISIBLE
+            binding.deleteGameState.visibility = GONE
+        }
+        binding.confirmDeleteGameState.setOnClickListener {
+            gameStateSharedViewModel.clearGameState()
+            binding.confirmDeleteGameState.visibility = GONE
+            binding.deleteGameState.visibility = VISIBLE
+
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.game_state_cleared),
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         setupPerformanceMonitorSwitch()
-
         setupFontPicker()
     }
 
@@ -135,5 +156,24 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(
                 adapter.setTextSize(TypedValue.COMPLEX_UNIT_SP, settingsService.data.fontSize.toFloat())
             }
         }
+    }
+
+    private fun changeLanguage(lang: Language) {
+        val locales: LocaleListCompat
+        when (lang) {
+            Language.ENGLISH -> {
+                locales = LocaleListCompat.forLanguageTags("en")
+            }
+
+            Language.CZECH -> {
+                locales = LocaleListCompat.forLanguageTags("cz")
+            }
+
+            Language.SLOVAK -> {
+                locales = LocaleListCompat.forLanguageTags("sk")
+            }
+        }
+
+        AppCompatDelegate.setApplicationLocales(locales)
     }
 }

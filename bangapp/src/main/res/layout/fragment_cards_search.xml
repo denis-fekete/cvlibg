@@ -17,7 +17,6 @@
             android:layout_width = "match_parent"
             android:layout_height = "wrap_content"
             android:background = "@color/list_background"
-            android:layout_marginLeft = "48dp"
             app:layout_constraintTop_toTopOf = "parent"
             app:layout_constraintStart_toStartOf = "parent"
             android:iconifiedByDefault = "false"

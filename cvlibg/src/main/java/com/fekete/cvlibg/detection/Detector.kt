@@ -1,10 +1,8 @@
 package com.fekete.cvlibg.detection
 
-import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Size
-import com.fekete.cvlibg.utils.AssetLoader
 import java.io.FileNotFoundException
 
 /**
