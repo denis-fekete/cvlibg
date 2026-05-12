@@ -102,7 +102,7 @@ class MetricsOverlay(context: Context, attrs: AttributeSet?) : View(context, att
             textList.add("") // spacer
 
         otherMetrics.forEach {
-            val text = "${it.prefix}: ${it.value}${it.value}\n"
+            val text = "${it.prefix}: ${it.value ?: " "}${it.suffix}\n"
             textList.add(text)
 
             val textWidth = textPaint.measureText(text)

@@ -22,7 +22,6 @@ class GameStateSharedViewModel : ViewModel() {
 
     private val _role = MutableStateFlow<CardDetail>(CardDetail())
 
-
     /**
      * Currently used Role from the game, this role is displayed by [com.fekete.bangdemo.fragments.CharacterAndRoleFragment]
      */

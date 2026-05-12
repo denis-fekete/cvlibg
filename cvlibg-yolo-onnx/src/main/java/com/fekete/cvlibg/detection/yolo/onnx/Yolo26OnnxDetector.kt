@@ -13,8 +13,6 @@ import com.fekete.cvlibg.detection.Detection
  *
  * @param modelPath full path to the ONNX YOLO model in the assets' folder.
  * @param confThreshold threshold used for filtering detections
- * @param com.fekete.cvlibg.detection.Detector.applyNMS use or not use Non-Maximum Suppression
- * @param com.fekete.cvlibg.detection.Detector.nmsThreshold Intersection over Union threshold for Non-Maximum Suppression
  * @param inputDataSize expected size for model loaded from the [modelPath]
  * @param useNNAPI whenever to use ONNX's NNAPI for accelerated inference
  *

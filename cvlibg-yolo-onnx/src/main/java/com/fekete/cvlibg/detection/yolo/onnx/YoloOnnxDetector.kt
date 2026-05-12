@@ -11,6 +11,7 @@ import android.util.Size
 import com.fekete.cvlibg.detection.AbstractYoloDetector
 import com.fekete.cvlibg.detection.Detection
 import com.fekete.cvlibg.detection.DetectorResult
+import com.fekete.cvlibg.metrics.MetricsValue
 import com.fekete.cvlibg.utils.AssetLoader
 import com.fekete.cvlibg.utils.Timer
 import org.opencv.android.Utils
@@ -107,20 +108,32 @@ open class YoloOnnxDetector(
         results.close()
         tensor.close()
 
+        val metrics = if (showMetrics && verboseMetrics) {
+            listOf(
+                MetricsValue(prefix = "Model: ", suffix = modelPath.substringAfterLast('/').substringBefore(".onnx")),
+                MetricsValue(prefix = "Detections: ", value = nsmFilteredDetections.size.toDouble()),
+            )
+        } else {
+            emptyList()
+        }
+
+        val timeMetrics = if (showMetrics && verboseMetrics) {
+            mapOf(
+                METRICS_LETTERBOX_KEY to letterboxingTime,
+                METRICS_CONVERSION_KEY to tensorConversion,
+                METRICS_INTERFACE_KEY to inferenceTime,
+                METRICS_EXTRACT_KEY to extractionTime,
+                METRICS_NMS_KEY to nmsTime,
+            )
+        } else {
+            emptyMap()
+        }
+
         return DetectorResult(
             nsmFilteredDetections,
             imageDetails,
-            timeMetrics = if (showMetrics && verboseMetrics) {
-                mapOf(
-                    METRICS_LETTERBOX_KEY to letterboxingTime,
-                    METRICS_CONVERSION_KEY to tensorConversion,
-                    METRICS_INTERFACE_KEY to inferenceTime,
-                    METRICS_EXTRACT_KEY to extractionTime,
-                    METRICS_NMS_KEY to nmsTime,
-                )
-            } else {
-                emptyMap()
-            }
+            metrics = metrics,
+            timeMetrics = timeMetrics
         )
     }
 

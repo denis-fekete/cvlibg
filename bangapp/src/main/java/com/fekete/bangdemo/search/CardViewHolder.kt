@@ -1,10 +1,13 @@
 package com.fekete.bangdemo.search
 
 import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.fekete.bangdemo.data.CardDetail
 import com.fekete.bangdemo.R
+import com.fekete.bangdemo.data.CardType
 import com.fekete.cvlibg.utils.AssetLoader
 import com.google.android.material.imageview.ShapeableImageView
 
@@ -32,7 +35,13 @@ class CardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         onAddCardClicked: (CardDetail) -> Unit
     ) {
         imageView.setOnClickListener { onCardClicked.invoke(cardDetail) }
-        addButton.setOnClickListener { onAddCardClicked.invoke(cardDetail) }
+
+        if (cardDetail.type == CardType.Action || cardDetail.type == CardType.Effect || cardDetail.type == CardType.Weapon) {
+            addButton.visibility = VISIBLE
+            addButton.setOnClickListener { onAddCardClicked.invoke(cardDetail) }
+        } else {
+            addButton.visibility = GONE
+        }
 
         if (cardDetail.imagePath != null) {
             val bitmap = assetLoader.loadImage(cardDetail.imagePath)

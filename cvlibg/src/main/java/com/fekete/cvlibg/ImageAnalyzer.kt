@@ -32,8 +32,8 @@ import java.io.FileNotFoundException
  * @author Denis Fekete, (xfeket01@vutbr.cz), (denis.fekete02@gmail.com)
  */
 class ImageAnalyzer(
-    private val realtimeDetector: Detector?,
-    private val detailedDetector: Detector?,
+    private var realtimeDetector: Detector?,
+    private var detailedDetector: Detector?,
 ) : ImageAnalysis.Analyzer {
     @Volatile
     private var analysisRunning = false
@@ -76,11 +76,11 @@ class ImageAnalyzer(
         val detectorResult: DetectorResult?
         val tempUseRealtimeDetector = useRealtimeDetector
         if (realtimeDetector != null && tempUseRealtimeDetector) {
-            detectorResult = realtimeDetector.run(bitmap)
+            detectorResult = realtimeDetector?.run(bitmap)
 
         } else if (detailedDetector != null) {
-            val tmp = detailedDetector.run(bitmap)
-            detectorResult = tmp.copyFrom(inputImage = bitmap)
+            val tmp = detailedDetector?.run(bitmap)
+            detectorResult = tmp?.copyFrom(inputImage = bitmap)
             pauseAnalysis = true
         } else {
             detectorResult = null
@@ -114,6 +114,13 @@ class ImageAnalyzer(
             detailedDetector?.build(context)
             unpauseAnalysis()
         }
+    }
+
+    fun replaceDetectors(realtimeDetector: Detector?, detailedDetector: Detector?) {
+        detectorsAreBuilt = false
+        pauseAnalysis()
+        this.realtimeDetector = realtimeDetector
+        this.detailedDetector = detailedDetector
     }
 
     /**

@@ -45,10 +45,12 @@ import com.fekete.cvlibg.utils.DetectorRegistry
 open class BaseCameraViewModel(private val app: Application) : AndroidViewModel(app) {
     private var detailedDetector: Detector? = null
     private var realtimeDetector: Detector? = null
-    private var initializeCalled = false
 
     private var _imageAnalyzer: ImageAnalyzer? = null
     private var _cameraController: CameraController? = null
+
+    private var lastRealtimeRegistryKey: String? = null
+    private var lastDetailedRegistryKey: String? = null
 
     val cameraController: CameraController
         get() {
@@ -69,25 +71,6 @@ open class BaseCameraViewModel(private val app: Application) : AndroidViewModel(
             return _imageAnalyzer!!
         }
 
-    /**
-     * Initializes [Detector] classes for the [imageAnalyzer]. This method must be called before accessing
-     * [imageAnalyzer].
-     *
-     * @param realtimeDetector used by the [imageAnalyzer]
-     * @param detailedDetector used by the [imageAnalyzer]
-     */
-    fun initialize(
-        realtimeDetector: Detector,
-        detailedDetector: Detector,
-    ) {
-        if (initializeCalled) {
-            return
-        }
-
-        initializeCalled = true
-        this.realtimeDetector = realtimeDetector
-        this.detailedDetector = detailedDetector
-    }
 
     /**
      * Initializes [Detector] classes for the [imageAnalyzer]. This method must be called before accessing
@@ -102,13 +85,15 @@ open class BaseCameraViewModel(private val app: Application) : AndroidViewModel(
         realtimeRegistryKey: String,
         detailedRegistryKey: String,
     ) {
-        if (initializeCalled) {
+        if (lastRealtimeRegistryKey == realtimeRegistryKey && lastDetailedRegistryKey == detailedRegistryKey) {
             return
         }
 
-        initializeCalled = true
+        lastRealtimeRegistryKey = realtimeRegistryKey
+        lastDetailedRegistryKey = detailedRegistryKey
         realtimeDetector = DetectorRegistry.createDetector(realtimeRegistryKey)
         detailedDetector = DetectorRegistry.createDetector(detailedRegistryKey)
+        imageAnalyzer.replaceDetectors(realtimeDetector, detailedDetector)
     }
 
     /**
@@ -117,7 +102,6 @@ open class BaseCameraViewModel(private val app: Application) : AndroidViewModel(
     override fun onCleared() {
         _cameraController?.destroy()
         //_imageAnalyzer?.destroy() // not needed because controllers `manageAnalyzer` is set to true
-
         super.onCleared()
     }
 }

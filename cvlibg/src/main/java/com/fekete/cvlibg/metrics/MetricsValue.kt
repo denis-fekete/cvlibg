@@ -7,6 +7,6 @@ package com.fekete.cvlibg.metrics
  */
 data class MetricsValue(
     val prefix: String = "",
-    val value: Double = 0.0,
+    val value: Double? = null,
     val suffix: String = "",
 )

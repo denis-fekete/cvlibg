@@ -1,7 +1,6 @@
 package com.fekete.cvlibg
 
 import android.content.Context
-import android.util.Log
 import android.util.Size
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
@@ -12,7 +11,6 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -76,6 +74,18 @@ open class CameraController(
         lifecycleOwner: LifecycleOwner,
         surfaceProvider: Preview.SurfaceProvider,
     ) {
+        if (manageAnalyzer) {
+            controllerScope.launch(Dispatchers.IO) {
+                try {
+                    imageAnalyzer?.buildDetectors(context)
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main.immediate) {
+                        onError?.invoke(e.message ?: "Error loading models.")
+                    }
+                }
+            }
+        }
+
         if (!isInitialized) {
             initialize(lifecycleOwner, surfaceProvider)
         } else {
@@ -134,18 +144,6 @@ open class CameraController(
         isBeingInitialized = true
 
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context.applicationContext)
-
-        if (manageAnalyzer) {
-            controllerScope.launch(Dispatchers.IO) {
-                try {
-                    imageAnalyzer?.buildDetectors(context)
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main.immediate) {
-                        onError?.invoke(e.message ?: "Error loading models.")
-                    }
-                }
-            }
-        }
 
         cameraProviderFuture.addListener({
             cameraProvider = cameraProviderFuture.get()

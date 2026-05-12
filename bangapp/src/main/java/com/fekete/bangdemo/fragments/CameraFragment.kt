@@ -47,10 +47,21 @@ class CameraFragment : BaseFragment<FragmentCameraBinding>(
 
         gameStateSharedViewModel.overlaysVisible(inventory = true, other = true)
 
-        viewModel.initialize(
-            settingsService.data.realtimeModel,
-            settingsService.data.precisionModel,
-        )
+        try {
+            viewModel.initialize(
+                settingsService.data.realtimeModel,
+                settingsService.data.precisionModel,
+            )
+        } catch (e: Exception) {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Error loading models:")
+                .setMessage(e.message)
+                .setPositiveButton("OK", null)
+                .show()
+        }
+
+        viewModel.imageAnalyzer.setMetricsEnabled(settingsService.data.showMetrics)
+        viewModel.imageAnalyzer.setVerboseMetricsEnabled(settingsService.data.verboseMetrics)
 
         // scale view to use as much screen space, keep ration and crop excess
         binding.previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
@@ -144,8 +155,8 @@ class CameraFragment : BaseFragment<FragmentCameraBinding>(
 
         viewModel.imageAnalyzer.switchToDetailedAnalysis()
 
-        binding.switchToDetailedDetectionButton.visibility = View.GONE
-        binding.switchToFastDetectionButton.visibility = View.VISIBLE
+        binding.switchToDetailedDetectionButton.visibility = GONE
+        binding.switchToFastDetectionButton.visibility = VISIBLE
     }
 
     private fun confirmDetailedMode() {
